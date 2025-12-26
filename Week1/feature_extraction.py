@@ -2,10 +2,12 @@ import librosa
 import matplotlib.pyplot as plt
 import pywt
 import numpy as np
+import os
 
 
 #0. Load raw-audio(wav) file
-FILE_PATH = "StillFlyin_Full_Preview.mp3"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILE_PATH = os.path.join(BASE_DIR, "StillFlyin_Full_Preview.mp3")
 def load_audio(file_path = FILE_PATH, sr=22050):
     """
     Load an audio file (wav/mp3, etc.) and return the signal and sampling rate.
