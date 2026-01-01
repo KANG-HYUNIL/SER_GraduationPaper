@@ -7,7 +7,7 @@ import os
 
 #0. Load raw-audio(wav) file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FILE_PATH = os.path.join(BASE_DIR, "StillFlyin_Full_Preview.mp3")
+FILE_PATH = os.path.join(BASE_DIR, "03-01-01-01-01-01-01.wav")
 def load_audio(file_path = FILE_PATH, sr=22050):
     """
     Load an audio file (wav/mp3, etc.) and return the signal and sampling rate.
