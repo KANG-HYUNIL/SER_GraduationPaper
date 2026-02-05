@@ -1,0 +1,5 @@
+name: "cnn_channel_attention"
+hidden_dims: [64, 128, 256, 512]
+attention_type: "channel"
+reduction_ratio: 16 # for SE-Block
+dropout: 0.1

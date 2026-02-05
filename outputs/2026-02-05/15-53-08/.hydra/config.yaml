@@ -1,0 +1,27 @@
+data:
+  dataset_path: ${hydra:runtime.cwd}/src/$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 128
+  n_fft: 1024
+  hop_length: 512
+  f_min: 0.0
+  f_max: 8000.0
+  pad_mode: constant
+  normalize: true
+model:
+  name: cnn_baseline
+  hidden_dims:
+  - 64
+  - 128
+  - 256
+  - 512
+  dropout: 0.1
+train:
+  seed: 42
+  batch_size: 32
+  epochs: 50
+  learning_rate: 0.001
+  k_folds: 5
+  early_stopping: 10
+  device: auto
