@@ -1,0 +1,22 @@
+defaults:
+  - data: default
+  - model: cnn_baseline
+  - _self_
+
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+train:
+  seed: 42
+  batch_size: 32
+  epochs: 50
+  learning_rate: 0.001
+  k_folds: 5
+  early_stopping: 10
+  device: "auto" # or "cuda", "cpu"
+
+inference:
+  audio_path: ???                      # Required
+  model_checkpoint: ???                # Optional (Will default to saved_models/best_model_{model.name}.pt if not set)
+  output_dir: "inference_outputs"
