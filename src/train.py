@@ -13,6 +13,10 @@ import os
 import random
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.manifold import TSNE
+from datetime import datetime
+import shutil
+import hydra.utils
 
 # Import models to trigger registry
 import src.models
@@ -31,6 +35,97 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
     torch.backends.cudnn.deterministic = True
+
+def plot_learning_curves(history, save_path):
+    """
+    학습 곡선 그리기
+    Args:
+        history: 학습 기록
+        save_path: 저장 경로
+    Returns:
+        None
+    """
+    epochs = range(1, len(history['train_loss']) + 1)
+    
+    plt.figure(figsize=(12, 5))
+    
+    # Loss Plot
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, history['train_loss'], 'b-', label='Train Loss')
+    plt.plot(epochs, history['val_loss'], 'r-', label='Val Loss')
+    plt.title('Loss Curve')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    
+    # Accuracy Plot
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, history['train_acc'], 'b-', label='Train Acc')
+    plt.plot(epochs, history['val_acc'], 'r-', label='Val Acc')
+    plt.title('Accuracy Curve')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+
+def plot_class_accuracy(cm, class_names, save_path):
+    """
+    클래스별 정확도 그리기
+    Args:
+        cm: 혼동 행렬
+        class_names: 클래스 이름
+        save_path: 저장 경로
+    Returns:
+        None
+    """
+    # CM: rows=True, cols=Pred
+    # Per-class Accuracy = Diagonal / Row_Sum
+    # Handle division by zero
+    row_sum = cm.sum(axis=1)
+    row_sum[row_sum == 0] = 1  # Prevent division by zero
+    class_acc = cm.diagonal() / row_sum
+    
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=class_names, y=class_acc, palette='viridis')
+    plt.title('Class-wise Accuracy')
+    plt.ylabel('Accuracy')
+    plt.ylim(0, 1.0)
+    for i, v in enumerate(class_acc):
+        plt.text(i, v + 0.01, f"{v:.2f}", ha='center')
+    
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+
+def plot_tsne(features, labels, class_names, save_path):
+    """
+    t-SNE 시각화
+    Args:
+        features: 추출된 특징 벡터 (N, D)
+        labels: 정답 레이블 (N,)
+        class_names: 클래스 이름 리스트
+        save_path: 저장 경로
+    """
+    tsne = TSNE(n_components=2, random_state=42, perplexity=30, n_iter=1000)
+    projections = tsne.fit_transform(features)
+    
+    plt.figure(figsize=(10, 8))
+    sns.scatterplot(
+        x=projections[:, 0], y=projections[:, 1],
+        hue=[class_names[i] for i in labels],
+        palette='viridis',
+        s=50, alpha=0.7
+    )
+    plt.title('t-SNE Visualization of Feature Space')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     """
@@ -133,9 +228,13 @@ def main(cfg: DictConfig):
     # 4. Training Loop (Cross-Validation)
     logger.info(f"Starting Group K-Fold (k={k_folds}) Training...")
     
+    # Define a readable run name
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_name = f"{cfg.model.name}_{timestamp}"
+
     # Only one MLFlow run for the entire experiment (or one per fold? Usually one per experiment with nested runs or just logging mean)
     # Let's use one parent run for the experiment, and maybe log fold metrics as fold_x_metric
-    with mlflow.start_run() as parent_run:
+    with mlflow.start_run(run_name=run_name) as parent_run:
         mlflow.log_params(OmegaConf.to_container(cfg, resolve=True))
         
         # Prepare inputs for splitter (X and y can be dummy, groups is what matters)
@@ -244,71 +343,9 @@ def main(cfg: DictConfig):
                     yticklabels=dataset.labels[:8]) # This might be wrong if labels are just collected values. 
                     # Dataset labels are 0-7 integers. We need the string mapping.
         
-        import matplotlib.pyplot as plt
-        import seaborn as sns
+ 
 
-        # --- Plotting Helpers ---
-        def plot_learning_curves(history, save_path):
-            """
-            학습 곡선 그리기
-            Args:
-                history: 학습 기록
-                save_path: 저장 경로
-            Returns:
-                None
-            """
-            epochs = range(1, len(history['train_loss']) + 1)
-            
-            plt.figure(figsize=(12, 5))
-            
-            # Loss Plot
-            plt.subplot(1, 2, 1)
-            plt.plot(epochs, history['train_loss'], 'b-', label='Train Loss')
-            plt.plot(epochs, history['val_loss'], 'r-', label='Val Loss')
-            plt.title('Loss Curve')
-            plt.xlabel('Epochs')
-            plt.ylabel('Loss')
-            plt.legend()
-            
-            # Accuracy Plot
-            plt.subplot(1, 2, 2)
-            plt.plot(epochs, history['train_acc'], 'b-', label='Train Acc')
-            plt.plot(epochs, history['val_acc'], 'r-', label='Val Acc')
-            plt.title('Accuracy Curve')
-            plt.xlabel('Epochs')
-            plt.ylabel('Accuracy')
-            plt.legend()
-            
-            plt.tight_layout()
-            plt.savefig(save_path)
-            plt.close()
-
-        def plot_class_accuracy(cm, class_names, save_path):
-            """
-            클래스별 정확도 그리기
-            Args:
-                cm: 혼동 행렬
-                class_names: 클래스 이름
-                save_path: 저장 경로
-            Returns:
-                None
-            """
-            # CM: rows=True, cols=Pred
-            # Per-class Accuracy = Diagonal / Row_Sum
-            class_acc = cm.diagonal() / cm.sum(axis=1)
-            
-            plt.figure(figsize=(10, 6))
-            sns.barplot(x=class_names, y=class_acc, palette='viridis')
-            plt.title('Class-wise Accuracy')
-            plt.ylabel('Accuracy')
-            plt.ylim(0, 1.0)
-            for i, v in enumerate(class_acc):
-                plt.text(i, v + 0.01, f"{v:.2f}", ha='center')
-            
-            plt.tight_layout()
-            plt.savefig(save_path)
-            plt.close()
-        # ------------------------
+        # Helper functions moved to module level
 
         # Use INV_EMOTION_MAP logic locally or imported
         emotion_names = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised']
@@ -335,24 +372,10 @@ def main(cfg: DictConfig):
         logger.info(f"Class-wise Accuracy saved to {class_acc_path}")
 
         # 3. t-SNE Visualization 
-        from sklearn.manifold import TSNE
+ 
         
-        def plot_tsne(features, labels, class_names, save_path):
-            tsne = TSNE(n_components=2, random_state=42, perplexity=30, n_iter=1000)
-            projections = tsne.fit_transform(features)
-            
-            plt.figure(figsize=(10, 8))
-            sns.scatterplot(
-                x=projections[:, 0], y=projections[:, 1],
-                hue=[class_names[i] for i in labels],
-                palette='viridis',
-                s=50, alpha=0.7
-            )
-            plt.title('t-SNE Visualization of Feature Space')
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-            plt.tight_layout()
-            plt.savefig(save_path)
-            plt.close()
+        # 3. t-SNE Visualization 
+        # plot_tsne is now valid globally
 
         # Extract features for t-SNE using the Best Demo Model
         # We need to re-run validation on the full dataset (or a subset) with hooks
@@ -366,12 +389,12 @@ def main(cfg: DictConfig):
         demo_model_path = "weights/best_model_demo.pt"
         
         # Copy to current run dir
-        import shutil
+        # Copy to current run dir
         shutil.copy(best_model_path, demo_model_path)
         logger.info(f"Best Fold was Fold {best_fold_num}. Saved as {demo_model_path}")
         
-        # [NEW] Copy to Project Root "saved_models" for easy Inference access
-        import hydra.utils
+        # Copy to Project Root "saved_models" for easy Inference access
+        # Copy to Project Root "saved_models" for easy Inference access
         original_cwd = hydra.utils.get_original_cwd()
         global_save_dir = os.path.join(original_cwd, "saved_models")
         os.makedirs(global_save_dir, exist_ok=True)

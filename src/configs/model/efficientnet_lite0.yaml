@@ -1,0 +1,4 @@
+# EfficientNet-Lite0 Configuration
+name: efficientnet_lite0
+# Standard Lite0 params are hardcoded in the class to follow the paper,
+# but could expose width/depth coefficients here.

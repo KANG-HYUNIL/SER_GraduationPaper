@@ -98,7 +98,7 @@ This project uses **Subject-Independent Group K-Fold (k=5)**. The reported resul
 ### 1. Installation
 ```bash
 # Create Environment
-conda create -n grad_paper_ser python=3.9
+conda create -n grad_paper_ser python
 conda activate grad_paper_ser
 
 # Install Dependencies
@@ -166,20 +166,20 @@ pip install -r requirements.txt
 This command runs K-Fold training and saves artifacts to `outputs/YYYY-MM-DD/HH-MM-SS/`.
 ```bash
 # Baseline
-python src/train.py model=cnn_baseline
+python -m src.train model=cnn_baseline
 
 # Temporal Attention
-python src/train.py model=cnn_temporal_attention
+python -m src.train model=cnn_temporal_attention
 
 # Channel Attention
-python src/train.py model=cnn_channel_attention
+python -m src.train model=cnn_channel_attention
 ```
 
 ### 3. Inference / Demo
 To use the best trained model for prediction:
 ```bash
 # (Required) Must provide valid audio path
-python src/infer.py audio_path="data/test_audio.wav"
+python -m src.infer audio_path="data/test_audio.wav"
 ```
 *(See `saved_models/` for the best model from the latest training run.)*
 

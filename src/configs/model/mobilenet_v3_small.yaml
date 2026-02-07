@@ -1,0 +1,4 @@
+# MobileNetV3 Small Configuration
+name: mobilenet_v3_small
+# No extra hyperparams needed for standard architecture, 
+# but can add dropout rate or width multiplier here if expanded.

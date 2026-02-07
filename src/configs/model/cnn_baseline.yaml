@@ -1,3 +1,3 @@
 name: "cnn_baseline"
 hidden_dims: [64, 128, 256, 512]
-dropout: 0.1
+dropout: 0.3
