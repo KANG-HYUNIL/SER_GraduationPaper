@@ -37,10 +37,10 @@ class BaselineCNN(nn.Module):
         
     def _build_block(self, in_c, out_c):
         return nn.Sequential(
-            nn.Conv2d(in_c, out_c, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(in_c, out_c, kernel_size=3, padding=1, bias=False), #kernel size
             nn.BatchNorm2d(out_c),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            nn.MaxPool2d(kernel_size=2, stride=2) # kernel size 
         )
 
     def forward(self, x):

@@ -30,22 +30,22 @@ class AudioPipeline:
         
         self.amplitude_to_db = T.AmplitudeToDB()
 
-    def _pad_truncate(self, waveform: torch.Tensor) -> torch.Tensor:
-        """
-        Pads or truncates the waveform to a fixed length.
+    # def _pad_truncate(self, waveform: torch.Tensor) -> torch.Tensor:
+    #     """
+    #     Pads or truncates the waveform to a fixed length.
         
-        Args:
-            waveform (torch.Tensor): Input audio tensor of shape (Channels, Time) or (1, Time).
+    #     Args:
+    #         waveform (torch.Tensor): Input audio tensor of shape (Channels, Time) or (1, Time).
             
-        Returns:
-            torch.Tensor: Fixed length tensor of shape (Channels, Target_Length).
-        """
-        if waveform.shape[1] > self.target_length:
-            return waveform[:, :self.target_length]
-        elif waveform.shape[1] < self.target_length:
-            pad_amount = self.target_length - waveform.shape[1]
-            return F.pad(waveform, (0, pad_amount), "constant")
-        return waveform
+    #     Returns:
+    #         torch.Tensor: Fixed length tensor of shape (Channels, Target_Length).
+    #     """
+    #     if waveform.shape[1] > self.target_length:
+    #         return waveform[:, :self.target_length]
+    #     elif waveform.shape[1] < self.target_length:
+    #         pad_amount = self.target_length - waveform.shape[1]
+    #         return F.pad(waveform, (0, pad_amount), "constant")
+    #     return waveform
 
     def transform(self, waveform: torch.Tensor, sr: int) -> torch.Tensor:
         """
@@ -71,7 +71,8 @@ class AudioPipeline:
         # waveform = torchaudio.functional.wad(waveform) 
 
         # 4. Pad or Truncate
-        waveform = self._pad_truncate(waveform)
+        # Modified: Return variable length for Dynamic Padding (Collate Fn handling)
+        # waveform = self._pad_truncate(waveform)
 
         # 5. Extract Log-Mel Spectrogram
         mel_spec = self.mel_spectrogram(waveform)

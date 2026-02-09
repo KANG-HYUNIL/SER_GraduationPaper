@@ -119,6 +119,44 @@ class RavdessDataset(Dataset):
         else:
             feature = waveform 
 
-        # Return (Feature, Label)
-        # torch.long is required for classification labels (integers 0~7)
         return feature, torch.tensor(label, dtype=torch.long)
+
+def collate_dynamic_padding(batch):
+    """
+    Collate function to handle variable length audio/spectrograms.
+    Args:
+        batch: List of tuples (feature, label)
+    Returns:
+        padded_features: (Batch, Channel, Freq, Max_Time)
+        labels: (Batch,)
+    """
+    # 1. Separate features and labels
+    features, labels = zip(*batch)
+    
+    # feature shape: (1, n_mels, Time)
+    # We need to find the max Time in this batch
+    max_time = max([f.shape[2] for f in features])
+    
+    padded_features = []
+    for f in features:
+        # f: (1, 128, T)
+        current_time = f.shape[2]
+        pad_amount = max_time - current_time
+        
+        # F.pad format for 3D tensor: (pad_left, pad_right, pad_top, pad_bottom, ...)
+        # We only pad the last dimension (Time) on the right
+        if pad_amount > 0:
+            # (pad_last_dim_left, pad_last_dim_right)
+            padded_f = torch.nn.functional.pad(f, (0, pad_amount), "constant", 0.0)
+        else:
+            padded_f = f
+            
+        padded_features.append(padded_f)
+        
+    # Stack them
+    padded_features = torch.stack(padded_features)
+    labels = torch.stack(labels)
+    
+    return padded_features, labels
+
+

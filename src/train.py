@@ -23,6 +23,7 @@ import src.models
 from src.data.dataset import RavdessDataset
 from src.data.transforms import AudioPipeline
 from src.utils.registry import get_model_class
+from src.data.dataset import collate_dynamic_padding
 
 logger = logging.getLogger(__name__)
 
@@ -249,8 +250,22 @@ def main(cfg: DictConfig):
             train_sub = Subset(dataset, train_idx)
             val_sub = Subset(dataset, val_idx)
             
-            train_loader = DataLoader(train_sub, batch_size=cfg.train.batch_size, shuffle=True)
-            val_loader = DataLoader(val_sub, batch_size=cfg.train.batch_size, shuffle=False)
+            # 3. Create DataLoaders
+            # Use collate_dynamic_padding for variable length handling
+ 
+            
+            train_loader = DataLoader(
+                train_sub, 
+                batch_size=cfg.train.batch_size, 
+                shuffle=True, 
+                collate_fn=collate_dynamic_padding
+            )
+            val_loader = DataLoader(
+                val_sub, 
+                batch_size=cfg.train.batch_size, 
+                shuffle=False, 
+                collate_fn=collate_dynamic_padding
+            )
             
             # Initialize Model & Optimizer (Fresh per fold)
             model_class = get_model_class(cfg.model.name)

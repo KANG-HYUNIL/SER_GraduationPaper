@@ -192,6 +192,14 @@ mlflow ui
 
 ---
 
+
+## 🎨 Mel Spectrogram Visualization
+You can generate and inspect the input data (Mel Spectrograms) transformed by the pipeline:
+```bash
+python -m src.visualize_mel
+```
+It saves images to `mel_spectrogram_transform_testing/` in the project root.
+
 ## 🔍 Experiments & Results
 *(To be updated after running full experiments)*
 
