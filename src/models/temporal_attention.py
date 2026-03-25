@@ -54,24 +54,24 @@ class TemporalAttentionCNN(nn.Module):
         )
 
     def forward(self, x):
-        # x: (Batch, 1, n_mels, Time)
+        # x: (Batch, 1, 128, 512)
         
         # 1. Extract Features
         x = self.features(x)
-        # x: (Batch, C, H', W') where W' corresponds to Time
+        # x: (Batch, 512, 8, 32)
         
         # 2. Prepare for Attention
-        # Collapse Frequency (H') dimension
+        # Frequency(H') 차원만 압축하여 시간 축 정보는 보존함.
         x_time = self.freq_pool(x).squeeze(2) 
-        # x_time: (Batch, C, W')
+        # x_time: (Batch, 512, 32)
         
         # 3. Calculate Attention Scores
-        # scores: (Batch, 1, W')
+        # 각 시간 스텝(32개)에 대한 가중치 계산
         scores = self.attention_layer(x_time)
-        alpha = F.softmax(scores, dim=2) # Softmax over time dimension
+        alpha = F.softmax(scores, dim=2) 
         
         # 4. Weighted Sum (Context Vector)
-        # context: (Batch, C, 1) = sum( (Batch, C, W') * (Batch, 1, W') )
+        # 중요한 시간대의 특징에 더 높은 가중치를 부여하여 합산
         context = torch.sum(x_time * alpha, dim=2)
         
         # 5. Classification

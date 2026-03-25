@@ -50,12 +50,13 @@ class ChannelAttentionCNN(nn.Module):
             
         self.features = nn.Sequential(*layers)
         
-        # Classifier
-        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+        # Classifier (Final Stage)
+        # 데이터를 심하게 뭉개는 1x1 Pooling 대신 4x4 정도의 해상도를 유지함
+        self.pool = nn.AdaptiveAvgPool2d((4, 4))
         self.classifier = nn.Sequential(
             nn.Flatten(),
             nn.Dropout(dropout_prob),
-            nn.Linear(hidden_dims[-1], num_classes)
+            nn.Linear(hidden_dims[-1] * 4 * 4, num_classes)
         )
         
     def _build_se_block(self, in_c, out_c, reduction):
@@ -64,11 +65,14 @@ class ChannelAttentionCNN(nn.Module):
             nn.BatchNorm2d(out_c),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            SEBlock(out_c, reduction) # Apply Channel Attention after block
+            SEBlock(out_c, reduction) # 채널 어텐션은 채널 정보를 모아야 하므로 내부 pooling은 필수
         )
 
     def forward(self, x):
+        # x: (B, 1, 128, 512)
         x = self.features(x)
-        x = self.global_pool(x)
+        # x: (B, 512, 8, 32)
+        x = self.pool(x)
+        # x: (B, 512, 4, 4)
         out = self.classifier(x)
         return out

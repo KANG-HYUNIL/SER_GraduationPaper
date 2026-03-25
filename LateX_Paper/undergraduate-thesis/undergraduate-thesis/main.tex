@@ -74,7 +74,30 @@
 % 你也可以选用自己的喜欢的其他宏包，如 minted；
 % 然而由于 minted 依赖 Python 的 Pygments 库作为外部依赖，因此出于模板的简洁程度考虑，我们没有提供 minted 进行代码块书写的示例。
 \usepackage{listings}
+\usepackage{pdflscape}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{tabularx}
+\usepackage{multirow}
 
+% --- 댓글 시스템 설정 (todonotes, pdfcomment) ---
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{pdfcomment}
+
+\newif\ifdraft
+\drafttrue % 댓글을 보려면 \drafttrue, 숨기려면 \draftfalse
+
+\ifdraft
+  \newcommand{\cmt}[1]{\todo[color=yellow!40]{#1}}
+  \newcommand{\cmti}[1]{\todo[inline,color=yellow!40]{#1}}
+  \newcommand{\pdfc}[1]{\pdfcomment{#1}}
+\else
+  \newcommand{\cmt}[1]{}
+  \newcommand{\cmti}[1]{}
+  \newcommand{\pdfc}[1]{}
+\fi
+% ------------------------------------------
 
 % 大部分关于参考文献样式的修改，都可以通过此处的选项进行配置。
 % 详情请搜索「biblatex-gb7714-2015 文档」进行阅读。

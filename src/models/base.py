@@ -25,14 +25,18 @@ class BaselineCNN(nn.Module):
             
         self.features = nn.Sequential(*layers)
         
-        # Global Average Pooling to handle variable time lengths
-        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+        # Spatial Attention 모듈 추가 (기존 베이스라인에 선택적 추가 가능하도록 구성)
+        self.spatial_attn = SpatialAttention() if cfg.model.get("use_spatial", False) else nn.Identity()
+
+        # Global Average Pooling (1x1)은 시공간 정보를 모두 뭉개버리므로 가급적 지양.
+        # 고정 해상도(8x32)를 최대한 활용하기 위해 pooling 사이즈를 키우거나 Flatten을 사용함.
+        self.pool = nn.AdaptiveAvgPool2d((4, 4)) # 8x32 -> 4x4 정도로 압축하여 정보 손실 최소화
         
         # Classifier Head
         self.classifier = nn.Sequential(
             nn.Flatten(),
             nn.Dropout(dropout_prob),
-            nn.Linear(hidden_dims[-1], num_classes)
+            nn.Linear(hidden_dims[-1] * 4 * 4, num_classes) # Pooled 사이즈 반영 (512 * 4 * 4)
         )
         
     def _build_block(self, in_c, out_c):
@@ -44,13 +48,14 @@ class BaselineCNN(nn.Module):
         )
 
     def forward(self, x):
-        # x shape: (Batch, 1, n_mels, Time)
+        # x shape: (Batch, 1, 128, 512)
         x = self.features(x)
-        # x shape: (Batch, Last_Dim, H', W')
+        # x shape: (Batch, 512, 8, 32)
         
-        x = self.global_pool(x)
-        # x shape: (Batch, Last_Dim, 1, 1)
+        x = self.spatial_attn(x) # Spatial Attention 적용
+        
+        x = self.pool(x)
+        # x shape: (Batch, 512, 4, 4)
         
         out = self.classifier(x)
-        # out shape: (Batch, Num_Classes)
         return out

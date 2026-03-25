@@ -18,6 +18,9 @@ class AudioPipeline:
         self.hop_length = cfg.hop_length
         self.target_length = int(self.sample_rate * self.duration)
         self.normalize = cfg.normalize
+        # Resizing Resolution(고정 해상도) 설정
+        self.resize_height = cfg.get("resize_height", 128)
+        self.resize_width = cfg.get("resize_width", 512)
 
         self.mel_spectrogram = T.MelSpectrogram(
             sample_rate=self.sample_rate,
@@ -84,4 +87,20 @@ class AudioPipeline:
             std = log_mel_spec.std()
             log_mel_spec = (log_mel_spec - mean) / (std + 1e-6)
 
-        return log_mel_spec
+        # 7. Bicubic Resizing (고정된 해상도로 변환)
+        # 패딩 대신 보간법을 사용하여 신호의 맥락을 유지하면서 규격화합니다.
+        # F.interpolate는 4D (Batch, Channel, Height, Width) 입력을 기대하므로 배치 차원 추가
+        # log_mel_spec: (Channels, n_mels, TimeFrames) -> (1, Channels, n_mels, TimeFrames)
+        log_mel_spec = log_mel_spec.unsqueeze(0)
+        
+        # Bicubic 보간법 적용 (시간축 왜곡 최소화)
+        log_mel_spec = F.interpolate(
+            log_mel_spec, 
+            size=(self.resize_height, self.resize_width), 
+            mode='bicubic', 
+            align_corners=False
+        )
+        
+        # 다시 원래 차원으로 복구: (Channels, n_mels, TimeFrames)
+        # 결과물은 항상 (1, 128, 512) 형태가 됩니다.
+        return log_mel_spec.squeeze(0)
