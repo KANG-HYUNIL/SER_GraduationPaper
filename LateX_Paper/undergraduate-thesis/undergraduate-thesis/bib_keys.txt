@@ -1,0 +1,246 @@
+﻿
+% @article{yuFeiJiZongTiDuoXueKeSheJiYouHuaDeXianZh
+uangYuFaZhanFangXiang2008,
+%   title = {飞机总体多学科设计优化的现状与发展方向},
+%   journaltitle = {南京航空航天大学学报},
+% @article{Hajela2012Application,
+%   title={Application of Global Sensitivity Equati
+ons in Multidisciplinary Aircraft Synthesis},
+%   title={全唐五代诗格会考},
+%   title={Introduction to information systems},
+%     title = {综合湿地管理: 综合湿地管理国际研讨会论文集},
+%   title={植物开花研究},
+%   booktitle = {植物科学进展},
+%   title = {嵌入式单片机系统设计},
+%   title = {Multidisciplinary Design Using Collabo
+rative Optimization},
+%   title = {核反应堆压力容器的LBB分析},
+%   title = {Optimization by Decomposition: A Step 
+from Hierarchic to Non-Hierarchic Systems},
+%   title = {一种温热外敷药制备方案},
+%   title={全国信息与文献标准化技术委员会. 文献著录: 第4部分$\,$非书资料: GB/
+T 3792.4-2009},
+%   title={创造学习的思路},
+%   title = {毕业设计(论文)规范化管理与培养学生综合素质},
+@article{liu2023dual,
+  title = {Dual-TBNet: Improving the Robustness of 
+Speech Features via Dual-Transformer-BiLSTM for Spe
+ech Emotion Recognition},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[1]}
+@article{zhang2022enhancing,
+  title = {Enhancing Segment-Based Speech Emotion R
+ecognition by Iterative Self-Learning},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[2]}
+@article{zhang2021speech,
+  title = {Speech Emotion Recognition Considering N
+onverbal Vocalization in Affective Conversations},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[3]}
+@article{song2020transfer,
+  title = {Transfer Sparse Discriminant Subspace Le
+arning for Cross-Corpus Speech Emotion Recognition}
+,
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[4]}
+@article{triantafyllopoulos2024selective,
+  title = {Selective Acoustic Feature Enhancement f
+or Speech Emotion Recognition With Noisy Speech},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[5]}
+@article{latif2023chunk,
+  title = {Chunk-Level Speech Emotion Recognition: 
+A General Framework of Sequence-to-One Dynamic Temp
+oral Modeling},
+  journaltitle = {IEEE Transactions on Affective Co
+mputing},
+  note = {[6]}
+@article{song2024unsupervised,
+  title = {Unsupervised Cross-Corpus Speech Emotion
+ Recognition Using a Multi-Source Cycle-GAN},
+  journaltitle = {IEEE Transactions on Affective Co
+mputing},
+  note = {[7]}
+@article{triantafyllopoulos2024end,
+  title = {End-to-End Label Uncertainty Modeling in
+ Speech Emotion Recognition Using Bayesian Neural N
+etworks and Label Distribution Learning},
+  journaltitle = {IEEE Transactions on Affective Co
+mputing},
+  note = {[8]}
+@article{song2020nonnegative,
+  title = {Nonnegative Matrix Factorization Based T
+ransfer Subspace Learning for Cross-Corpus Speech E
+motion Recognition},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[9]}
+@inproceedings{satt2018speech,
+  title = {Speech Emotion Recognition Using Semi-Su
+pervised Learning with Ladder Networks},
+  booktitle = {2018 First Asian Conference on Affec
+tive Computing and Intelligent Interaction (ACII As
+ia)},
+  note = {[10]}
+@article{pappagari2023music,
+  title = {Music Theory-Inspired Acoustic Represent
+ation for Speech Emotion Recognition},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[11]}
+@article{gan2022multi,
+  title = {Multi-Classifier Interactive Learning fo
+r Ambiguous Speech Emotion Recognition},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[12]}
+@article{fan2022isnet,
+  title = {ISNet: Individual Standardization Networ
+k for Speech Emotion Recognition},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[13]}
+@article{hou2021multi,
+  title = {Multi-View Speech Emotion Recognition Vi
+a Collective Relation Construction},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[14]}
+@article{liu2023discriminative,
+  title = {A Discriminative Feature Representation 
+Method Based on Cascaded Attention Network With Adv
+ersarial Strategy for Speech Emotion Recognition},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[15]}
+@article{lu2022domain,
+  title = {Domain Invariant Feature Learning for Sp
+eaker-Independent Speech Emotion Recognition},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[16]}
+@article{ahn2025multitask,
+  title = {Multitask Transformer for Cross-Corpus S
+peech Emotion Recognition},
+  journaltitle = {IEEE Transactions on Affective Co
+mputing},
+  note = {[17]}
+@inproceedings{thanh2024robust,
+  title = {A Robust Pitch-Fusion Model for Speech E
+motion Recognition in Tonal Languages},
+  booktitle = {ICASSP 2024 - 2024 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[18]}
+@inproceedings{zhang2025efficient,
+  title = {Efficient Finetuning for Dimensional Spe
+ech Emotion Recognition in the Age of Transformers}
+,
+  booktitle = {ICASSP 2025 - 2025 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[19]}
+@inproceedings{chandola2024sercgcn,
+  title = {SERC-GCN: Speech Emotion Recognition in 
+Conversation Using Graph Convolutional Networks},
+  booktitle = {ICASSP 2024 - 2024 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[20]}
+@inproceedings{zou2022speech,
+  title = {Speech Emotion Recognition with Co-Atten
+tion Based Multi-Level Acoustic Information},
+  booktitle = {ICASSP 2022 - 2022 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[21]}
+@inproceedings{peng2021efficient,
+  title = {Efficient Speech Emotion Recognition Usi
+ng Multi-Scale CNN and Attention},
+  booktitle = {ICASSP 2021 - 2021 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[22]}
+@inproceedings{mirsamadi2017automatic,
+  title = {Automatic Speech Emotion Recognition Usi
+ng Recurrent Neural Networks with Local Attention},
+  booktitle = {2017 IEEE International Conference o
+n Acoustics, Speech and Signal Processing (ICASSP)}
+,
+  note = {[23]}
+@article{gao2024adversarial,
+  title = {Adversarial Domain Generalized Transform
+er for Cross-Corpus Speech Emotion Recognition},
+  journaltitle = {IEEE Transactions on Affective Co
+mputing},
+  note = {[24]}
+@inproceedings{zhang2023cnnbigru,
+  title = {CNN-BiGRU Speech Emotion Recognition Bas
+ed on Attention Mechanism},
+  booktitle = {2023 2nd International Conference on
+ Artificial Intelligence and Intelligent Informatio
+n Processing (AIIIP)},
+  note = {[25]}
+@inproceedings{hao2024channel,
+  title = {Channel Attention Scale Feature Fusion w
+ith SwiGLU for Speech Emotion Recognition},
+  booktitle = {2024 5th International Conference on
+ Electronic Communication and Artificial Intelligen
+ce (ICECAI)},
+  note = {[26]}
+@inproceedings{chen2023dwformer,
+  title = {DWFormer: Dynamic Window Transformer for
+ Speech Emotion Recognition},
+  booktitle = {ICASSP 2023 - 2023 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[27]}
+@inproceedings{wang2024speech,
+  title = {Speech Swin-Transformer: Exploring a Hie
+rarchical Transformer with Shifted Windows for Spee
+ch Emotion Recognition},
+  booktitle = {ICASSP 2024 - 2024 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[28]}
+@inproceedings{he2023multiple,
+  title = {Multiple Acoustic Features Speech Emotio
+n Recognition Using Cross-Attention Transformer},
+  booktitle = {ICASSP 2023 - 2023 IEEE Internationa
+l Conference on Acoustics, Speech and Signal Proces
+sing (ICASSP)},
+  note = {[29]}
+@article{ma2023review,
+  title = {A Review of Affective Computing Research
+ Based on Function-Component-Representation Framewo
+rk},
+  journaltitle = {IEEE Transactions on Affective Co
+mputing},
+  note = {[30]}
+@article{raamkumar2023empathetic,
+  title = {Empathetic Conversational Systems: A Rev
+iew of Current Advances, Gaps, and Opportunities},
+  journaltitle = {IEEE Transactions on Affective Co
+mputing},
+  note = {[31]}
+@article{shou2026comprehensive,
+  title = {A Comprehensive Survey on Multi-modal Co
+nversational Emotion Recognition with Deep Learning
+},
+  journaltitle = {ACM Transactions on Information S
+ystems},
+  note = {[32]}
+@article{hou2022multi,
+  title = {Multi-View Speech Emotion Recognition Vi
+a Collective Relation Construction},
+  journaltitle = {IEEE/ACM Transactions on Audio, S
+peech, and Language Processing},
+  note = {[33]}
+
+
