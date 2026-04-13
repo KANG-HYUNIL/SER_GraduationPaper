@@ -28,12 +28,16 @@ def analyze_optuna_study(study, save_dir=None):
     # or saved to disk if save_dir is requested (using plotly's write_image if kaleido is installed)
     if save_dir:
         try:
+            fig_history.write_html(os.path.join(save_dir, "optuna_history.html"))
+            fig_importance.write_html(os.path.join(save_dir, "optuna_importance.html"))
+            fig_contour.write_html(os.path.join(save_dir, "optuna_contour.html"))
+            fig_parallel.write_html(os.path.join(save_dir, "optuna_parallel.html"))
             fig_history.write_image(os.path.join(save_dir, "optuna_history.png"), scale=3)
             fig_importance.write_image(os.path.join(save_dir, "optuna_importance.png"), scale=3)
             fig_contour.write_image(os.path.join(save_dir, "optuna_contour.png"), scale=3)
             fig_parallel.write_image(os.path.join(save_dir, "optuna_parallel.png"), scale=3)
         except Exception as e:
-            print("To save Optuna plots as PNG, you need the 'kaleido' package: pip install kaleido")
+            print("Saved Optuna HTML plots. PNG export needs the 'kaleido' package.")
             print("Error:", e)
             
     return {

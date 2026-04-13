@@ -26,7 +26,7 @@ class BaselineCNN(nn.Module):
         self.features = nn.Sequential(*layers)
         
         # Spatial Attention 모듈 추가 (기존 베이스라인에 선택적 추가 가능하도록 구성)
-        self.spatial_attn = SpatialAttention() if cfg.model.get("use_spatial", False) else nn.Identity()
+        self.spatial_attn = nn.Identity()
 
         # Global Average Pooling (1x1)은 시공간 정보를 모두 뭉개버리므로 가급적 지양.
         # 고정 해상도(8x32)를 최대한 활용하기 위해 pooling 사이즈를 키우거나 Flatten을 사용함.

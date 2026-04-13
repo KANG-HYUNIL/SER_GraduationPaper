@@ -1,24 +1,34 @@
 defaults:
   - data: default
   - model: cnn_baseline
+  - optuna: default
   - _self_
 
 hydra:
   run:
-    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${experiment.name}
   job:
     chdir: true
+
+experiment:
+  name: "${model.name}"
+  family: "${model.name}"
+  tag: ""
 
 train:
   seed: 42
   batch_size: 32
-  epochs: 1
-  learning_rate: 0.0001 # small
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.0
   k_folds: 5
   early_stopping: 10
-  device: "auto" # or "cuda", "cpu"
+  device: "auto"
+  num_workers: 0
+  objective_metric: "f1_macro"
+  save_best_to_root: true
 
 inference:
-  audio_path: ???                      # Required
-  model_checkpoint: ???                # Optional (Will default to saved_models/best_model_{model.name}.pt if not set)
+  audio_path: ???
+  model_checkpoint: ???
   output_dir: "inference_outputs"
