@@ -8,6 +8,8 @@ import hydra.utils
 import mlflow
 import optuna
 from omegaconf import DictConfig, OmegaConf, open_dict
+from optuna.study import MaxTrialsCallback
+from optuna.trial import TrialState
 
 from src.engine.trainer import run_cross_validation_experiment, sanitize_experiment_name
 from src.utils.viz_optuna import analyze_optuna_study
@@ -28,16 +30,14 @@ def ensure_storage_path(storage_uri: str, root_dir: Path) -> str:
 
 def suggest_monotonic_hidden_dims(trial, choices, min_blocks, max_blocks):
     num_blocks = trial.suggest_int("cnn_num_blocks", min_blocks, max_blocks)
-    hidden_dims = []
-    min_choice_index = 0
+    sampled_dims = [
+        trial.suggest_categorical(f"cnn_hidden_dim_{block_idx + 1}", choices)
+        for block_idx in range(max_blocks)
+    ]
+    hidden_dims = sampled_dims[:num_blocks]
 
-    for block_idx in range(num_blocks):
-        choice = trial.suggest_categorical(
-            f"cnn_hidden_dim_{block_idx + 1}",
-            choices[min_choice_index:],
-        )
-        hidden_dims.append(choice)
-        min_choice_index = choices.index(choice)
+    if any(curr < prev for prev, curr in zip(hidden_dims, hidden_dims[1:])):
+        raise optuna.TrialPruned("CNN hidden dims must be monotonic non-decreasing.")
 
     return hidden_dims
 
@@ -47,16 +47,20 @@ def suggest_logmel_params(trial, cfg):
     sample_rate = cfg.data.sample_rate
 
     n_fft = trial.suggest_categorical("logmel_n_fft", list(space.n_fft_choices))
-    hop_length = trial.suggest_categorical("logmel_hop_length", [v for v in space.hop_length_choices if v < n_fft])
+    hop_length = trial.suggest_categorical("logmel_hop_length", list(space.hop_length_choices))
     n_mels = trial.suggest_categorical("logmel_n_mels", list(space.n_mels_choices))
-    duration = trial.suggest_categorical("logmel_duration", list(space.duration_choices))
     resize_height = trial.suggest_categorical("logmel_resize_height", list(space.resize_height_choices))
     resize_width = trial.suggest_categorical("logmel_resize_width", list(space.resize_width_choices))
     normalize = trial.suggest_categorical("logmel_normalize", list(space.normalize_choices))
 
+    if hop_length >= n_fft:
+        raise optuna.TrialPruned("Hop length must be smaller than n_fft.")
+
     f_max_upper = sample_rate / 2
-    f_max_choices = [float(v) for v in (4000.0, 6000.0, 7000.0, 8000.0) if v <= f_max_upper]
-    f_min_choices = [0.0, 20.0, 50.0]
+    f_max_choices = [float(v) for v in space.f_max_choices if float(v) <= f_max_upper]
+    f_min_choices = [float(v) for v in space.f_min_choices]
+    if not f_max_choices:
+        raise optuna.TrialPruned("No valid f_max choices under Nyquist limit.")
     f_min = trial.suggest_categorical("logmel_f_min", f_min_choices)
     f_max = trial.suggest_categorical("logmel_f_max", f_max_choices)
     if f_min >= f_max:
@@ -66,7 +70,6 @@ def suggest_logmel_params(trial, cfg):
         "n_fft": n_fft,
         "hop_length": hop_length,
         "n_mels": n_mels,
-        "duration": duration,
         "resize_height": resize_height,
         "resize_width": resize_width,
         "normalize": normalize,
@@ -82,6 +85,8 @@ def validate_input_resolution(hidden_dims, resize_height, resize_width):
 
 def apply_trial_params(base_cfg: DictConfig, trial: optuna.Trial) -> DictConfig:
     cfg = OmegaConf.create(OmegaConf.to_container(base_cfg, resolve=True))
+    if "trial_overrides" in cfg.optuna and cfg.optuna.trial_overrides:
+        cfg = OmegaConf.merge(cfg, cfg.optuna.trial_overrides)
 
     cnn_space = cfg.optuna.search_space.cnn
     train_space = cfg.optuna.search_space.train
@@ -179,7 +184,14 @@ def main(cfg: DictConfig):
         return float(result["summary_metrics"][cfg.optuna.metric])
 
     with mlflow.start_run(run_name=f"{cfg.optuna.study_name}_study"):
-        study.optimize(objective, n_trials=int(cfg.optuna.trials), timeout=cfg.optuna.timeout, n_jobs=1)
+        target_complete_trials = int(cfg.optuna.trials)
+        study.optimize(
+            objective,
+            n_trials=None,
+            timeout=cfg.optuna.timeout,
+            n_jobs=1,
+            callbacks=[MaxTrialsCallback(target_complete_trials, states=(TrialState.COMPLETE,))],
+        )
 
         best_payload = {
             "best_trial": study.best_trial.number,

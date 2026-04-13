@@ -165,6 +165,18 @@ def ensure_artifact_dir(path: Path) -> Path:
     return path
 
 
+def resolve_folds_to_run(cfg) -> int:
+    total_folds = int(cfg.train.k_folds)
+    folds_to_run = cfg.train.get("folds_to_run")
+    if folds_to_run is None:
+        return total_folds
+
+    folds_to_run = int(folds_to_run)
+    if folds_to_run < 1 or folds_to_run > total_folds:
+        raise ValueError(f"train.folds_to_run must be between 1 and {total_folds}, got {folds_to_run}.")
+    return folds_to_run
+
+
 def save_fold_learning_curve(history, artifact_dir: Path, fold: int) -> str:
     save_path = artifact_dir / f"fold_{fold}_learning_curve.png"
     plot_learning_curves(
@@ -257,7 +269,12 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
     y_dummy = np.array(dataset.labels)
     groups = np.array(dataset.actor_ids)
 
-    splitter = GroupKFold(n_splits=cfg.train.k_folds)
+    total_folds = int(cfg.train.k_folds)
+    folds_to_run = resolve_folds_to_run(cfg)
+    if folds_to_run < total_folds:
+        logger.info("Running partial cross-validation: %s/%s folds", folds_to_run, total_folds)
+
+    splitter = GroupKFold(n_splits=total_folds)
     fold_metrics = []
     global_true = []
     global_pred = []
@@ -266,7 +283,10 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
     fold_best_paths = []
 
     for fold, (train_idx, val_idx) in enumerate(splitter.split(X_dummy, y_dummy, groups=groups), start=1):
-        logger.info("Starting fold %s/%s", fold, cfg.train.k_folds)
+        if fold > folds_to_run:
+            break
+
+        logger.info("Starting fold %s/%s", fold, folds_to_run)
         train_loader, val_loader = build_dataloaders(cfg, dataset, train_idx, val_idx)
 
         model = model_class(cfg).to(device)

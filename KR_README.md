@@ -159,7 +159,6 @@ flowchart TD
 
 설정 위치: `src/configs/optuna/default.yaml`
 
-- `logmel.duration_choices`
   - 음성 길이 후보
 - `logmel.n_mels_choices`
   - mel filter 개수 후보
@@ -183,7 +182,6 @@ trial에서 추가로 샘플링되는 파라미터:
 
 의미:
 
-- `duration`
   - 입력 음성 길이를 결정
 - `n_mels`
   - 주파수 해상도와 모델 입력 높이에 영향
@@ -420,7 +418,6 @@ python -m src.launch_optuna_workers experiment.family=cnn_baseline experiment.na
 
 ### Log-Mel
 
-- duration: `[2.0, 2.5, 3.0, 3.5, 4.0]`
 - n_mels: `[64, 80, 96, 128, 160]`
 - n_fft: `[512, 1024, 2048]`
 - hop_length: `[160, 256, 320, 512]` 중 `hop_length < n_fft`
@@ -639,4 +636,167 @@ python -m src.train experiment.name=cnn_manual_5blocks model.hidden_dims=[64,96,
 - Optuna 결과 leaderboard csv 추가
 - best trial config를 별도 yaml로 export
 - MLflow에서 trial 비교 대시보드 정리
+---
 
+## baseline 구축 후 할만한 실험방향
+
+아래 항목은 **CNN baseline + log-mel baseline이 정리된 다음** 진행할 만한 후속 실험이다.
+
+전제 조건:
+
+- RNN / GRU / LSTM 계열은 사용하지 않는다.
+- 최소한 backbone 안에 **Transformer 계열이 반드시 포함**되어야 한다.
+- 그냥 Transformer만 쓰는 것으로 끝내지 말고, **가변길이 처리 방식** 또는 **pooling / token 설계 / local-global 결합 방식**에서 논문용 차별점을 만들어야 한다.
+- zero padding, batch zero padding, waveform crop/truncate를 쓰지 않는 방향을 우선 고려한다.
+- 현재 baseline처럼 시간축을 강제로 `resize_width`로 맞추는 방식은 baseline용으로는 가능하지만, 후속 논문 실험에서는 **가변 길이 정보를 보존하는 방향**이 더 타당하다.
+
+가변길이 처리 원칙:
+
+- 가장 단순한 방식은 **sample-wise forward + gradient accumulation**이다.
+  - 각 샘플의 time frame 수를 그대로 유지한다.
+  - 배치는 tensor stack 대신 list로 받고, loss를 누적한 뒤 optimizer step을 수행한다.
+- 그다음 대안은 **exact-length bucketing**이다.
+  - 동일하거나 거의 동일한 frame 길이끼리만 batch를 구성한다.
+  - zero padding 없이도 일부 mini-batch 병렬화가 가능하다.
+- PyTorch `NestedTensor`는 ragged input을 다루는 공식 방향이지만 아직 prototype 성격이 강하므로, 논문 메인 실험보다는 보조 실험 또는 구현 검토용으로 두는 편이 안전하다.
+
+### 실험 1. Variable-Length AST Encoder + Attentive Statistics Pooling
+
+핵심 아이디어:
+
+- log-mel을 고정 width 이미지처럼 강제 resize하지 않고, **가변 길이 spectrogram token sequence**로 바꾼다.
+- backbone은 **encoder-only Transformer(AST 스타일)** 로 둔다.
+- 마지막 분류 head는 단순 CLS token 대신 **Attentive Statistics Pooling(ASP)** 으로 바꾼다.
+
+논문 포인트:
+
+- baseline 대비 차별점이 명확하다.
+  - baseline: CNN + fixed resize
+  - 제안: Transformer encoder + variable-length token sequence + attentive statistics pooling
+- 감정 단서는 전체 구간에 균등하게 있지 않을 수 있으므로, 평균 pooling보다 attention 기반 pooling이 더 설득력 있다.
+- 평균뿐 아니라 분산(std)까지 쓰는 pooling은 utterance-level emotion dynamics를 더 잘 담을 가능성이 있다.
+
+구현 포인트:
+
+- `resize_width`를 없애고 시간축 frame 수를 유지한다.
+- spectrogram을 patchify해서 token sequence로 만든다.
+- token 수는 발화 길이에 따라 달라진다.
+- batching은 padding 없이 list 기반 또는 exact-length bucket 기반으로 처리한다.
+- 출력 집계는 `mean` 대신 `weighted mean + weighted std` 계열로 설계한다.
+
+추천 차별화 포인트:
+
+- scalar attention이 아니라 **multi-head attentive statistics pooling**
+- frame importance뿐 아니라 **channel-wise/vector-wise attentive pooling**
+- 길이 정보(length prior) 또는 energy/confidence를 pooling score에 함께 넣는 방식
+
+### 실험 2. CNN Front-End + Conformer Encoder + Attentive Pooling
+
+핵심 아이디어:
+
+- 완전 pure Transformer만 고집하지 말고, 앞단에 **얕은 CNN stem**을 둬서 local spectral pattern을 먼저 추출한다.
+- 그 뒤 backbone은 **Conformer encoder** 로 두어 local dependency와 global dependency를 함께 본다.
+- 마지막은 attentive pooling 또는 statistics pooling으로 utterance embedding을 만든다.
+
+논문 포인트:
+
+- “Transformer 기반이면서도 CNN의 local inductive bias를 앞단에 남긴 hybrid 구조”라는 점이 명확하다.
+- 감정 인식은 짧은 burst, formant 변화, 에너지 패턴 같은 local cue와 긴 문맥 둘 다 중요하므로, CNN + Conformer 조합의 명분이 강하다.
+- baseline CNN보다 문맥 modeling이 강하고, pure Transformer보다 local pattern 추출 명분이 좋다.
+
+구현 포인트:
+
+- CNN stem은 stride를 크게 쓰지 말고, time resolution을 과도하게 잃지 않게 설계한다.
+- 그 뒤 time-major token으로 reshape해서 Conformer encoder에 넣는다.
+- pooling head는 단순 FC보다 attentive/statistics pooling 쪽이 가변길이 utterance 집계에 더 자연스럽다.
+
+추천 차별화 포인트:
+
+- CNN stem 뒤에 **multi-scale temporal tokenization**
+- Conformer block 일부를 **emotion-guided attention** 또는 **local-window + global token mixing**으로 변형
+- 마지막 pooling에서 **high-arousal cue에 더 민감한 weighting** 설계
+
+### 실험 3. MelTrans 계열 확장: Multi-Scale Patch Transformer + Cross-Scale Fusion
+
+핵심 아이디어:
+
+- 단일 patch size만 쓰지 말고, **fine patch** 와 **coarse patch** 두 흐름을 동시에 만든다.
+- backbone은 Transformer encoder를 유지하되, 중간에 **cross-attention 또는 gated fusion**으로 두 scale을 합친다.
+- 최종적으로 variable-length token sequence를 pooling해서 분류한다.
+
+논문 포인트:
+
+- 감정 신호는 짧은 phonetic cue와 긴 prosodic cue가 섞여 있으므로, 단일 scale보다 multi-scale token 설계가 더 자연스럽다.
+- “Transformer 기반 + patch scale 다중화 + cross-scale fusion”은 논문에서 구조적 차별점으로 쓰기 좋다.
+
+구현 포인트:
+
+- 같은 spectrogram에 대해 patch stride/size를 두 종류로 만든다.
+- 두 토큰 스트림을 별도 encoder 또는 shared encoder에 통과시킨다.
+- 중간 fusion은 concat보다 cross-attention이 더 설득력 있다.
+
+추천 차별화 포인트:
+
+- coarse token이 전체 prosody를 보고, fine token이 local emotion burst를 본다는 해석
+- scale별 attention map 시각화
+- ASP head와 결합하여 multi-scale pooled statistics 비교
+
+### 실험 4. Hierarchical / Windowed Transformer for Long Variable-Length Utterances
+
+핵심 아이디어:
+
+- time 길이가 길어질수록 full attention 비용이 커지므로, **windowed attention + hierarchical token merging** 구조를 쓴다.
+- backbone은 Transformer 기반을 유지하되, token 수를 단계적으로 줄여서 long utterance를 다룬다.
+
+논문 포인트:
+
+- padding/cropping 없이 길이가 긴 샘플까지 처리하려면 효율 문제가 바로 생긴다.
+- 따라서 단순 정확도뿐 아니라 **가변길이 효율성(memory/latency)** 까지 실험 축으로 삼을 수 있다.
+
+구현 포인트:
+
+- 초기에는 local window attention
+- 상위 layer로 갈수록 token merge 또는 segment merge
+- 마지막은 global token 또는 attentive pooling으로 utterance representation 생성
+
+추천 차별화 포인트:
+
+- merge 기준을 단순 평균이 아니라 **energy / attention saliency 기반**으로 바꾸기
+- 감정적으로 덜 중요한 구간은 더 공격적으로 merge하는 방식
+
+### 우선순위 추천
+
+논문용으로 가장 현실적인 순서는 아래가 좋다.
+
+1. **Variable-Length AST Encoder + ASP**
+   - baseline 대비 차별점이 가장 명확하고, 구현 난이도도 상대적으로 통제 가능하다.
+2. **CNN Front-End + Conformer Encoder + Attentive Pooling**
+   - local-global 결합 명분이 강하고, “Transformer 기반 hybrid”라는 논문 서사가 좋다.
+3. **Multi-Scale Patch Transformer**
+   - 성능이 잘 나오면 논문 차별점이 가장 예쁘게 보일 가능성이 있다.
+
+### 권장 실험 설계 메모
+
+- baseline과의 공정 비교를 위해 front-end feature는 처음에는 동일한 log-mel에서 시작한다.
+- 후속 실험에서는 `resize_width`를 제거하고 시간축 가변 길이를 보존하는 것이 핵심이다.
+- 분류 head는 단순 FC만 두기보다, variable-length utterance를 fixed embedding으로 집계하는 pooling 모듈을 실험 축으로 넣는 것이 좋다.
+- 단순 accuracy만 보지 말고 `f1_macro`, `uar`, 길이별 성능 편차, 짧은 발화/긴 발화 성능 분리 평가도 같이 본다.
+
+### 참고 문헌 / 출발점
+
+- AST: Yuan Gong et al., *AST: Audio Spectrogram Transformer*  
+  https://huggingface.co/docs/transformers/v4.38.2/model_doc/audio-spectrogram-transformer
+- Conformer: Anmol Gulati et al., *Conformer: Convolution-augmented Transformer for Speech Recognition*  
+  https://arxiv.org/abs/2005.08100
+- MelTrans: Hui Li et al., *Mel-Spectrogram Relationship-Learning for Speech Emotion Recognition via Transformers*  
+  https://www.mdpi.com/1424-8220/24/17/5506
+- Attentive Statistics Pooling: Koji Okabe et al., *Attentive Statistics Pooling for Deep Speaker Embedding*  
+  https://www.isca-archive.org/interspeech_2018/okabe18_interspeech.pdf
+- PyTorch Nested Tensor tutorial  
+  https://docs.pytorch.org/tutorials/unstable/nestedtensor.html
+
+주의:
+
+- 위 NestedTensor 문서는 padding 없는 variable-length 처리의 공식 방향을 보기 위한 참고자료다.
+- 하지만 본 프로젝트 후속 실험에서는 **RNN/GRU를 쓰지 않는다**.
+- 구현 안정성을 우선하면, 1차 실험은 list-batch + gradient accumulation 또는 exact-length bucketing이 더 현실적이다.

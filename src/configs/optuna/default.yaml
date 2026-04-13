@@ -1,8 +1,8 @@
 enabled: false
-study_name: "cnn_logmel_baseline"
-storage: "sqlite:///optuna_studies/cnn_logmel_baseline.db"
+study_name: "cnn_logmel_baseline_v2"
+storage: "sqlite:///optuna_studies/cnn_logmel_baseline_v2.db"
 direction: "maximize"
-trials: 20
+trials: 20  # Target number of COMPLETE trials; PRUNED/FAIL are not counted.
 timeout: null
 sampler_seed: 42
 pruner:
@@ -10,6 +10,9 @@ pruner:
 parallel_workers: 1
 trials_per_worker: 10
 metric: "f1_macro"
+trial_overrides:
+  train:
+    folds_to_run: 1
 search_space:
   cnn:
     min_blocks: 3
@@ -24,10 +27,11 @@ search_space:
     weight_decay_max: 1.0e-3
     batch_choices: [16, 32, 64]
   logmel:
-    duration_choices: [2.0, 2.5, 3.0, 3.5, 4.0]
     n_mels_choices: [64, 80, 96, 128, 160]
     n_fft_choices: [512, 1024, 2048]
     hop_length_choices: [160, 256, 320, 512]
     normalize_choices: [true, false]
     resize_height_choices: [64, 96, 128, 160]
     resize_width_choices: [256, 384, 512, 640]
+    f_min_choices: [0.0, 20.0, 50.0]
+    f_max_choices: [4000.0, 6000.0, 7000.0, 8000.0]
