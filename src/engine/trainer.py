@@ -196,7 +196,12 @@ def save_global_artifacts(result, artifact_dir: Path):
     plot_roc_pr_curves(y_true, y_prob, EMOTION_NAMES, save_path=str(roc_pr_path))
 
     tsne_path = artifact_dir / "global_tsne_plot.png"
-    plot_tsne_embeddings(features, y_true, EMOTION_NAMES, save_path=str(tsne_path))
+    tsne_saved = False
+    try:
+        plot_tsne_embeddings(features, y_true, EMOTION_NAMES, save_path=str(tsne_path))
+        tsne_saved = True
+    except Exception as exc:
+        logger.warning("Skipping t-SNE artifact generation due to plotting error: %s", exc)
 
     metrics_path = artifact_dir / "summary_metrics.json"
     with open(metrics_path, "w", encoding="utf-8") as fp:
@@ -206,14 +211,16 @@ def save_global_artifacts(result, artifact_dir: Path):
     with open(fold_metrics_path, "w", encoding="utf-8") as fp:
         json.dump(result["fold_metrics"], fp, indent=2)
 
-    return [
+    artifact_paths = [
         str(confusion_path),
         str(calibration_path),
         str(roc_pr_path),
-        str(tsne_path),
         str(metrics_path),
         str(fold_metrics_path),
     ]
+    if tsne_saved:
+        artifact_paths.append(str(tsne_path))
+    return artifact_paths
 
 
 def copy_best_model_to_root(cfg, best_model_path: str) -> str | None:
