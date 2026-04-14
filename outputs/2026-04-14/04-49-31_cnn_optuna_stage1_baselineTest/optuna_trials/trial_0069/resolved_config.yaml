@@ -1,0 +1,119 @@
+data:
+  dataset_path: C:\Users\hik88\Desktop\BIT_Uni\GraduationPaper\Project\SER_GraduationPaper/src/$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 80
+  n_fft: 1024
+  hop_length: 160
+  f_min: 20.0
+  f_max: 6000.0
+  normalize: true
+  resize_height: 96
+  resize_width: 512
+model:
+  name: cnn_baseline
+  hidden_dims:
+  - 32
+  - 32
+  - 160
+  dropout: 0.2824540357208116
+optuna:
+  enabled: false
+  study_name: cnn_logmel_baseline_v2
+  storage: sqlite:///optuna_studies/cnn_logmel_baseline_v2.db
+  direction: maximize
+  trials: 30
+  timeout: null
+  sampler_seed: 42
+  pruner:
+    warmup_steps: 5
+  parallel_workers: 1
+  trials_per_worker: 10
+  metric: f1_macro
+  trial_overrides:
+    train:
+      folds_to_run: 1
+  search_space:
+    cnn:
+      min_blocks: 3
+      max_blocks: 6
+      channel_choices:
+      - 32
+      - 64
+      - 96
+      - 128
+      - 160
+      - 192
+      - 256
+      - 384
+      - 512
+      dropout_min: 0.1
+      dropout_max: 0.5
+    train:
+      lr_min: 0.0001
+      lr_max: 0.003
+      weight_decay_min: 1.0e-06
+      weight_decay_max: 0.001
+      batch_choices:
+      - 16
+      - 32
+      - 64
+    logmel:
+      n_mels_choices:
+      - 64
+      - 80
+      - 96
+      - 128
+      - 160
+      n_fft_choices:
+      - 512
+      - 1024
+      - 2048
+      hop_length_choices:
+      - 160
+      - 256
+      - 320
+      - 512
+      normalize_choices:
+      - true
+      - false
+      resize_height_choices:
+      - 64
+      - 96
+      - 128
+      - 160
+      resize_width_choices:
+      - 256
+      - 384
+      - 512
+      - 640
+      f_min_choices:
+      - 0.0
+      - 20.0
+      - 50.0
+      f_max_choices:
+      - 4000.0
+      - 6000.0
+      - 7000.0
+      - 8000.0
+experiment:
+  name: cnn_baseline_trial_0069
+  family: cnn_baseline
+  tag: ''
+train:
+  seed: 42
+  batch_size: 16
+  epochs: 30
+  learning_rate: 0.00026754909789865013
+  weight_decay: 0.00011950146050962808
+  k_folds: 5
+  folds_to_run: 1
+  early_stopping: 10
+  device: auto
+  num_workers: 0
+  objective_metric: f1_macro
+  save_best_to_root: false
+inference:
+  audio_path: ???
+  model_checkpoint: ???
+  output_dir: inference_outputs

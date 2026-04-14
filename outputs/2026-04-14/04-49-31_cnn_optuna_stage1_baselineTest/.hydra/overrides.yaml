@@ -1,0 +1,2 @@
+- optuna.trials=30
+- experiment.name=cnn_optuna_stage1_baselineTest

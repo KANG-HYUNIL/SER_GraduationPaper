@@ -1,0 +1,68 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "cnn_baseline",
+      "hidden_dims": [
+        32,
+        64,
+        256,
+        512
+      ],
+      "dropout": 0.2927585318653319
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper/src/$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 64,
+      "n_fft": 1024,
+      "hop_length": 512,
+      "f_min": 50.0,
+      "f_max": 7000.0,
+      "normalize": true,
+      "resize_height": 64,
+      "resize_width": 640
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 16,
+      "epochs": 30,
+      "learning_rate": 0.00015588417620542627,
+      "weight_decay": 6.296673928975076e-06,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "auto",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.58,
+    "f1_macro": 0.5703554306568045,
+    "f1_weighted": 0.5803089505953284,
+    "uar": 0.58125,
+    "war": 0.58,
+    "mcc": 0.5256854570940159,
+    "kappa": 0.5199390398780799,
+    "ece": 0.07181042909622193,
+    "fold_accuracy_mean": 0.58,
+    "fold_f1_macro_mean": 0.5703554306568045
+  },
+  "best_fold": {
+    "accuracy": 0.58,
+    "f1_macro": 0.5703554306568045,
+    "f1_weighted": 0.5803089505953284,
+    "uar": 0.58125,
+    "war": 0.58,
+    "mcc": 0.5256854570940159,
+    "kappa": 0.5199390398780799,
+    "ece": 0.07181042909622193,
+    "loss": 1.5268565861384074,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0011\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}
