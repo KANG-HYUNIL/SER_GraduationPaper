@@ -1,4 +1,5 @@
 import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,14 @@ def main(cfg: DictConfig):
     worker_count = int(cfg.optuna.parallel_workers)
     trials_per_worker = int(cfg.optuna.trials_per_worker)
     root_dir = Path(hydra.utils.get_original_cwd())
+    storage = str(cfg.optuna.storage)
+
+    if worker_count > 1 and os.name == "nt" and storage.startswith("sqlite:///"):
+        raise SystemExit(
+            "Parallel Optuna workers are disabled on Windows when using SQLite storage. "
+            "Use a single worker, switch to a server-based Optuna storage backend, "
+            "or activate the environment first and launch runs sequentially."
+        )
 
     processes = []
     for worker_id in range(worker_count):

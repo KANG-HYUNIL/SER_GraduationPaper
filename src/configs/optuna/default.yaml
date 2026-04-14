@@ -10,6 +10,10 @@ pruner:
 parallel_workers: 1
 trials_per_worker: 10
 metric: "f1_macro"
+visualization:
+  save_html: true
+  save_png: false
+  png_scale: 3
 trial_overrides:
   train:
     folds_to_run: 1

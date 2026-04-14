@@ -303,7 +303,14 @@ def main(cfg: DictConfig):
             json.dump(best_payload, fp, indent=2)
 
         mlflow.log_artifact(str(best_path))
-        analyze_optuna_study(study, save_dir="optuna_plots")
+        viz_cfg = cfg.optuna.get("visualization")
+        analyze_optuna_study(
+            study,
+            save_dir="optuna_plots",
+            save_html=bool(viz_cfg.get("save_html", True)) if viz_cfg else True,
+            save_png=bool(viz_cfg.get("save_png", False)) if viz_cfg else False,
+            png_scale=int(viz_cfg.get("png_scale", 3)) if viz_cfg else 3,
+        )
         for artifact in Path("optuna_plots").glob("*"):
             mlflow.log_artifact(str(artifact))
 

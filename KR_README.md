@@ -263,6 +263,10 @@ Optuna 기본 설정은 `src/configs/optuna/default.yaml`에 있다.
   - Optuna objective 반환 metric
 - `pruner.warmup_steps: 5`
   - 초반 5 step은 pruning 완화
+- `visualization.save_html: true`
+  - Optuna Plotly HTML 산출물 저장
+- `visualization.save_png: false`
+  - Windows + kaleido/chrome 임시 파일 권한 문제를 피하기 위해 PNG export 기본 비활성화
 
 주의:
 
@@ -397,6 +401,10 @@ python -m src.launch_optuna_workers experiment.family=cnn_baseline experiment.na
 - GPU가 1개뿐이면 worker 수를 너무 높이지 않는 것이 좋다.
 - worker 수가 많으면 디스크 I/O와 메모리 사용량이 커진다.
 - 현재 launcher는 같은 Python 환경으로 subprocess를 실행한다.
+- Windows에서 기본 `sqlite:///...db` storage를 쓰는 경우 병렬 worker는 비권장이다.
+- 특히 `conda run ...`을 여러 개 병렬로 띄우면 Conda 임시 파일 충돌(`__conda_tmp_*.txt`)이 날 수 있다.
+- Windows 장비에서는 `conda activate grad_paper_ser` 후 `python -m src.optuna_search ...`를 순차 실행하는 방식이 가장 안전하다.
+- 병렬 실행이 꼭 필요하면 SQLite 대신 서버형 storage를 쓰는 편이 낫다.
 
 ---
 
