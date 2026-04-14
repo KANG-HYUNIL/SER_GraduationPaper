@@ -19,7 +19,10 @@ def main(cfg: DictConfig):
         run_name = f"{run_name}_{cfg.experiment.tag}"
 
     with mlflow.start_run(run_name=run_name):
-        mlflow.log_text(OmegaConf.to_yaml(cfg), "resolved_config.yaml")
+        config_path = "resolved_config.yaml"
+        with open(config_path, "w", encoding="utf-8") as fp:
+            fp.write(OmegaConf.to_yaml(cfg))
+        mlflow.log_artifact(config_path)
         result = run_cross_validation_experiment(cfg, artifact_root="artifacts")
         log_result_to_mlflow(cfg, result)
 

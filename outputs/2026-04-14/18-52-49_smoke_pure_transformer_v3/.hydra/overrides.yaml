@@ -1,0 +1,7 @@
+- model=pure_transformer
+- experiment.family=pure_transformer
+- experiment.name=smoke_pure_transformer_v3
+- optuna.trials=2
+- train.epochs=1
+- train.folds_to_run=1
+- train.early_stopping=1

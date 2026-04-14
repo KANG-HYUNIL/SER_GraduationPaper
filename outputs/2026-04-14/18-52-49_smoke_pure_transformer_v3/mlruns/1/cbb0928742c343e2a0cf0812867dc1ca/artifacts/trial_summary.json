@@ -1,0 +1,75 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "pure_transformer",
+      "embed_dim": 256,
+      "num_heads": 4,
+      "num_layers": 2,
+      "ffn_dim": 512,
+      "patch_size": [
+        8,
+        8
+      ],
+      "patch_stride": [
+        16,
+        16
+      ],
+      "pooling": "mean",
+      "dropout": 0.39087538832936763
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper/src/$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 64,
+      "n_fft": 2048,
+      "hop_length": 512,
+      "f_min": 20.0,
+      "f_max": 8000.0,
+      "normalize": true,
+      "resize_height": 160,
+      "resize_width": 640
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 16,
+      "epochs": 1,
+      "learning_rate": 0.0003574712922600243,
+      "weight_decay": 0.0007114476009343421,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 1,
+      "device": "auto",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.15333333333333332,
+    "f1_macro": 0.07636503281664572,
+    "f1_weighted": 0.0814560350044221,
+    "uar": 0.14375,
+    "war": 0.15333333333333332,
+    "mcc": 0.02847680373173872,
+    "kappa": 0.023076923076923106,
+    "ece": 0.02794490615526835,
+    "fold_accuracy_mean": 0.15333333333333332,
+    "fold_f1_macro_mean": 0.07636503281664572
+  },
+  "best_fold": {
+    "accuracy": 0.15333333333333332,
+    "f1_macro": 0.07636503281664572,
+    "f1_weighted": 0.0814560350044221,
+    "uar": 0.14375,
+    "war": 0.15333333333333332,
+    "mcc": 0.02847680373173872,
+    "kappa": 0.023076923076923106,
+    "ece": 0.02794490615526835,
+    "loss": 2.045924599965413,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0002\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

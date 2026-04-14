@@ -148,6 +148,9 @@ def evaluate(model, loader, criterion, device):
 
 
 def extract_features(model, inputs):
+    if hasattr(model, "get_embedding"):
+        return model.get_embedding(inputs)
+
     features = model.features(inputs)
 
     if hasattr(model, "freq_pool") and hasattr(model, "attention_layer"):

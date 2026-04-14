@@ -1,4 +1,4 @@
-# SER_GraduationPaper 한국어 실행 가이드
+﻿# SER_GraduationPaper 한국어 실행 가이드
 
 ## 1. 프로젝트 개요
 
@@ -800,3 +800,262 @@ python -m src.train experiment.name=cnn_manual_5blocks model.hidden_dims=[64,96,
 - 위 NestedTensor 문서는 padding 없는 variable-length 처리의 공식 방향을 보기 위한 참고자료다.
 - 하지만 본 프로젝트 후속 실험에서는 **RNN/GRU를 쓰지 않는다**.
 - 구현 안정성을 우선하면, 1차 실험은 list-batch + gradient accumulation 또는 exact-length bucketing이 더 현실적이다.
+
+## 부록 A. 2026-04-14 CNN baseline Optuna 실험 기록
+
+### A.1 분석 대상
+
+- 분석 경로: `outputs/2026-04-14/04-49-31_cnn_optuna_stage1_baselineTest/`
+- 분석 기준 파일: 각 trial 폴더의 `trial_summary.json`, `resolved_config.yaml`
+- 현재 저장된 완료 trial 수: **14개**
+- 주의: 이번 스터디는 `train.folds_to_run=1` 상태로 수행되어, 현재 기록된 점수는 **5-fold 전체 평균이 아니라 1-fold 기준 성능**이다.
+- 주의: 산출물 폴더 내부에는 `optuna_best_trial.json`이 남아 있지 않아, 아래 최고 trial은 저장된 `trial_summary.json`을 재집계하여 선정하였다.
+
+### A.2 스터디 개요
+
+| 항목 | 값 |
+|---|---|
+| experiment.name | `cnn_optuna_stage1_baselineTest` |
+| experiment.family | `cnn_baseline` |
+| objective metric | `f1_macro` |
+| dataset | RAVDESS |
+| input feature | log-Mel spectrogram |
+| search 범위 | CNN 구조 + log-Mel 파라미터 + train 파라미터 |
+| 완료 trial 수 | 14 |
+| 평균 accuracy | 0.5755 |
+| 평균 f1_macro | 0.5672 |
+| 평균 UAR | 0.5714 |
+| 최고 accuracy | 0.6167 |
+| 최고 f1_macro | 0.6220 |
+| 최고 UAR | 0.6156 |
+
+### A.3 Top trial 요약
+
+| Rank | Trial | Accuracy | F1-macro | UAR | CNN hidden_dims | Dropout | LR | Weight Decay | Batch | Log-Mel 설정 |
+|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---|
+| 1 | 23 | 0.6167 | **0.6220** | 0.6156 | `[32, 64, 256, 512]` | 0.3324 | 3.41e-4 | 1.93e-5 | 16 | `n_mels=80, n_fft=1024, hop=160, resize=96x512, f_min=0, f_max=6000, normalize=true` |
+| 2 | 75 | 0.6033 | 0.5800 | 0.5969 | `[32, 32, 96, 512]` | 0.3704 | 1.59e-4 | 3.65e-5 | 16 | `n_mels=128, n_fft=1024, hop=160, resize=96x512, f_min=20, f_max=6000, normalize=true` |
+| 3 | 60 | 0.5967 | 0.5760 | 0.5813 | `[32, 32, 96, 512]` | 0.3277 | 2.04e-4 | 5.47e-5 | 16 | `n_mels=80, n_fft=1024, hop=160, resize=96x512, f_min=50, f_max=6000, normalize=true` |
+| 4 | 72 | 0.6067 | 0.5757 | 0.5875 | `[32, 32, 96, 512]` | 0.3442 | 1.55e-4 | 3.01e-5 | 16 | `n_mels=80, n_fft=1024, hop=160, resize=96x512, f_min=20, f_max=6000, normalize=true` |
+| 5 | 65 | 0.5967 | 0.5749 | 0.5938 | `[32, 32, 160, 512]` | 0.3431 | 2.58e-4 | 1.19e-4 | 16 | `n_mels=80, n_fft=1024, hop=160, resize=96x512, f_min=20, f_max=6000, normalize=true` |
+
+### A.4 현재까지 관찰된 성향
+
+| 관찰 항목 | 경향 |
+|---|---|
+| batch size | 상위 5개 trial 모두 `16`, 완료 14개 중 11개도 `16` |
+| n_fft | 완료 14개 중 13개가 `1024` |
+| hop_length | 완료 14개 중 9개가 `160` |
+| resize | 완료 14개 중 9개가 `96x512` |
+| normalize | 상위 trial 전부 `true` |
+| channel 구조 | 상위권은 `32`로 시작하고 마지막 stage는 `512`로 유지하는 얕은-중간 채널 구조가 우세 |
+| LR 범위 | 상위권은 대체로 `1.5e-4 ~ 3.5e-4` 구간 |
+| dropout 범위 | 상위권은 대체로 `0.32 ~ 0.37` |
+
+### A.5 현재 최고 성능 조합 서술 초안
+
+현재 `outputs/2026-04-14/04-49-31_cnn_optuna_stage1_baselineTest`에 저장된 완료 trial 기준 최고 성능은 **trial 23**이며, `accuracy=0.6167`, `f1_macro=0.6220`, `UAR=0.6156`을 기록하였다. 해당 조합은 CNN backbone을 `[32, 64, 256, 512]` 채널로 구성하고, classifier 전 dropout을 `0.3324`로 설정하였으며, Adam 학습률은 `3.41e-4`, weight decay는 `1.93e-5`, batch size는 `16`으로 설정되었다.
+
+입력 특징 추출 측면에서는 `n_mels=80`, `n_fft=1024`, `hop_length=160`, `resize_height=96`, `resize_width=512`, `f_min=0`, `f_max=6000`, `normalize=true` 조합이 사용되었다. 상위권 trial 전반을 보면 작은 batch, `n_fft=1024`, `hop_length=160`, `96x512` 해상도, 정규화 활성화가 반복적으로 등장하므로, 이후 Transformer 계열 실험에서도 우선 이 구간을 **고정 baseline 후보**로 삼고 모델 구조 차이에 집중하는 편이 타당하다.
+
+### A.6 후속 기준점 제안
+
+- Transformer 계열 1차 실험에서는 우선 아래 설정을 공통 baseline으로 고정하는 것을 권장한다.
+  - `n_mels=80`
+  - `n_fft=1024`
+  - `hop_length=160`
+  - `resize_height=96`
+  - `resize_width=512`
+  - `normalize=true`
+  - `batch_size=16`
+- 이후 모델별 Optuna에서는 구조 파라미터를 우선 탐색하고, log-Mel 파라미터는 2단계에서만 제한적으로 다시 풀어주는 방식이 해석과 재현성에 유리하다.
+
+## 부록 B. Transformer 계열 실험 템플릿 및 구현 계획
+
+### B.1 Pure Transformer
+
+#### 목적
+
+- CNN 없이 patch embedding + Transformer encoder만으로 SER 분류 baseline을 구축한다.
+- 이후 hybrid 구조나 multi-scale 구조의 개선 효과를 비교하기 위한 **Transformer 기준선** 역할을 맡긴다.
+
+#### ref.bib 기반 참고 / 인용 포인트
+
+| ref.bib key | 인용 포인트 |
+|---|---|
+| `chen2023dwformer` | SER에서 중요한 감정 단서가 시간축 전 구간에 균등하지 않고, 지역적 중요 구간과 전역 상호작용을 함께 다뤄야 한다는 근거 |
+| `wang2024swin` | patch 기반 Transformer, 계층적 표현, local window와 patch merging이 SER에 유효하다는 근거 |
+| `gao2024adversarial` | Transformer 계열 backbone이 SER, 특히 일반화 문제에서도 연구 주제로 충분히 타당하다는 근거 |
+| `ahn2025multitask` | Transformer를 SER의 주 backbone으로 두고 auxiliary objective를 결합하는 연구 흐름의 근거 |
+
+#### 온라인 확인 메모
+
+- `chen2023dwformer`: 감정 관련 구간이 다양한 시간 스케일에 흩어져 있으므로, 동적 window 분할과 window 내부 local attention + cross-window global interaction을 제안함.
+- `wang2024swin`: spectrogram을 time-domain segment patch로 나누고, local window Transformer, shifted window, patch merging으로 계층적 speech representation을 구성함.
+- `gao2024adversarial`: cross-corpus SER에서 domain adversarial learning, center loss, gated fusion을 결합한 transformer 기반 일반화 구조를 제안함.
+- `ahn2025multitask`: cross-corpus SER에서 multitask framework와 transformer backbone을 사용해 보조 과제를 결합하는 흐름을 제시함.
+
+#### 구현 로드맵
+
+1. 고정 resize spectrogram에 대해 2D patch embedding 수행
+2. token sequence에 positional embedding 추가
+3. encoder-only Transformer stack 적용
+4. `mean / cls / attention pooling` 중 하나로 utterance embedding 생성
+5. classifier로 8-class emotion 분류
+6. baseline CNN과 동일한 output/optuna/mlflow 산출물 경로 유지
+
+#### Optuna search space 설계
+
+| 파라미터 | 제안 범위 |
+|---|---|
+| `embed_dim` | `[128, 192, 256]` |
+| `num_heads` | `[4, 8]` |
+| `num_layers` | `2 ~ 6` |
+| `ffn_ratio` | `[2, 4]` |
+| `patch_size` | `[8, 16, 32]` |
+| `patch_stride` | `[8, 16]` |
+| `pooling` | `attention / mean / cls` |
+| `dropout` | `0.1 ~ 0.4` |
+| `learning_rate` | `1e-4 ~ 3e-3 (log)` |
+| `weight_decay` | `1e-6 ~ 1e-3 (log)` |
+| `batch_size` | `[16, 32, 64]` |
+
+#### 실험 기록 표
+
+| Trial | Accuracy | F1-macro | UAR | embed_dim | heads | layers | patch | stride | pooling | dropout | LR | WD | Batch | 비고 |
+|---|---:|---:|---:|---:|---:|---:|---|---|---|---:|---:|---:|---:|---|
+| TBA | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+
+#### 실행 예시
+
+```bash
+python -m src.train model=pure_transformer experiment.name=pure_transformer_manual
+python -m src.optuna_search model=pure_transformer experiment.family=pure_transformer experiment.name=pure_transformer_optuna optuna.trials=30
+```
+
+### B.2 CNN Front-End + Conformer Encoder
+
+#### 목적
+
+- CNN stem으로 local spectral pattern을 먼저 추출하고, 그 뒤 Conformer encoder로 local-global temporal dependency를 함께 모델링한다.
+- 논문 메인 후보로 사용할 **hybrid Transformer 모델**이다.
+
+#### ref.bib 기반 참고 / 인용 포인트
+
+| ref.bib key | 인용 포인트 |
+|---|---|
+| `liu2023dualrobustness` | Transformer를 다른 시계열 모듈과 결합한 hybrid SER 구조의 타당성 |
+| `chen2023dwformer` | local 중요 구간과 global communication을 함께 다루는 구조적 명분 |
+| `wang2024swin` | 계층적 local-to-global aggregation이 SER에서 유의미하다는 근거 |
+| `he2023multiple` | cross-attention 및 feature fusion 관점에서 hybrid 설계의 타당성 |
+
+#### 온라인 확인 메모
+
+- `liu2023dualrobustness`: 두 개의 Transformer와 BiLSTM, 1D convolution을 결합하여 서로 다른 길이/차원의 특징을 융합하고 contextual information을 강화함.
+- `he2023multiple`: raw waveform, spectrogram, MFCC를 cross-attention transformer로 융합하여 단일 특징보다 더 강한 표현을 얻는 방향을 제시함.
+- `chen2023dwformer`, `wang2024swin`: local window, shifted window, patch aggregation 등 local-global 결합 전략이 SER에서 유효함을 보여줌.
+
+#### 구현 로드맵
+
+1. 얕은 CNN stem으로 주파수-시간 국소 패턴 추출
+2. frequency 축 평균 집계 후 time-major sequence 생성
+3. linear projection으로 conformer embedding 차원 정렬
+4. conformer block stack으로 self-attention + convolution modeling 수행
+5. attentive / mean pooling으로 utterance embedding 생성
+6. classifier로 emotion 분류
+
+#### Optuna search space 설계
+
+| 파라미터 | 제안 범위 |
+|---|---|
+| `stem_channels` | 첫/둘째 stage 각각 `[32, 48, 64, 96]` 중 선택 |
+| `embed_dim` | `[128, 192, 256]` |
+| `num_heads` | `[4, 8]` |
+| `num_layers` | `2 ~ 5` |
+| `ffn_ratio` | `[2, 4]` |
+| `conv_kernel_size` | `[7, 15, 31]` |
+| `pooling` | `attention / mean` |
+| `dropout` | `0.1 ~ 0.4` |
+| `learning_rate` | `1e-4 ~ 3e-3 (log)` |
+| `weight_decay` | `1e-6 ~ 1e-3 (log)` |
+| `batch_size` | `[16, 32, 64]` |
+
+#### 실험 기록 표
+
+| Trial | Accuracy | F1-macro | UAR | stem_channels | embed_dim | heads | layers | conv_kernel | pooling | dropout | LR | WD | Batch | 비고 |
+|---|---:|---:|---:|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---|
+| TBA | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+
+#### 실행 예시
+
+```bash
+python -m src.train model=cnn_conformer experiment.name=cnn_conformer_manual
+python -m src.optuna_search model=cnn_conformer experiment.family=cnn_conformer experiment.name=cnn_conformer_optuna optuna.trials=30
+```
+
+### B.3 Multi-Scale Patch Transformer
+
+#### 목적
+
+- fine patch와 coarse patch 두 흐름을 동시에 구성하고, cross-attention fusion으로 scale 간 상호작용을 학습한다.
+- 구조 차별성이 가장 큰 Transformer 계열 제안 모델이다.
+
+#### ref.bib 기반 참고 / 인용 포인트
+
+| ref.bib key | 인용 포인트 |
+|---|---|
+| `wang2024swin` | hierarchical patch representation, shifted window, patch merging의 multi-scale 논리 |
+| `chen2023dwformer` | 시간 스케일별 중요 감정 구간을 다뤄야 한다는 논리 |
+| `he2023multiple` | cross-attention을 이용한 서로 다른 특징 흐름의 융합 근거 |
+| `gao2024adversarial` | gated fusion을 활용한 transformer 계열 표현 결합 근거 |
+
+#### 온라인 확인 메모
+
+- `wang2024swin`: frame-level에서 segment-level로 receptive field를 넓히며 계층적 speech representation을 형성함.
+- `chen2023dwformer`: 감정 중요 정보의 시간 스케일이 발화 안팎에서 크게 달라질 수 있음을 강조함.
+- `he2023multiple`: cross-attention을 통해 이종 특징 간 상호보완 정보를 학습하는 방식을 제시함.
+- `gao2024adversarial`: supervised feature extractor와 pretrained feature를 gated fusion으로 결합하는 전략을 사용함.
+
+#### 구현 로드맵
+
+1. 동일 spectrogram에 대해 fine/coarse patch embedding을 별도로 생성
+2. 각 branch에 Transformer encoder 적용
+3. fine query와 coarse key/value의 cross-attention 수행
+4. gate 기반 융합으로 fine branch를 보정
+5. 각 branch pooling 후 concat하여 최종 embedding 생성
+6. classifier로 emotion 분류
+
+#### Optuna search space 설계
+
+| 파라미터 | 제안 범위 |
+|---|---|
+| `fine_patch` | `[4, 8]` |
+| `coarse_patch` | `[12, 16, 24]` |
+| `embed_dim` | `[128, 192, 256]` |
+| `num_heads` | `[4, 8]` |
+| `num_layers` | `2 ~ 4` |
+| `ffn_ratio` | `[2, 4]` |
+| `pooling` | `attention / mean` |
+| `dropout` | `0.1 ~ 0.4` |
+| `learning_rate` | `1e-4 ~ 3e-3 (log)` |
+| `weight_decay` | `1e-6 ~ 1e-3 (log)` |
+| `batch_size` | `[16, 32, 64]` |
+
+#### 실험 기록 표
+
+| Trial | Accuracy | F1-macro | UAR | fine_patch | coarse_patch | embed_dim | heads | layers | pooling | dropout | LR | WD | Batch | 비고 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---|
+| TBA | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+
+#### 실행 예시
+
+```bash
+python -m src.train model=multiscale_patch_transformer experiment.name=multiscale_patch_transformer_manual
+python -m src.optuna_search model=multiscale_patch_transformer experiment.family=multiscale_patch_transformer experiment.name=multiscale_patch_transformer_optuna optuna.trials=30
+```
+
+### B.4 구현 메모
+
+- 현재 구현은 **가변 길이 처리를 사용하지 않고**, 기존 baseline과 동일하게 `resize_height`, `resize_width` 기반 고정 입력을 전제로 한다.
+- 세 모델 모두 기존 `Hydra config`, `registry pattern`, `train.py`, `optuna_search.py`, `outputs/YYYY-MM-DD/HH-MM-SS_experiment/` 구조를 그대로 사용한다.
+- 현재 `ref.bib`에는 pure Transformer의 AST 원 논문과 Conformer 원 논문이 직접 들어 있지 않다. 논문 본문에서 backbone 원형 자체를 설명하려면 추후 `ref.bib`에 별도 추가하는 것이 바람직하다.

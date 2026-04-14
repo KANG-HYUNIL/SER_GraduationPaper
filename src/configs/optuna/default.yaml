@@ -1,6 +1,6 @@
 enabled: false
-study_name: "cnn_logmel_baseline_v2"
-storage: "sqlite:///optuna_studies/cnn_logmel_baseline_v2.db"
+study_name: "${experiment.family}_optuna"
+storage: "sqlite:///optuna_studies/${experiment.family}_optuna.db"
 direction: "maximize"
 trials: 20  # Target number of COMPLETE trials; PRUNED/FAIL are not counted.
 timeout: null
@@ -20,6 +20,39 @@ search_space:
     channel_choices: [32, 64, 96, 128, 160, 192, 256, 384, 512]
     dropout_min: 0.1
     dropout_max: 0.5
+  transformer:
+    patch_size_choices: [8, 16, 32]
+    patch_stride_choices: [8, 16]
+    embed_dim_choices: [128, 192, 256]
+    num_layers_min: 2
+    num_layers_max: 6
+    num_heads_choices: [4, 8]
+    ffn_ratio_choices: [2, 4]
+    pooling_choices: ["attention", "mean", "cls"]
+    dropout_min: 0.1
+    dropout_max: 0.4
+  cnn_conformer:
+    stem_channel_choices: [32, 48, 64, 96]
+    embed_dim_choices: [128, 192, 256]
+    num_layers_min: 2
+    num_layers_max: 5
+    num_heads_choices: [4, 8]
+    ffn_ratio_choices: [2, 4]
+    conv_kernel_choices: [7, 15, 31]
+    pooling_choices: ["attention", "mean"]
+    dropout_min: 0.1
+    dropout_max: 0.4
+  multiscale:
+    fine_patch_choices: [4, 8]
+    coarse_patch_choices: [12, 16, 24]
+    embed_dim_choices: [128, 192, 256]
+    num_layers_min: 2
+    num_layers_max: 4
+    num_heads_choices: [4, 8]
+    ffn_ratio_choices: [2, 4]
+    pooling_choices: ["attention", "mean"]
+    dropout_min: 0.1
+    dropout_max: 0.4
   train:
     lr_min: 1.0e-4
     lr_max: 3.0e-3

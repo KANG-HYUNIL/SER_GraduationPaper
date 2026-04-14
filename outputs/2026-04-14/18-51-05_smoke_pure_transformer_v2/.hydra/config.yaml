@@ -1,0 +1,204 @@
+data:
+  dataset_path: ${hydra:runtime.cwd}/src/$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 128
+  n_fft: 1024
+  hop_length: 512
+  f_min: 0.0
+  f_max: 8000.0
+  normalize: true
+  resize_height: 128
+  resize_width: 512
+model:
+  name: pure_transformer
+  embed_dim: 192
+  num_heads: 4
+  num_layers: 4
+  ffn_dim: 768
+  patch_size:
+  - 16
+  - 16
+  patch_stride:
+  - 16
+  - 16
+  pooling: attention
+  dropout: 0.2
+optuna:
+  enabled: false
+  study_name: ${experiment.family}_optuna
+  storage: sqlite:///optuna_studies/${experiment.family}_optuna.db
+  direction: maximize
+  trials: 2
+  timeout: null
+  sampler_seed: 42
+  pruner:
+    warmup_steps: 5
+  parallel_workers: 1
+  trials_per_worker: 10
+  metric: f1_macro
+  trial_overrides:
+    train:
+      folds_to_run: 1
+  search_space:
+    cnn:
+      min_blocks: 3
+      max_blocks: 6
+      channel_choices:
+      - 32
+      - 64
+      - 96
+      - 128
+      - 160
+      - 192
+      - 256
+      - 384
+      - 512
+      dropout_min: 0.1
+      dropout_max: 0.5
+    transformer:
+      patch_size_choices:
+      - 8
+      - 16
+      - 32
+      patch_stride_choices:
+      - 8
+      - 16
+      embed_dim_choices:
+      - 128
+      - 192
+      - 256
+      num_layers_min: 2
+      num_layers_max: 6
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 2
+      - 4
+      pooling_choices:
+      - attention
+      - mean
+      - cls
+      dropout_min: 0.1
+      dropout_max: 0.4
+    cnn_conformer:
+      stem_channel_choices:
+      - 32
+      - 48
+      - 64
+      - 96
+      embed_dim_choices:
+      - 128
+      - 192
+      - 256
+      num_layers_min: 2
+      num_layers_max: 5
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 2
+      - 4
+      conv_kernel_choices:
+      - 7
+      - 15
+      - 31
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.4
+    multiscale:
+      fine_patch_choices:
+      - 4
+      - 8
+      coarse_patch_choices:
+      - 12
+      - 16
+      - 24
+      embed_dim_choices:
+      - 128
+      - 192
+      - 256
+      num_layers_min: 2
+      num_layers_max: 4
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 2
+      - 4
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.4
+    train:
+      lr_min: 0.0001
+      lr_max: 0.003
+      weight_decay_min: 1.0e-06
+      weight_decay_max: 0.001
+      batch_choices:
+      - 16
+      - 32
+      - 64
+    logmel:
+      n_mels_choices:
+      - 64
+      - 80
+      - 96
+      - 128
+      - 160
+      n_fft_choices:
+      - 512
+      - 1024
+      - 2048
+      hop_length_choices:
+      - 160
+      - 256
+      - 320
+      - 512
+      normalize_choices:
+      - true
+      - false
+      resize_height_choices:
+      - 64
+      - 96
+      - 128
+      - 160
+      resize_width_choices:
+      - 256
+      - 384
+      - 512
+      - 640
+      f_min_choices:
+      - 0.0
+      - 20.0
+      - 50.0
+      f_max_choices:
+      - 4000.0
+      - 6000.0
+      - 7000.0
+      - 8000.0
+experiment:
+  name: smoke_pure_transformer_v2
+  family: pure_transformer
+  tag: ''
+train:
+  seed: 42
+  batch_size: 32
+  epochs: 1
+  learning_rate: 0.0001
+  weight_decay: 0.0
+  k_folds: 5
+  folds_to_run: 1
+  early_stopping: 1
+  device: auto
+  num_workers: 0
+  objective_metric: f1_macro
+  save_best_to_root: true
+inference:
+  audio_path: ???
+  model_checkpoint: ???
+  output_dir: inference_outputs

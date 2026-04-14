@@ -1,0 +1,7 @@
+- model=multiscale_patch_transformer
+- experiment.family=multiscale_patch_transformer
+- experiment.name=smoke_multiscale_patch
+- optuna.trials=1
+- train.epochs=1
+- train.folds_to_run=1
+- train.early_stopping=1

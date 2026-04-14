@@ -1,0 +1,9 @@
+name: "pure_transformer"
+embed_dim: 192
+num_heads: 4
+num_layers: 4
+ffn_dim: 768
+patch_size: [16, 16]
+patch_stride: [16, 16]
+pooling: "attention"
+dropout: 0.2
