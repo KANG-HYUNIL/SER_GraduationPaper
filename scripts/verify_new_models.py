@@ -22,24 +22,31 @@ def main():
         del base["hydra"]
     base.data.dataset_path = str(Path("src/$RVNS6MQ").resolve())
     model_files = {
-        "cnn_baseline": "src/configs/model/cnn_baseline.yaml",
         "pure_transformer": "src/configs/model/pure_transformer.yaml",
         "cnn_conformer": "src/configs/model/cnn_conformer.yaml",
-        "multiscale_patch_transformer": "src/configs/model/multiscale_patch_transformer.yaml",
+        "hierarchical_window_transformer": "src/configs/model/hierarchical_window_transformer.yaml",
     }
 
     print("FORWARD_CHECK")
-    for model_name in ("pure_transformer", "cnn_conformer", "multiscale_patch_transformer"):
+    for model_name in ("pure_transformer", "cnn_conformer", "hierarchical_window_transformer"):
         cfg = OmegaConf.merge(base, {"model": OmegaConf.load(model_files[model_name])})
+        cfg.data.resize_enabled = model_name == "cnn_baseline"
         model = get_model_class(model_name)(cfg)
         x = torch.randn(2, 1, int(cfg.data.resize_height), int(cfg.data.resize_width))
-        logits = model(x)
-        embedding = model.get_embedding(x)
+        if cfg.data.resize_enabled:
+            logits = model(x)
+            embedding = model.get_embedding(x)
+        else:
+            lengths = torch.tensor([x.shape[-1], x.shape[-1] - 17])
+            x[1, :, :, lengths[1]:] = 0
+            logits = model(x, lengths=lengths)
+            embedding = model.get_embedding(x, lengths=lengths)
         print(model_name, tuple(logits.shape), tuple(embedding.shape))
 
     print("OPTUNA_APPLY_CHECK")
     for model_name, path in model_files.items():
         cfg = OmegaConf.merge(base, {"model": OmegaConf.load(path)})
+        cfg.data.resize_enabled = False
         study = optuna.create_study(direction="maximize")
         sampled = None
         for _ in range(20):

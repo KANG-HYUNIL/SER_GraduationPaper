@@ -1,8 +1,6 @@
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import mlflow
-import torch
-from torch.utils.data import DataLoader
 import logging
 import os
 
@@ -11,6 +9,7 @@ import src.models
 
 from src.data.dataset import RavdessDataset
 from src.data.transforms import AudioPipeline
+from src.engine.trainer import build_dataloaders
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +54,22 @@ def main(cfg: DictConfig):
             raise e
 
         # 5. Verify Data Loader & Model Forward
-        loader = DataLoader(dataset, batch_size=4, shuffle=True)
-        sample_batch, sample_labels = next(iter(loader))
+        index_count = min(len(dataset), max(5, int(cfg.train.batch_size)))
+        train_idx = list(range(max(1, index_count - 1)))
+        val_idx = [index_count - 1]
+        loader, _ = build_dataloaders(cfg, dataset, train_idx, val_idx)
+        batch = next(iter(loader))
+        if len(batch) == 3:
+            sample_batch, sample_labels, sample_lengths = batch
+        else:
+            sample_batch, sample_labels = batch
+            sample_lengths = None
         
         logger.info(f"Sample Batch Shape: {sample_batch.shape}") 
         
         # Test Forward Pass
         try:
-            output = model(sample_batch)
+            output = model(sample_batch) if sample_lengths is None else model(sample_batch, sample_lengths)
             logger.info(f"Model Output Shape: {output.shape}") # Expected: [4, 8]
         except Exception as e:
             logger.error(f"Model forward failed: {e}")

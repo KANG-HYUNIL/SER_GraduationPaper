@@ -1,17 +1,29 @@
 import json
 import logging
 import os
+import gc
+import hashlib
 from pathlib import Path
+from typing import Any
 
 import hydra
 import hydra.utils
 import mlflow
 import optuna
+import numpy as np
+import torch
+import torch.nn as nn
 from omegaconf import DictConfig, OmegaConf, open_dict
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
+from sklearn.model_selection import GroupKFold
 
-from src.engine.trainer import run_cross_validation_experiment, sanitize_experiment_name
+import src.models
+from src.data.dataset import RavdessDataset
+from src.data.transforms import AudioPipeline
+from src.engine.trainer import build_dataloaders, resolve_device, sanitize_experiment_name
+from src.engine.trainer import run_cross_validation_experiment
+from src.utils.registry import get_model_class
 from src.utils.viz_optuna import analyze_optuna_study
 
 logger = logging.getLogger(__name__)
@@ -28,29 +40,105 @@ def ensure_storage_path(storage_uri: str, root_dir: Path) -> str:
     return f"sqlite:///{storage_path.as_posix()}"
 
 
-def suggest_monotonic_hidden_dims(trial, choices, min_blocks, max_blocks):
-    num_blocks = trial.suggest_int("cnn_num_blocks", min_blocks, max_blocks)
-    sampled_dims = [
-        trial.suggest_categorical(f"cnn_hidden_dim_{block_idx + 1}", choices)
-        for block_idx in range(max_blocks)
-    ]
-    hidden_dims = sampled_dims[:num_blocks]
+def resolve_study_name(cfg: DictConfig) -> str:
+    base_name = str(cfg.optuna.study_name)
+    if not bool(cfg.optuna.get("namespace_by_search_space", True)):
+        return base_name
 
-    if any(curr < prev for prev, curr in zip(hidden_dims, hidden_dims[1:])):
-        raise optuna.TrialPruned("CNN hidden dims must be monotonic non-decreasing.")
+    payload = {
+        "family": str(cfg.experiment.family),
+        "model_name": str(cfg.model.name),
+        "search_space": OmegaConf.to_container(cfg.optuna.search_space, resolve=True),
+        "trial_overrides": OmegaConf.to_container(cfg.optuna.get("trial_overrides"), resolve=True),
+    }
+    digest = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()[:10]
+    return f"{base_name}_{digest}"
 
-    return hidden_dims
+
+def validate_dataset_path(cfg: DictConfig, root_dir: Path) -> str:
+    dataset_path = Path(str(cfg.data.dataset_path))
+    if not dataset_path.is_absolute():
+        dataset_path = root_dir / dataset_path
+
+    wav_count = len(list(dataset_path.glob("Actor_*/*.wav")))
+    if wav_count == 0:
+        raise FileNotFoundError(
+            "No RAVDESS wav files found. Expected pattern "
+            f"'{dataset_path / 'Actor_*' / '*.wav'}'. "
+            "Set data.dataset_path to the directory that directly contains Actor_01, Actor_02, ..."
+        )
+    return str(dataset_path)
+
+
+def _cfg_get(cfg_section: Any, key: str, default=None):
+    if cfg_section is None:
+        return default
+    if isinstance(cfg_section, DictConfig):
+        return cfg_section.get(key, default)
+    return cfg_section[key] if key in cfg_section else default
+
+
+def _normalize_list_of_int_lists(raw_choices) -> list[list[int]]:
+    normalized: list[list[int]] = []
+    for choice in raw_choices or []:
+        normalized.append([int(value) for value in choice])
+    return normalized
+
+
+def _suggest_pair_choice(trial: optuna.Trial, name: str, raw_choices, field_name: str) -> list[int]:
+    choices = _normalize_list_of_int_lists(raw_choices)
+    if not choices:
+        raise ValueError(f"{field_name} must define at least one candidate pair.")
+    labels = ["x".join(str(value) for value in choice) for choice in choices]
+    selected = trial.suggest_categorical(name, labels)
+    return choices[labels.index(selected)]
+
+
+def _suggest_stage_spec(trial: optuna.Trial, space) -> tuple[list[int], list[int]]:
+    raw_choices = _cfg_get(space, "stage_spec_choices")
+    if not raw_choices:
+        stage1_dim = trial.suggest_categorical("window_stage1_dim", list(space.stage1_dim_choices))
+        stage2_dim = trial.suggest_categorical("window_stage2_dim", list(space.stage2_dim_choices))
+        if stage2_dim < stage1_dim:
+            raise optuna.TrialPruned("window stage2_dim must be >= stage1_dim.")
+        num_heads = trial.suggest_categorical("window_num_heads", list(space.num_heads_choices))
+        if stage1_dim % num_heads != 0 or stage2_dim % num_heads != 0:
+            raise optuna.TrialPruned("Window stage dims must be divisible by num_heads.")
+        return [int(stage1_dim), int(stage2_dim)], [int(num_heads), int(num_heads)]
+
+    stage_specs = []
+    labels = []
+    for spec in raw_choices:
+        stage_dims = [int(value) for value in spec["stage_dims"]]
+        num_heads = [int(value) for value in spec["num_heads"]]
+        if len(stage_dims) != 2 or len(num_heads) != 2:
+            raise ValueError("Each stage_spec_choices entry must contain two stage_dims and two num_heads values.")
+        if any(dim % heads != 0 for dim, heads in zip(stage_dims, num_heads)):
+            raise ValueError(f"Invalid stage spec: stage_dims={stage_dims}, num_heads={num_heads}")
+        stage_specs.append((stage_dims, num_heads))
+        labels.append(f"{stage_dims[0]}x{stage_dims[1]}_h{num_heads[0]}x{num_heads[1]}")
+
+    selected = trial.suggest_categorical("window_stage_spec", labels)
+    return stage_specs[labels.index(selected)]
 
 
 def suggest_logmel_params(trial, cfg):
     space = cfg.optuna.search_space.logmel
+    if not bool(_cfg_get(space, "enabled", True)):
+        return {
+            "n_fft": int(cfg.data.n_fft),
+            "hop_length": int(cfg.data.hop_length),
+            "n_mels": int(cfg.data.n_mels),
+            "normalize": bool(cfg.data.normalize),
+            "f_min": float(cfg.data.f_min),
+            "f_max": float(cfg.data.f_max),
+        }
+
     sample_rate = cfg.data.sample_rate
 
     n_fft = trial.suggest_categorical("logmel_n_fft", list(space.n_fft_choices))
     hop_length = trial.suggest_categorical("logmel_hop_length", list(space.hop_length_choices))
     n_mels = trial.suggest_categorical("logmel_n_mels", list(space.n_mels_choices))
-    resize_height = trial.suggest_categorical("logmel_resize_height", list(space.resize_height_choices))
-    resize_width = trial.suggest_categorical("logmel_resize_width", list(space.resize_width_choices))
     normalize = trial.suggest_categorical("logmel_normalize", list(space.normalize_choices))
 
     if hop_length >= n_fft:
@@ -66,21 +154,15 @@ def suggest_logmel_params(trial, cfg):
     if f_min >= f_max:
         raise optuna.TrialPruned("Invalid mel frequency range.")
 
-    return {
+    params = {
         "n_fft": n_fft,
         "hop_length": hop_length,
         "n_mels": n_mels,
-        "resize_height": resize_height,
-        "resize_width": resize_width,
         "normalize": normalize,
         "f_min": f_min,
         "f_max": f_max,
     }
-
-
-def validate_input_resolution(hidden_dims, resize_height, resize_width):
-    downsample_factor = 2 ** len(hidden_dims)
-    return resize_height >= downsample_factor and resize_width >= downsample_factor
+    return params
 
 
 def suggest_common_train_params(trial, train_space):
@@ -88,6 +170,40 @@ def suggest_common_train_params(trial, train_space):
     weight_decay = trial.suggest_float("train_weight_decay", float(train_space.weight_decay_min), float(train_space.weight_decay_max), log=True)
     batch_size = trial.suggest_categorical("train_batch_size", list(train_space.batch_choices))
     return learning_rate, weight_decay, batch_size
+
+
+def suggest_chunking_params(trial, cfg):
+    space = cfg.optuna.search_space.chunking
+    if not bool(_cfg_get(space, "enabled", True)):
+        chunk_cfg = cfg.data.get("chunking", {})
+        return {
+            "enabled": bool(chunk_cfg.get("enabled", True)),
+            "chunk_frames": int(chunk_cfg.get("chunk_frames", 64)),
+            "hop_frames": int(chunk_cfg.get("hop_frames", 32)),
+            "eval_hop_frames": int(chunk_cfg.get("eval_hop_frames", chunk_cfg.get("hop_frames", 32))),
+            "aggregation_mode": str(chunk_cfg.get("aggregation_mode", "mean_logit")),
+            "topk_ratio": float(chunk_cfg.get("topk_ratio", 0.5)),
+        }
+
+    chunk_frames = int(trial.suggest_categorical("chunk_frames", list(space.chunk_frames_choices)))
+    hop_ratio = float(trial.suggest_categorical("chunk_hop_ratio", list(space.chunk_hop_ratio_choices)))
+    eval_hop_ratio = float(trial.suggest_categorical("chunk_eval_hop_ratio", list(space.eval_hop_ratio_choices)))
+    aggregation_mode = trial.suggest_categorical("chunk_aggregation_mode", list(space.aggregation_mode_choices))
+    topk_ratio = float(trial.suggest_categorical("chunk_topk_ratio", list(space.topk_ratio_choices)))
+
+    hop_frames = max(1, int(round(chunk_frames * hop_ratio)))
+    eval_hop_frames = max(1, int(round(chunk_frames * eval_hop_ratio)))
+    if hop_frames > chunk_frames or eval_hop_frames > chunk_frames:
+        raise optuna.TrialPruned("Chunk hop size cannot exceed chunk size.")
+
+    return {
+        "enabled": True,
+        "chunk_frames": chunk_frames,
+        "hop_frames": hop_frames,
+        "eval_hop_frames": eval_hop_frames,
+        "aggregation_mode": aggregation_mode,
+        "topk_ratio": topk_ratio,
+    }
 
 
 def suggest_pure_transformer_params(trial, cfg):
@@ -122,7 +238,7 @@ def suggest_cnn_conformer_params(trial, cfg):
     ]
     stem_channels = sorted(stem_channels)
     embed_dim = trial.suggest_categorical("conformer_embed_dim", list(space.embed_dim_choices))
-    num_layers = trial.suggest_int("conformer_num_layers", int(space.num_layers_min), int(space.num_layers_max))
+    num_layers = trial.suggest_categorical("conformer_num_layers", list(space.num_layers_choices))
     num_heads = trial.suggest_categorical("conformer_num_heads", list(space.num_heads_choices))
     if embed_dim % num_heads != 0:
         raise optuna.TrialPruned("Conformer embed_dim must be divisible by num_heads.")
@@ -142,31 +258,40 @@ def suggest_cnn_conformer_params(trial, cfg):
     }
 
 
-def suggest_multiscale_params(trial, cfg):
-    space = cfg.optuna.search_space.multiscale
-    fine_patch = trial.suggest_categorical("multiscale_fine_patch", list(space.fine_patch_choices))
-    coarse_patch = trial.suggest_categorical("multiscale_coarse_patch", list(space.coarse_patch_choices))
-    if coarse_patch <= fine_patch:
-        raise optuna.TrialPruned("coarse_patch must be larger than fine_patch.")
-    embed_dim = trial.suggest_categorical("multiscale_embed_dim", list(space.embed_dim_choices))
-    num_layers = trial.suggest_int("multiscale_num_layers", int(space.num_layers_min), int(space.num_layers_max))
-    num_heads = trial.suggest_categorical("multiscale_num_heads", list(space.num_heads_choices))
-    if embed_dim % num_heads != 0:
-        raise optuna.TrialPruned("Multiscale embed_dim must be divisible by num_heads.")
-    ffn_ratio = trial.suggest_categorical("multiscale_ffn_ratio", list(space.ffn_ratio_choices))
-    pooling = trial.suggest_categorical("multiscale_pooling", list(space.pooling_choices))
-    dropout = trial.suggest_float("multiscale_dropout", float(space.dropout_min), float(space.dropout_max))
+def suggest_hierarchical_window_params(trial, cfg):
+    space = cfg.optuna.search_space.hierarchical_window
+    stem_pair_choices = _cfg_get(space, "stem_pair_choices")
+    if stem_pair_choices:
+        stem_channels = _suggest_pair_choice(trial, "window_stem_pair", stem_pair_choices, "stem_pair_choices")
+    else:
+        stem_1 = trial.suggest_categorical("window_stem_channel_1", list(space.stem_channel_choices))
+        stem_2 = trial.suggest_categorical("window_stem_channel_2", list(space.stem_channel_choices))
+        stem_channels = sorted([int(stem_1), int(stem_2)])
+
+    stage_dims, num_heads = _suggest_stage_spec(trial, space)
+
+    depth_pair_choices = _cfg_get(space, "depth_pair_choices")
+    if depth_pair_choices:
+        stage_depths = _suggest_pair_choice(trial, "window_depth_pair", depth_pair_choices, "depth_pair_choices")
+    else:
+        stage1_depth = trial.suggest_int("window_stage1_depth", int(space.stage1_depth_min), int(space.stage1_depth_max))
+        stage2_depth = trial.suggest_int("window_stage2_depth", int(space.stage2_depth_min), int(space.stage2_depth_max))
+        stage_depths = [int(stage1_depth), int(stage2_depth)]
+
+    window_size = int(trial.suggest_categorical("window_window_size", list(space.window_size_choices)))
+    ffn_ratio = trial.suggest_categorical("window_ffn_ratio", list(space.ffn_ratio_choices))
+    pooling = trial.suggest_categorical("window_pooling", list(space.pooling_choices))
+    dropout = trial.suggest_float("window_dropout", float(space.dropout_min), float(space.dropout_max))
     return {
-        "embed_dim": embed_dim,
-        "num_heads": num_heads,
-        "num_layers": num_layers,
-        "ffn_dim": int(embed_dim * ffn_ratio),
-        "fine_patch_size": [int(fine_patch), int(fine_patch)],
-        "fine_patch_stride": [int(fine_patch), int(fine_patch)],
-        "coarse_patch_size": [int(coarse_patch), int(coarse_patch)],
-        "coarse_patch_stride": [int(coarse_patch), int(coarse_patch)],
+        "stem_channels": [int(value) for value in stem_channels],
+        "stage_dims": [int(value) for value in stage_dims],
+        "stage_depths": [int(value) for value in stage_depths],
+        "num_heads": [int(value) for value in num_heads],
+        "window_sizes": [window_size, window_size],
+        "ffn_ratio": float(ffn_ratio),
         "pooling": pooling,
         "dropout": dropout,
+        "use_shifted_windows": True,
     }
 
 
@@ -176,32 +301,18 @@ def apply_trial_params(base_cfg: DictConfig, trial: optuna.Trial) -> DictConfig:
         cfg = OmegaConf.merge(cfg, cfg.optuna.trial_overrides)
 
     train_space = cfg.optuna.search_space.train
+    model_name = str(cfg.model.name)
     learning_rate, weight_decay, batch_size = suggest_common_train_params(trial, train_space)
     logmel_params = suggest_logmel_params(trial, cfg)
-    model_name = str(cfg.model.name)
+    chunking_params = suggest_chunking_params(trial, cfg)
 
     model_updates = {}
-    if model_name.startswith("cnn_") and model_name not in ("cnn_conformer",):
-        cnn_space = cfg.optuna.search_space.cnn
-        hidden_dims = suggest_monotonic_hidden_dims(
-            trial,
-            list(cnn_space.channel_choices),
-            int(cnn_space.min_blocks),
-            int(cnn_space.max_blocks),
-        )
-        dropout = trial.suggest_float("cnn_dropout", float(cnn_space.dropout_min), float(cnn_space.dropout_max))
-        if not validate_input_resolution(hidden_dims, logmel_params["resize_height"], logmel_params["resize_width"]):
-            raise optuna.TrialPruned("Input resolution too small for sampled CNN depth.")
-        model_updates = {
-            "hidden_dims": hidden_dims,
-            "dropout": dropout,
-        }
-    elif model_name == "pure_transformer":
+    if model_name == "pure_transformer":
         model_updates = suggest_pure_transformer_params(trial, cfg)
     elif model_name == "cnn_conformer":
         model_updates = suggest_cnn_conformer_params(trial, cfg)
-    elif model_name == "multiscale_patch_transformer":
-        model_updates = suggest_multiscale_params(trial, cfg)
+    elif model_name == "hierarchical_window_transformer":
+        model_updates = suggest_hierarchical_window_params(trial, cfg)
     else:
         raise ValueError(f"Unsupported Optuna model family: {model_name}")
 
@@ -213,11 +324,55 @@ def apply_trial_params(base_cfg: DictConfig, trial: optuna.Trial) -> DictConfig:
         cfg.train.batch_size = batch_size
         cfg.train.save_best_to_root = False
         cfg.experiment.name = sanitize_experiment_name(f"{cfg.experiment.family}_trial_{trial.number:04d}")
+        cfg.data.resize_enabled = False
+        cfg.data.cache_features = True
 
         for key, value in logmel_params.items():
             cfg.data[key] = value
+        for key, value in chunking_params.items():
+            cfg.data.chunking[key] = value
 
     return cfg
+
+
+def preflight_trial_config(cfg: DictConfig) -> None:
+    device = resolve_device(cfg.train.device)
+    processor = AudioPipeline(cfg.data)
+    dataset = RavdessDataset(cfg.data, transform=processor)
+    if len(dataset) == 0:
+        raise RuntimeError("Dataset is empty during trial preflight.")
+
+    total_folds = int(cfg.train.k_folds)
+    splitter = GroupKFold(n_splits=total_folds)
+    X_dummy = np.zeros(len(dataset))
+    y_dummy = np.array(dataset.labels)
+    groups = np.array(dataset.actor_ids)
+    train_idx, val_idx = next(iter(splitter.split(X_dummy, y_dummy, groups=groups)))
+    train_loader, _ = build_dataloaders(cfg, dataset, train_idx, val_idx)
+    batch = next(iter(train_loader))
+
+    if len(batch) == 3:
+        inputs, labels, lengths = batch
+        lengths = lengths.to(device)
+    else:
+        inputs, labels = batch
+        lengths = None
+
+    inputs = inputs.to(device)
+    labels = labels.to(device)
+
+    model_class = get_model_class(cfg.model.name)
+    model = model_class(cfg).to(device)
+    criterion = nn.CrossEntropyLoss()
+
+    try:
+        logits = model(inputs, lengths=lengths) if lengths is not None else model(inputs)
+        loss = criterion(logits, labels)
+        loss.backward()
+    finally:
+        del model, criterion, inputs, labels, train_loader, dataset
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
 
 def build_trial_summary(trial_cfg, result, trial_dir: Path):
@@ -241,9 +396,15 @@ def build_trial_summary(trial_cfg, result, trial_dir: Path):
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(cfg: DictConfig):
     root_dir = Path(hydra.utils.get_original_cwd())
+    resolved_dataset_path = validate_dataset_path(cfg, root_dir)
+    resolved_study_name = resolve_study_name(cfg)
+    with open_dict(cfg):
+        cfg.data.dataset_path = resolved_dataset_path
+        cfg.optuna.study_name = resolved_study_name
     storage = ensure_storage_path(cfg.optuna.storage, root_dir)
     sampler = optuna.samplers.TPESampler(seed=int(cfg.optuna.sampler_seed))
     pruner = optuna.pruners.MedianPruner(n_warmup_steps=int(cfg.optuna.pruner.warmup_steps))
+    logger.info("Using Optuna study: %s", cfg.optuna.study_name)
     study = optuna.create_study(
         study_name=cfg.optuna.study_name,
         storage=storage,
@@ -266,7 +427,29 @@ def main(cfg: DictConfig):
         run_name = trial_cfg.experiment.name
         with mlflow.start_run(run_name=run_name, nested=True):
             mlflow.log_artifact(str(trial_dir / "resolved_config.yaml"))
-            result = run_cross_validation_experiment(trial_cfg, artifact_root=trial_dir / "artifacts", trial=trial)
+            try:
+                preflight_trial_config(trial_cfg)
+                result = run_cross_validation_experiment(trial_cfg, artifact_root=trial_dir / "artifacts", trial=trial)
+            except ValueError as exc:
+                raise optuna.TrialPruned(str(exc))
+            except torch.OutOfMemoryError as exc:
+                trial.set_user_attr("oom", True)
+                trial.set_user_attr("oom_message", str(exc))
+                mlflow.log_param("oom", True)
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                raise optuna.TrialPruned("CUDA OOM")
+            except RuntimeError as exc:
+                if "out of memory" in str(exc).lower():
+                    trial.set_user_attr("oom", True)
+                    trial.set_user_attr("oom_message", str(exc))
+                    mlflow.log_param("oom", True)
+                    gc.collect()
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    raise optuna.TrialPruned("CUDA OOM")
+                raise
             summary_path = build_trial_summary(trial_cfg, result, trial_dir)
 
             for metric_name, metric_value in result["summary_metrics"].items():
@@ -279,6 +462,9 @@ def main(cfg: DictConfig):
             for artifact_path in result["artifact_paths"]:
                 if os.path.exists(artifact_path):
                     mlflow.log_artifact(artifact_path)
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         return float(result["summary_metrics"][cfg.optuna.metric])
 
@@ -291,6 +477,13 @@ def main(cfg: DictConfig):
             n_jobs=1,
             callbacks=[MaxTrialsCallback(target_complete_trials, states=(TrialState.COMPLETE,))],
         )
+
+        complete_trials = [trial for trial in study.trials if trial.state == TrialState.COMPLETE]
+        if not complete_trials:
+            raise SystemExit(
+                "Optuna finished without any COMPLETE trials. "
+                "Check data.dataset_path, search-space validity, and timeout settings."
+            )
 
         best_payload = {
             "best_trial": study.best_trial.number,

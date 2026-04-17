@@ -1,0 +1,8 @@
+- optuna=hierarchical_window_cnnfixed
+- model=hierarchical_window_transformer
+- experiment.family=hierarchical_window_transformer
+- experiment.name=hierarchical_window_cnnfixed_stage2
+- train.device=cuda
+- train.epochs=30
+- train.folds_to_run=1
+- optuna.trials=30

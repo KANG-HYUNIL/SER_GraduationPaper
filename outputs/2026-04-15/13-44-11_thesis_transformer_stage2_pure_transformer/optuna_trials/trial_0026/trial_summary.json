@@ -1,0 +1,76 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "pure_transformer",
+      "embed_dim": 256,
+      "num_heads": 4,
+      "num_layers": 5,
+      "ffn_dim": 1024,
+      "patch_size": [
+        32,
+        32
+      ],
+      "patch_stride": [
+        8,
+        8
+      ],
+      "pooling": "cls",
+      "dropout": 0.16388717171118813
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 64,
+      "n_fft": 2048,
+      "hop_length": 160,
+      "f_min": 20.0,
+      "f_max": 6000.0,
+      "normalize": false,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 16,
+      "epochs": 30,
+      "learning_rate": 0.0007236891885521796,
+      "weight_decay": 0.0005368811603170591,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.4633333333333333,
+    "f1_macro": 0.45608907992079084,
+    "f1_weighted": 0.46350651283505045,
+    "uar": 0.45000000000000007,
+    "war": 0.4633333333333333,
+    "mcc": 0.3859423666715059,
+    "kappa": 0.3821949347659248,
+    "ece": 0.25756421049435935,
+    "fold_accuracy_mean": 0.4633333333333333,
+    "fold_f1_macro_mean": 0.45608907992079084
+  },
+  "best_fold": {
+    "accuracy": 0.4633333333333333,
+    "f1_macro": 0.45608907992079084,
+    "f1_weighted": 0.46350651283505045,
+    "uar": 0.45000000000000007,
+    "war": 0.4633333333333333,
+    "mcc": 0.3859423666715059,
+    "kappa": 0.3821949347659248,
+    "ece": 0.25756421049435935,
+    "loss": 2.0042795737584433,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0026\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

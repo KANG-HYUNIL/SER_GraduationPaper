@@ -1,0 +1,4 @@
+- model=cnn_conformer
+- experiment.family=cnn_conformer
+- experiment.name=cnn_conformer_padding_safe_stage2
+- train.device=cuda

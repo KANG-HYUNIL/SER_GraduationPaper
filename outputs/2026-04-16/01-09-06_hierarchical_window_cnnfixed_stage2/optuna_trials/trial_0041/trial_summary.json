@@ -1,0 +1,86 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "hierarchical_window_transformer",
+      "stem_channels": [
+        48,
+        64
+      ],
+      "stage_dims": [
+        128,
+        192
+      ],
+      "stage_depths": [
+        2,
+        3
+      ],
+      "num_heads": [
+        4,
+        8
+      ],
+      "window_sizes": [
+        12,
+        12
+      ],
+      "ffn_ratio": 2.0,
+      "pooling": "attention",
+      "use_shifted_windows": true,
+      "dropout": 0.10009210954657943
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 80,
+      "n_fft": 1024,
+      "hop_length": 160,
+      "f_min": 0.0,
+      "f_max": 6000.0,
+      "normalize": true,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 8,
+      "epochs": 30,
+      "learning_rate": 0.00022510862949801346,
+      "weight_decay": 1.2015000965994143e-05,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.49,
+    "f1_macro": 0.4791720538476877,
+    "f1_weighted": 0.4793708256915018,
+    "uar": 0.490625,
+    "war": 0.49,
+    "mcc": 0.4174271077983345,
+    "kappa": 0.4148393676695563,
+    "ece": 0.16189987887938817,
+    "fold_accuracy_mean": 0.49,
+    "fold_f1_macro_mean": 0.4791720538476877
+  },
+  "best_fold": {
+    "accuracy": 0.49,
+    "f1_macro": 0.4791720538476877,
+    "f1_weighted": 0.4793708256915018,
+    "uar": 0.490625,
+    "war": 0.49,
+    "mcc": 0.4174271077983345,
+    "kappa": 0.4148393676695563,
+    "ece": 0.16189987887938817,
+    "loss": 1.6266811835765838,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0041\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

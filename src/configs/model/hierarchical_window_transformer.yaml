@@ -1,0 +1,10 @@
+name: "hierarchical_window_transformer"
+stem_channels: [32, 64]
+stage_dims: [128, 192]
+stage_depths: [2, 2]
+num_heads: [4, 8]
+window_sizes: [8, 8]
+ffn_ratio: 2.0
+pooling: "attention"
+use_shifted_windows: true
+dropout: 0.2

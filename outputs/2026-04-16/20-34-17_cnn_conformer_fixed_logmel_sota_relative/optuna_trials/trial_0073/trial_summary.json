@@ -1,0 +1,86 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "cnn_conformer",
+      "stem_channels": [
+        64,
+        96
+      ],
+      "embed_dim": 256,
+      "num_heads": 8,
+      "num_layers": 4,
+      "ffn_dim": 1024,
+      "conv_kernel_size": 31,
+      "pooling": "attention",
+      "dropout": 0.16385377658760475,
+      "attention_type": "relative",
+      "max_relative_position": 128
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 80,
+      "n_fft": 512,
+      "hop_length": 160,
+      "f_min": 0.0,
+      "f_max": 8000.0,
+      "normalize": true,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512,
+      "cache_features": true,
+      "chunking": {
+        "enabled": true,
+        "chunk_frames": 64,
+        "hop_frames": 16,
+        "eval_hop_frames": 16,
+        "aggregation_mode": "mean_logit",
+        "topk_ratio": 0.25
+      }
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 16,
+      "epochs": 30,
+      "learning_rate": 0.00011705450707824576,
+      "weight_decay": 3.385350852880504e-05,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.63,
+    "f1_macro": 0.6316756046619603,
+    "f1_weighted": 0.6374236752757879,
+    "uar": 0.628125,
+    "war": 0.63,
+    "mcc": 0.5795147667637133,
+    "kappa": 0.5756880733944955,
+    "ece": 0.09366865893205009,
+    "fold_accuracy_mean": 0.63,
+    "fold_f1_macro_mean": 0.6316756046619603
+  },
+  "best_fold": {
+    "accuracy": 0.63,
+    "f1_macro": 0.6316756046619603,
+    "f1_weighted": 0.6374236752757879,
+    "uar": 0.628125,
+    "war": 0.63,
+    "mcc": 0.5795147667637133,
+    "kappa": 0.5756880733944955,
+    "ece": 0.09366865893205009,
+    "loss": 1.3492528269719333,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0073\\artifacts\\fold_1_learning_curve.png",
+    "attention_map": "optuna_trials\\trial_0073\\artifacts\\fold_1_attention_map.png",
+    "cnn_feature_map": "optuna_trials\\trial_0073\\artifacts\\fold_1_cnn_feature_map.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "accuracy": 0.49,
+    "f1_macro": 0.4791720538476877,
+    "f1_weighted": 0.4793708256915018,
+    "uar": 0.490625,
+    "war": 0.49,
+    "mcc": 0.4174271077983345,
+    "kappa": 0.4148393676695563,
+    "ece": 0.16189987887938817,
+    "loss": 1.6266811835765838,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0041\\artifacts\\fold_1_learning_curve.png"
+  }
+]

@@ -1,0 +1,76 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "pure_transformer",
+      "embed_dim": 256,
+      "num_heads": 4,
+      "num_layers": 6,
+      "ffn_dim": 1024,
+      "patch_size": [
+        32,
+        32
+      ],
+      "patch_stride": [
+        16,
+        16
+      ],
+      "pooling": "mean",
+      "dropout": 0.39155188345283665
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 64,
+      "n_fft": 2048,
+      "hop_length": 256,
+      "f_min": 20.0,
+      "f_max": 6000.0,
+      "normalize": true,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 16,
+      "epochs": 30,
+      "learning_rate": 0.0002946581631239614,
+      "weight_decay": 0.0006953841429427445,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.43666666666666665,
+    "f1_macro": 0.41492960601874784,
+    "f1_weighted": 0.4101591473208986,
+    "uar": 0.4375,
+    "war": 0.43666666666666665,
+    "mcc": 0.3579142654218463,
+    "kappa": 0.35282103650753127,
+    "ece": 0.1834357373913129,
+    "fold_accuracy_mean": 0.43666666666666665,
+    "fold_f1_macro_mean": 0.41492960601874784
+  },
+  "best_fold": {
+    "accuracy": 0.43666666666666665,
+    "f1_macro": 0.41492960601874784,
+    "f1_weighted": 0.4101591473208986,
+    "uar": 0.4375,
+    "war": 0.43666666666666665,
+    "mcc": 0.3579142654218463,
+    "kappa": 0.35282103650753127,
+    "ece": 0.1834357373913129,
+    "loss": 1.9145525081952413,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0011\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

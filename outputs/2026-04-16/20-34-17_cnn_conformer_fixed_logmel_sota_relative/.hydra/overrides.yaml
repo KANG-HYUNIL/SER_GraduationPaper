@@ -1,0 +1,17 @@
+- model=cnn_conformer
+- experiment.family=cnn_conformer
+- experiment.name=cnn_conformer_fixed_logmel_sota_relative
+- train.device=cuda
+- train.epochs=30
+- train.folds_to_run=1
+- train.num_workers=0
+- optuna.trials=30
+- +optuna.search_space.logmel.enabled=false
+- data.n_mels=80
+- data.n_fft=512
+- data.hop_length=160
+- data.f_min=0.0
+- data.f_max=8000.0
+- data.normalize=true
+- model.attention_type=relative
+- model.max_relative_position=128

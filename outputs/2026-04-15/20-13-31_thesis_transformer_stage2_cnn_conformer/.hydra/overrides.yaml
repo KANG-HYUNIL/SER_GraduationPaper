@@ -1,0 +1,10 @@
+- model=cnn_conformer
+- experiment.family=cnn_conformer
+- experiment.name=thesis_transformer_stage2_cnn_conformer
+- optuna.study_name=thesis_transformer_stage2_cnn_conformer_20260415_134403
+- optuna.storage=sqlite:///optuna_studies/thesis_transformer_stage2_cnn_conformer_20260415_134403.db
+- optuna.trials=40
+- train.epochs=30
+- train.device=cuda
+- train.num_workers=0
+- train.folds_to_run=1

@@ -1,0 +1,233 @@
+data:
+  dataset_path: C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 80
+  n_fft: 1024
+  hop_length: 160
+  f_min: 0.0
+  f_max: 6000.0
+  normalize: true
+  resize_enabled: false
+  resize_height: 128
+  resize_width: 512
+model:
+  name: hierarchical_window_transformer
+  stem_channels:
+  - 48
+  - 64
+  stage_dims:
+  - 128
+  - 192
+  stage_depths:
+  - 2
+  - 3
+  num_heads:
+  - 4
+  - 8
+  window_sizes:
+  - 12
+  - 12
+  ffn_ratio: 2.0
+  pooling: attention
+  use_shifted_windows: true
+  dropout: 0.10040019419159224
+optuna:
+  enabled: false
+  study_name: hierarchical_window_transformer_optuna
+  storage: sqlite:///optuna_studies/hierarchical_window_transformer_optuna.db
+  direction: maximize
+  trials: 30
+  timeout: null
+  sampler_seed: 42
+  pruner:
+    warmup_steps: 3
+  parallel_workers: 1
+  trials_per_worker: 10
+  metric: f1_macro
+  visualization:
+    save_html: true
+    save_png: false
+    png_scale: 3
+  trial_overrides:
+    train:
+      folds_to_run: 1
+    data:
+      n_mels: 80
+      n_fft: 1024
+      hop_length: 160
+      normalize: true
+      f_min: 0.0
+      f_max: 6000.0
+  search_space:
+    transformer:
+      patch_size_choices:
+      - 8
+      - 16
+      - 32
+      patch_stride_choices:
+      - 8
+      - 16
+      embed_dim_choices:
+      - 128
+      - 192
+      - 256
+      num_layers_min: 2
+      num_layers_max: 6
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 2
+      - 4
+      pooling_choices:
+      - attention
+      - mean
+      - cls
+      dropout_min: 0.1
+      dropout_max: 0.4
+    cnn_conformer:
+      stem_channel_choices:
+      - 32
+      - 48
+      - 64
+      - 96
+      embed_dim_choices:
+      - 128
+      - 192
+      - 256
+      num_layers_min: 2
+      num_layers_max: 5
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 2
+      - 4
+      conv_kernel_choices:
+      - 7
+      - 15
+      - 31
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.4
+    hierarchical_window:
+      stem_pair_choices:
+      - - 32
+        - 48
+      - - 32
+        - 64
+      - - 48
+        - 64
+      stage_spec_choices:
+      - stage_dims:
+        - 96
+        - 128
+        num_heads:
+        - 4
+        - 4
+      - stage_dims:
+        - 96
+        - 160
+        num_heads:
+        - 4
+        - 8
+      - stage_dims:
+        - 128
+        - 160
+        num_heads:
+        - 4
+        - 8
+      - stage_dims:
+        - 128
+        - 192
+        num_heads:
+        - 4
+        - 8
+      - stage_dims:
+        - 128
+        - 192
+        num_heads:
+        - 8
+        - 8
+      depth_pair_choices:
+      - - 2
+        - 2
+      - - 2
+        - 3
+      - - 3
+        - 2
+      - - 3
+        - 3
+      window_size_choices:
+      - 4
+      - 8
+      - 12
+      ffn_ratio_choices:
+      - 2
+      - 3
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.25
+    train:
+      lr_min: 0.00015
+      lr_max: 0.0008
+      weight_decay_min: 1.0e-05
+      weight_decay_max: 0.0007
+      batch_choices:
+      - 8
+      - 16
+    logmel:
+      enabled: false
+      n_mels_choices:
+      - 64
+      - 80
+      - 96
+      - 128
+      - 160
+      n_fft_choices:
+      - 512
+      - 1024
+      - 2048
+      hop_length_choices:
+      - 160
+      - 256
+      - 320
+      - 512
+      normalize_choices:
+      - true
+      - false
+      f_min_choices:
+      - 0.0
+      - 20.0
+      - 50.0
+      f_max_choices:
+      - 4000.0
+      - 6000.0
+      - 7000.0
+      - 8000.0
+experiment:
+  name: hierarchical_window_transformer_trial_0032
+  family: hierarchical_window_transformer
+  tag: ''
+train:
+  seed: 42
+  batch_size: 8
+  epochs: 30
+  learning_rate: 0.00022866738748723243
+  weight_decay: 1.802005601724142e-05
+  k_folds: 5
+  folds_to_run: 1
+  early_stopping: 10
+  device: cuda
+  num_workers: 0
+  objective_metric: f1_macro
+  save_best_to_root: false
+inference:
+  audio_path: ???
+  model_checkpoint: ???
+  output_dir: inference_outputs

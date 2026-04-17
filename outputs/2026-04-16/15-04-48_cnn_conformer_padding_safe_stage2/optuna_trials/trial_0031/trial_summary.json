@@ -1,0 +1,73 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "cnn_conformer",
+      "stem_channels": [
+        32,
+        96
+      ],
+      "embed_dim": 128,
+      "num_heads": 8,
+      "num_layers": 3,
+      "ffn_dim": 512,
+      "conv_kernel_size": 7,
+      "pooling": "attention",
+      "dropout": 0.20696624723240262
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 64,
+      "n_fft": 1024,
+      "hop_length": 320,
+      "f_min": 50.0,
+      "f_max": 7000.0,
+      "normalize": false,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 16,
+      "epochs": 30,
+      "learning_rate": 0.00015436694942036328,
+      "weight_decay": 5.912285579505992e-06,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.4166666666666667,
+    "f1_macro": 0.3705497104062678,
+    "f1_weighted": 0.39080857998890783,
+    "uar": 0.39375,
+    "war": 0.4166666666666667,
+    "mcc": 0.3340999481476921,
+    "kappa": 0.3286445012787723,
+    "ece": 0.06461952432990073,
+    "fold_accuracy_mean": 0.4166666666666667,
+    "fold_f1_macro_mean": 0.3705497104062678
+  },
+  "best_fold": {
+    "accuracy": 0.4166666666666667,
+    "f1_macro": 0.3705497104062678,
+    "f1_weighted": 0.39080857998890783,
+    "uar": 0.39375,
+    "war": 0.4166666666666667,
+    "mcc": 0.3340999481476921,
+    "kappa": 0.3286445012787723,
+    "ece": 0.06461952432990073,
+    "loss": 1.6388741890589396,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0031\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

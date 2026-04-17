@@ -17,5 +17,6 @@
         "name": "XeLaTeX -> Biber -> XeLaTeX * 2",
         "tools": ["xelatex", "biber", "xelatex", "xelatex"]
     }
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

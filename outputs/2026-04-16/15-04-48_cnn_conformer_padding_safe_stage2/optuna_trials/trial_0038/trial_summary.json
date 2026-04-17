@@ -1,0 +1,73 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "cnn_conformer",
+      "stem_channels": [
+        96,
+        96
+      ],
+      "embed_dim": 128,
+      "num_heads": 4,
+      "num_layers": 2,
+      "ffn_dim": 512,
+      "conv_kernel_size": 31,
+      "pooling": "attention",
+      "dropout": 0.12215667968604967
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 96,
+      "n_fft": 2048,
+      "hop_length": 512,
+      "f_min": 50.0,
+      "f_max": 6000.0,
+      "normalize": false,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 32,
+      "epochs": 30,
+      "learning_rate": 0.00033695562019051115,
+      "weight_decay": 1.6422239891272049e-06,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.5066666666666667,
+    "f1_macro": 0.49377841806979034,
+    "f1_weighted": 0.4965894523927226,
+    "uar": 0.496875,
+    "war": 0.5066666666666667,
+    "mcc": 0.43792268800285067,
+    "kappa": 0.4323702377908464,
+    "ece": 0.16369417965412142,
+    "fold_accuracy_mean": 0.5066666666666667,
+    "fold_f1_macro_mean": 0.49377841806979034
+  },
+  "best_fold": {
+    "accuracy": 0.5066666666666667,
+    "f1_macro": 0.49377841806979034,
+    "f1_weighted": 0.4965894523927226,
+    "uar": 0.496875,
+    "war": 0.5066666666666667,
+    "mcc": 0.43792268800285067,
+    "kappa": 0.4323702377908464,
+    "ece": 0.16369417965412142,
+    "loss": 1.5951828332742055,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0038\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

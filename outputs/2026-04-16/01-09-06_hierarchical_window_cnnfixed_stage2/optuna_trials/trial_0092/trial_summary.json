@@ -1,0 +1,86 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "hierarchical_window_transformer",
+      "stem_channels": [
+        48,
+        64
+      ],
+      "stage_dims": [
+        128,
+        192
+      ],
+      "stage_depths": [
+        2,
+        3
+      ],
+      "num_heads": [
+        4,
+        8
+      ],
+      "window_sizes": [
+        12,
+        12
+      ],
+      "ffn_ratio": 2.0,
+      "pooling": "attention",
+      "use_shifted_windows": true,
+      "dropout": 0.10793083695009485
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 80,
+      "n_fft": 1024,
+      "hop_length": 160,
+      "f_min": 0.0,
+      "f_max": 6000.0,
+      "normalize": true,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 8,
+      "epochs": 30,
+      "learning_rate": 0.00020971639635410154,
+      "weight_decay": 1.5552480500722327e-05,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.48333333333333334,
+    "f1_macro": 0.4663431375156097,
+    "f1_weighted": 0.4686038511878215,
+    "uar": 0.478125,
+    "war": 0.48333333333333334,
+    "mcc": 0.4129036166141052,
+    "kappa": 0.40643349502170023,
+    "ece": 0.21343222081661223,
+    "fold_accuracy_mean": 0.48333333333333334,
+    "fold_f1_macro_mean": 0.4663431375156097
+  },
+  "best_fold": {
+    "accuracy": 0.48333333333333334,
+    "f1_macro": 0.4663431375156097,
+    "f1_weighted": 0.4686038511878215,
+    "uar": 0.478125,
+    "war": 0.48333333333333334,
+    "mcc": 0.4129036166141052,
+    "kappa": 0.40643349502170023,
+    "ece": 0.21343222081661223,
+    "loss": 1.8198535970846812,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0092\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}

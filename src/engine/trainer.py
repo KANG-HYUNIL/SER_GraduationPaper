@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import shutil
+import gc
 from copy import deepcopy
 from pathlib import Path
 
@@ -17,8 +18,15 @@ from sklearn.model_selection import GroupKFold
 from torch.utils.data import DataLoader, Subset
 
 import src.models
-from src.data.dataset import RavdessDataset
+from src.data.dataset import (
+    ChunkedTrainDataset,
+    RavdessDataset,
+    UtteranceChunkDataset,
+    collate_fixed_chunks,
+    collate_utterance_chunks,
+)
 from src.data.transforms import AudioPipeline
+from src.models.utterance_aggregators import aggregate_chunk_embeddings, aggregate_chunk_logits
 from src.utils.metrics_eval import calculate_comprehensive_metrics
 from src.utils.registry import get_model_class
 from src.utils.viz_curves import (
@@ -27,7 +35,7 @@ from src.utils.viz_curves import (
     plot_roc_pr_curves,
 )
 from src.utils.viz_embeddings import plot_tsne_embeddings
-from src.utils.viz_heatmaps import plot_confusion_matrix
+from src.utils.viz_heatmaps import plot_attention_maps, plot_cnn_feature_map, plot_confusion_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -66,17 +74,78 @@ def resolve_device(device_name: str) -> torch.device:
     return torch.device(device_name)
 
 
+def chunking_enabled(cfg) -> bool:
+    return bool(cfg.data.get("chunking", {}).get("enabled", False))
+
+
+def get_chunking_params(cfg) -> tuple[int, int, int]:
+    chunk_cfg = cfg.data.get("chunking", {})
+    chunk_frames = int(chunk_cfg.get("chunk_frames", 64))
+    hop_frames = int(chunk_cfg.get("hop_frames", max(1, chunk_frames // 2)))
+    eval_hop_frames = int(chunk_cfg.get("eval_hop_frames", hop_frames))
+    return chunk_frames, hop_frames, eval_hop_frames
+
+
+def get_aggregation_params(cfg) -> tuple[str, float]:
+    chunk_cfg = cfg.data.get("chunking", {})
+    mode = str(chunk_cfg.get("aggregation_mode", "mean_logit"))
+    topk_ratio = float(chunk_cfg.get("topk_ratio", 0.5))
+    return mode, topk_ratio
+
+
 def build_dataloaders(cfg, dataset, train_idx, val_idx):
+    pin_memory = torch.cuda.is_available()
+    if chunking_enabled(cfg):
+        chunk_frames, hop_frames, eval_hop_frames = get_chunking_params(cfg)
+        train_subset = ChunkedTrainDataset(dataset, train_idx, chunk_frames=chunk_frames, hop_frames=hop_frames)
+        val_subset = UtteranceChunkDataset(dataset, val_idx, chunk_frames=chunk_frames, hop_frames=eval_hop_frames)
+        if len(train_subset) == 0:
+            raise RuntimeError("ChunkedTrainDataset is empty. Reduce chunk_frames or adjust log-Mel parameters.")
+        train_loader = DataLoader(
+            train_subset,
+            batch_size=cfg.train.batch_size,
+            shuffle=True,
+            num_workers=cfg.train.num_workers,
+            pin_memory=pin_memory,
+            collate_fn=collate_fixed_chunks,
+        )
+        val_loader = DataLoader(
+            val_subset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=cfg.train.num_workers,
+            pin_memory=pin_memory,
+            collate_fn=collate_utterance_chunks,
+        )
+        return train_loader, val_loader
+
     train_subset = Subset(dataset, train_idx)
     val_subset = Subset(dataset, val_idx)
     loader_kwargs = {
         "batch_size": cfg.train.batch_size,
         "num_workers": cfg.train.num_workers,
-        "pin_memory": torch.cuda.is_available(),
+        "pin_memory": pin_memory,
     }
     train_loader = DataLoader(train_subset, shuffle=True, **loader_kwargs)
     val_loader = DataLoader(val_subset, shuffle=False, **loader_kwargs)
     return train_loader, val_loader
+
+
+def unpack_batch(batch, device):
+    if len(batch) == 3:
+        inputs, labels, lengths = batch
+        return inputs.to(device), labels.to(device), lengths.to(device)
+    inputs, labels = batch
+    return inputs.to(device), labels.to(device), None
+
+
+def forward_model(model, inputs, lengths=None):
+    if lengths is None:
+        return model(inputs)
+    try:
+        return model(inputs, lengths=lengths)
+    except TypeError:
+        return model(inputs)
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
@@ -85,12 +154,11 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     all_preds = []
     all_labels = []
 
-    for inputs, labels in loader:
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+    for batch in loader:
+        inputs, labels, lengths = unpack_batch(batch, device)
 
         optimizer.zero_grad()
-        logits = model(inputs)
+        logits = forward_model(model, inputs, lengths)
         loss = criterion(logits, labels)
         loss.backward()
         optimizer.step()
@@ -105,7 +173,28 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     return metrics
 
 
-def evaluate(model, loader, criterion, device):
+def extract_features(model, inputs, lengths=None):
+    if hasattr(model, "get_embedding"):
+        if lengths is None:
+            return model.get_embedding(inputs)
+        try:
+            return model.get_embedding(inputs, lengths=lengths)
+        except TypeError:
+            return model.get_embedding(inputs)
+
+    features = model.features(inputs)
+
+    if hasattr(model, "freq_pool") and hasattr(model, "attention_layer"):
+        x_time = model.freq_pool(features).squeeze(2)
+        scores = model.attention_layer(x_time)
+        alpha = torch.softmax(scores, dim=2)
+        return torch.sum(x_time * alpha, dim=2)
+
+    pooled = model.pool(features) if hasattr(model, "pool") else nn.functional.adaptive_avg_pool2d(features, (1, 1))
+    return torch.flatten(pooled, 1)
+
+
+def evaluate_standard(model, loader, criterion, device):
     model.eval()
     total_loss = 0.0
     all_preds = []
@@ -114,11 +203,10 @@ def evaluate(model, loader, criterion, device):
     feature_batches = []
 
     with torch.no_grad():
-        for inputs, labels in loader:
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+        for batch in loader:
+            inputs, labels, lengths = unpack_batch(batch, device)
 
-            logits = model(inputs)
+            logits = forward_model(model, inputs, lengths)
             loss = criterion(logits, labels)
             probs = torch.softmax(logits, dim=1)
             preds = torch.argmax(logits, dim=1)
@@ -128,7 +216,7 @@ def evaluate(model, loader, criterion, device):
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
-            features = extract_features(model, inputs)
+            features = extract_features(model, inputs, lengths)
             feature_batches.append(features.cpu().numpy())
 
     y_true = np.array(all_labels)
@@ -147,20 +235,57 @@ def evaluate(model, loader, criterion, device):
     }
 
 
-def extract_features(model, inputs):
-    if hasattr(model, "get_embedding"):
-        return model.get_embedding(inputs)
+def evaluate_chunked_utterances(model, loader, criterion, device, aggregation_mode: str, topk_ratio: float):
+    model.eval()
+    total_loss = 0.0
+    all_preds = []
+    all_labels = []
+    all_probs = []
+    feature_batches = []
 
-    features = model.features(inputs)
+    with torch.no_grad():
+        for chunks, labels, _ in loader:
+            chunks = chunks.to(device)
+            label = labels.to(device)
 
-    if hasattr(model, "freq_pool") and hasattr(model, "attention_layer"):
-        x_time = model.freq_pool(features).squeeze(2)
-        scores = model.attention_layer(x_time)
-        alpha = torch.softmax(scores, dim=2)
-        return torch.sum(x_time * alpha, dim=2)
+            chunk_logits = model(chunks)
+            agg_logits, weights = aggregate_chunk_logits(chunk_logits, mode=aggregation_mode, topk_ratio=topk_ratio)
+            agg_logits = agg_logits.unsqueeze(0)
 
-    pooled = model.pool(features) if hasattr(model, "pool") else nn.functional.adaptive_avg_pool2d(features, (1, 1))
-    return torch.flatten(pooled, 1)
+            loss = criterion(agg_logits, label)
+            probs = torch.softmax(agg_logits, dim=1)
+            preds = torch.argmax(probs, dim=1)
+
+            total_loss += loss.item()
+            all_probs.append(probs.cpu().numpy())
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(label.cpu().numpy())
+
+            chunk_embeddings = model.get_embedding(chunks)
+            utterance_embedding = aggregate_chunk_embeddings(chunk_embeddings, weights).unsqueeze(0)
+            feature_batches.append(utterance_embedding.cpu().numpy())
+
+    y_true = np.array(all_labels)
+    y_pred = np.array(all_preds)
+    y_prob = np.concatenate(all_probs, axis=0)
+    feature_array = np.concatenate(feature_batches, axis=0)
+
+    metrics = calculate_comprehensive_metrics(y_true, y_pred, y_prob=y_prob)
+    metrics["loss"] = total_loss / len(loader.dataset)
+    return {
+        "metrics": metrics,
+        "y_true": y_true,
+        "y_pred": y_pred,
+        "y_prob": y_prob,
+        "features": feature_array,
+    }
+
+
+def evaluate(model, loader, criterion, device, cfg):
+    if chunking_enabled(cfg):
+        aggregation_mode, topk_ratio = get_aggregation_params(cfg)
+        return evaluate_chunked_utterances(model, loader, criterion, device, aggregation_mode, topk_ratio)
+    return evaluate_standard(model, loader, criterion, device)
 
 
 def ensure_artifact_dir(path: Path) -> Path:
@@ -193,6 +318,59 @@ def save_fold_learning_curve(history, artifact_dir: Path, fold: int) -> str:
         title=f"Fold {fold} Learning Curves",
     )
     return str(save_path)
+
+
+def save_model_visualizations(model, loader, device, artifact_dir: Path, cfg, fold: int) -> list[str]:
+    if not hasattr(model, "enable_visualization_capture") or not hasattr(model, "get_visualization_payload"):
+        return []
+
+    batch = next(iter(loader))
+    if chunking_enabled(cfg):
+        chunks, _, _ = batch
+        inputs = chunks[:1].to(device)
+        lengths = None
+    else:
+        inputs, _, lengths = unpack_batch(batch, device)
+        inputs = inputs[:1]
+        lengths = None if lengths is None else lengths[:1]
+
+    model.enable_visualization_capture(True)
+    with torch.no_grad():
+        _ = forward_model(model, inputs, lengths)
+    payload = model.get_visualization_payload()
+    model.enable_visualization_capture(False)
+
+    if not payload:
+        return []
+
+    attention_path = artifact_dir / f"fold_{fold}_attention_map.png"
+    feature_map_path = artifact_dir / f"fold_{fold}_cnn_feature_map.png"
+
+    spectrogram = payload.get("spectrogram")
+    attention_weights = payload.get("attention_weights")
+    feature_map = payload.get("cnn_feature_map")
+    if feature_map is None:
+        feature_map = payload.get("frequency_feature_map")
+
+    saved_paths = []
+    if spectrogram is not None and attention_weights is not None:
+        plot_attention_maps(
+            spectrogram.numpy(),
+            attention_weights.numpy(),
+            title=f"Fold {fold} Attention Map",
+            save_path=str(attention_path),
+        )
+        saved_paths.append(str(attention_path))
+
+    if feature_map is not None:
+        plot_cnn_feature_map(
+            feature_map.numpy(),
+            title=f"Fold {fold} CNN Feature Map",
+            save_path=str(feature_map_path),
+        )
+        saved_paths.append(str(feature_map_path))
+
+    return saved_paths
 
 
 def save_global_artifacts(result, artifact_dir: Path):
@@ -235,6 +413,18 @@ def save_global_artifacts(result, artifact_dir: Path):
     ]
     if tsne_saved:
         artifact_paths.append(str(tsne_path))
+
+    best_attention_path = result.get("best_attention_map_path")
+    if best_attention_path and os.path.exists(best_attention_path):
+        target = artifact_dir / "attention_map.png"
+        shutil.copy2(best_attention_path, target)
+        artifact_paths.append(str(target))
+
+    best_feature_map_path = result.get("best_cnn_feature_map_path")
+    if best_feature_map_path and os.path.exists(best_feature_map_path):
+        target = artifact_dir / "cnn_feature_map.png"
+        shutil.copy2(best_feature_map_path, target)
+        artifact_paths.append(str(target))
     return artifact_paths
 
 
@@ -268,7 +458,7 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
     model_class = get_model_class(cfg.model.name)
     criterion = nn.CrossEntropyLoss()
 
-    X_dummy = np.zeros(len(dataset))
+    x_dummy = np.zeros(len(dataset))
     y_dummy = np.array(dataset.labels)
     groups = np.array(dataset.actor_ids)
 
@@ -284,8 +474,9 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
     global_prob = []
     global_features = []
     fold_best_paths = []
+    fold_visual_paths = []
 
-    for fold, (train_idx, val_idx) in enumerate(splitter.split(X_dummy, y_dummy, groups=groups), start=1):
+    for fold, (train_idx, val_idx) in enumerate(splitter.split(x_dummy, y_dummy, groups=groups), start=1):
         if fold > folds_to_run:
             break
 
@@ -311,7 +502,7 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
 
         for epoch in range(1, cfg.train.epochs + 1):
             train_metrics = train_one_epoch(model, train_loader, criterion, optimizer, device)
-            val_output = evaluate(model, val_loader, criterion, device)
+            val_output = evaluate(model, val_loader, criterion, device, cfg)
             val_metrics = val_output["metrics"]
             score = val_metrics[cfg.train.objective_metric]
 
@@ -352,17 +543,34 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
 
         best_model = model_class(cfg).to(device)
         best_model.load_state_dict(torch.load(best_model_path, map_location=device))
-        fold_output = evaluate(best_model, val_loader, criterion, device)
+        fold_output = evaluate(best_model, val_loader, criterion, device, cfg)
+        visual_paths = save_model_visualizations(best_model, val_loader, device, artifact_dir, cfg, fold)
         fold_result = deepcopy(fold_output["metrics"])
         fold_result["fold"] = fold
         fold_result["learning_curve"] = fold_curve_path
+        for path in visual_paths:
+            if path.endswith("_attention_map.png"):
+                fold_result["attention_map"] = path
+            if path.endswith("_cnn_feature_map.png"):
+                fold_result["cnn_feature_map"] = path
         fold_metrics.append(fold_result)
         fold_best_paths.append(str(best_model_path))
+        fold_visual_paths.append(
+            {
+                "attention_map": fold_result.get("attention_map"),
+                "cnn_feature_map": fold_result.get("cnn_feature_map"),
+            }
+        )
 
         global_true.append(fold_output["y_true"])
         global_pred.append(fold_output["y_pred"])
         global_prob.append(fold_output["y_prob"])
         global_features.append(fold_output["features"])
+
+        del best_model, model, optimizer, train_loader, val_loader, fold_output
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     global_true = np.concatenate(global_true, axis=0)
     global_pred = np.concatenate(global_pred, axis=0)
@@ -376,6 +584,7 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
     best_fold = max(fold_metrics, key=lambda item: item[cfg.train.objective_metric])
     best_model_path = fold_best_paths[best_fold["fold"] - 1]
     exported_model_path = copy_best_model_to_root(cfg, best_model_path)
+    best_visuals = fold_visual_paths[best_fold["fold"] - 1]
 
     result = {
         "summary_metrics": summary_metrics,
@@ -383,6 +592,8 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
         "best_fold": best_fold,
         "best_model_path": best_model_path,
         "exported_model_path": exported_model_path,
+        "best_attention_map_path": best_visuals.get("attention_map"),
+        "best_cnn_feature_map_path": best_visuals.get("cnn_feature_map"),
         "global_true": global_true,
         "global_pred": global_pred,
         "global_prob": global_prob,

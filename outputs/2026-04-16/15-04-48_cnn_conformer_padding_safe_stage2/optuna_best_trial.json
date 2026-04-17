@@ -1,0 +1,38 @@
+{
+  "best_trial": 38,
+  "best_value": 0.49377841806979034,
+  "best_params": {
+    "train_learning_rate": 0.00033695562019051115,
+    "train_weight_decay": 1.6422239891272049e-06,
+    "train_batch_size": 32,
+    "logmel_n_fft": 2048,
+    "logmel_hop_length": 512,
+    "logmel_n_mels": 96,
+    "logmel_normalize": false,
+    "logmel_f_min": 50.0,
+    "logmel_f_max": 6000.0,
+    "conformer_stem_channel_1": 96,
+    "conformer_stem_channel_2": 96,
+    "conformer_embed_dim": 128,
+    "conformer_num_layers": 2,
+    "conformer_num_heads": 4,
+    "conformer_ffn_ratio": 4,
+    "conformer_conv_kernel": 31,
+    "conformer_pooling": "attention",
+    "conformer_dropout": 0.12215667968604967
+  },
+  "best_attrs": {
+    "accuracy": 0.5066666666666667,
+    "best_model_path": "weights\\best_model_fold1.pt",
+    "ece": 0.16369417965412142,
+    "f1_macro": 0.49377841806979034,
+    "f1_weighted": 0.4965894523927226,
+    "fold_accuracy_mean": 0.5066666666666667,
+    "fold_f1_macro_mean": 0.49377841806979034,
+    "kappa": 0.4323702377908464,
+    "mcc": 0.43792268800285067,
+    "trial_dir": "optuna_trials\\trial_0038",
+    "uar": 0.496875,
+    "war": 0.5066666666666667
+  }
+}

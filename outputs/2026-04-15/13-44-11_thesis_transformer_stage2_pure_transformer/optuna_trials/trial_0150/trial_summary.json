@@ -1,0 +1,76 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "pure_transformer",
+      "embed_dim": 256,
+      "num_heads": 4,
+      "num_layers": 5,
+      "ffn_dim": 512,
+      "patch_size": [
+        32,
+        32
+      ],
+      "patch_stride": [
+        16,
+        16
+      ],
+      "pooling": "cls",
+      "dropout": 0.28241304696537484
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 64,
+      "n_fft": 1024,
+      "hop_length": 160,
+      "f_min": 20.0,
+      "f_max": 8000.0,
+      "normalize": true,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 8,
+      "epochs": 30,
+      "learning_rate": 0.00018174815919047053,
+      "weight_decay": 7.109141136659479e-05,
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "cuda",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.47,
+    "f1_macro": 0.4630960358334074,
+    "f1_weighted": 0.4778074887273518,
+    "uar": 0.453125,
+    "war": 0.47,
+    "mcc": 0.3970958334440276,
+    "kappa": 0.39049322770253003,
+    "ece": 0.30702936023473737,
+    "fold_accuracy_mean": 0.47,
+    "fold_f1_macro_mean": 0.4630960358334074
+  },
+  "best_fold": {
+    "accuracy": 0.47,
+    "f1_macro": 0.4630960358334074,
+    "f1_weighted": 0.4778074887273518,
+    "uar": 0.453125,
+    "war": 0.47,
+    "mcc": 0.3970958334440276,
+    "kappa": 0.39049322770253003,
+    "ece": 0.30702936023473737,
+    "loss": 2.156676272054513,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0150\\artifacts\\fold_1_learning_curve.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}
