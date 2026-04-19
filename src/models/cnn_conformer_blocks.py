@@ -68,6 +68,26 @@ class RelativePositionMultiHeadAttention(nn.Module):
         return attn_output, None
 
 
+class MultiScaleConvModule(nn.Module):
+    def __init__(self, embed_dim: int, kernel_sizes: list[int], dropout: float):
+        super().__init__()
+        if len(kernel_sizes) < 2:
+            raise ValueError("MultiScaleConvModule requires at least two kernel sizes.")
+        self.branches = nn.ModuleList([ConvModule(embed_dim, int(kernel_size), dropout) for kernel_size in kernel_sizes])
+        merged_dim = embed_dim * len(self.branches)
+        self.merge = nn.Sequential(
+            nn.LayerNorm(merged_dim),
+            nn.Linear(merged_dim, embed_dim),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x: torch.Tensor, key_padding_mask: torch.Tensor | None = None) -> torch.Tensor:
+        branch_outputs = [branch(x, key_padding_mask=key_padding_mask) for branch in self.branches]
+        merged = torch.cat(branch_outputs, dim=-1)
+        merged = self.merge(merged)
+        return apply_sequence_mask(merged, key_padding_mask)
+
+
 class CNNConformerBlock(nn.Module):
     def __init__(
         self,
@@ -78,6 +98,8 @@ class CNNConformerBlock(nn.Module):
         dropout: float,
         attention_type: str = "relative",
         max_relative_position: int = 128,
+        conv_module_type: str = "single",
+        multiscale_kernel_sizes: list[int] | None = None,
     ):
         super().__init__()
         self.attention_type = str(attention_type)
@@ -96,7 +118,14 @@ class CNNConformerBlock(nn.Module):
             raise ValueError(f"Unsupported cnn_conformer attention_type: {self.attention_type}")
 
         self.self_attn_dropout = nn.Dropout(dropout)
-        self.conv_module = ConvModule(embed_dim, conv_kernel_size, dropout)
+        self.conv_module_type = str(conv_module_type)
+        if self.conv_module_type == "single":
+            self.conv_module = ConvModule(embed_dim, conv_kernel_size, dropout)
+        elif self.conv_module_type == "multiscale":
+            kernel_sizes = [int(value) for value in (multiscale_kernel_sizes or [15, conv_kernel_size])]
+            self.conv_module = MultiScaleConvModule(embed_dim, kernel_sizes, dropout)
+        else:
+            raise ValueError(f"Unsupported conv_module_type: {self.conv_module_type}")
         self.ffn2 = FeedForwardModule(embed_dim, ffn_dim, dropout)
         self.final_norm = nn.LayerNorm(embed_dim)
 

@@ -12,6 +12,12 @@ resize_enabled: true
 resize_height: 128
 resize_width: 512
 cache_features: true
+specaugment:
+  enabled: false
+  time_mask_count: 0
+  time_mask_width: 0
+  freq_mask_count: 0
+  freq_mask_width: 0
 chunking:
   enabled: false
   chunk_frames: 64

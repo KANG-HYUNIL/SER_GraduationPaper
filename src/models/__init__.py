@@ -8,3 +8,4 @@ from .efficientnet_lite import EfficientNetLite0
 from .pure_transformer import PureTransformerSER
 from .cnn_conformer import CNNConformerSER
 from .hierarchical_window_transformer import HierarchicalWindowTransformerSER
+from .bridged_window_transformer import BridgedWindowTransformerSER

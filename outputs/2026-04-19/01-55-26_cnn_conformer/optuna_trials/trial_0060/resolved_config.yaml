@@ -1,0 +1,361 @@
+data:
+  dataset_path: C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 80
+  n_fft: 1024
+  hop_length: 160
+  f_min: 0.0
+  f_max: 6000.0
+  normalize: true
+  resize_enabled: false
+  resize_height: 128
+  resize_width: 512
+  cache_features: true
+  specaugment:
+    enabled: true
+    time_mask_count: 1
+    time_mask_width: 4
+    freq_mask_count: 0
+    freq_mask_width: 0
+  chunking:
+    enabled: true
+    chunk_frames: 80
+    hop_frames: 20
+    eval_hop_frames: 20
+    aggregation_mode: confidence_weighted_logit
+    topk_ratio: 0.75
+model:
+  name: cnn_conformer
+  stem_channels:
+  - 64
+  - 96
+  stem_strides:
+  - - 2
+    - 1
+  - - 2
+    - 2
+  embed_dim: 256
+  num_heads: 8
+  num_layers: 4
+  ffn_dim: 1024
+  conv_kernel_size: 31
+  conv_module_type: single
+  multiscale_kernel_sizes:
+  - 15
+  - 31
+  layer_fusion: last
+  pooling: attention
+  dropout: 0.14976262813797367
+  stem_dropout: 0.14061717120194586
+  projector_dropout: 0.13763267142195282
+  input_dropout: 0.11805886583131728
+  encoder_dropout: 0.14976262813797367
+  classifier_dropout: 0.1602800682147976
+  attention_type: relative
+  max_relative_position: 128
+optuna:
+  enabled: true
+  study_name: cnn_conformer_optuna_a6d745324f
+  namespace_by_search_space: true
+  storage: sqlite:///optuna_studies/cnn_conformer_optuna.db
+  direction: maximize
+  trials: 30
+  timeout: null
+  sampler_seed: 42
+  pruner:
+    warmup_steps: 0
+  parallel_workers: 1
+  trials_per_worker: 8
+  metric: f1_macro
+  visualization:
+    save_html: true
+    save_png: false
+    png_scale: 3
+  trial_overrides:
+    train:
+      folds_to_run: 1
+    model:
+      stem_channels:
+      - 64
+      - 96
+      embed_dim: 256
+      num_layers: 4
+      num_heads: 8
+      ffn_dim: 1024
+      conv_kernel_size: 31
+      pooling: attention
+    data:
+      n_mels: 80
+      n_fft: 1024
+      hop_length: 160
+      normalize: true
+      f_min: 0.0
+      f_max: 6000.0
+  search_space:
+    chunking:
+      enabled: true
+      chunk_frames_choices:
+      - 48
+      - 64
+      - 80
+      chunk_hop_ratio_choices:
+      - 0.25
+      - 0.5
+      eval_hop_ratio_choices:
+      - 0.25
+      - 0.5
+      aggregation_mode_choices:
+      - mean_logit
+      - confidence_weighted_logit
+      - topk_logit
+      topk_ratio_choices:
+      - 0.5
+      - 0.75
+    transformer:
+      patch_size_choices:
+      - 8
+      - 16
+      - 32
+      patch_stride_choices:
+      - 8
+      - 16
+      embed_dim_choices:
+      - 128
+      - 192
+      - 256
+      num_layers_min: 2
+      num_layers_max: 6
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 2
+      - 4
+      pooling_choices:
+      - attention
+      - mean
+      - cls
+      dropout_min: 0.1
+      dropout_max: 0.4
+    cnn_conformer:
+      stem_pair_choices:
+      - - 64
+        - 96
+      subsampling_choices:
+      - name: standard_4x
+        stem_strides:
+        - - 2
+          - 2
+        - - 2
+          - 2
+      - name: time_preserve_first
+        stem_strides:
+        - - 2
+          - 1
+        - - 2
+          - 2
+      - name: freq_only
+        stem_strides:
+        - - 2
+          - 1
+        - - 2
+          - 1
+      embed_dim_choices:
+      - 256
+      num_layers_choices:
+      - 4
+      num_heads_choices:
+      - 8
+      ffn_ratio_choices:
+      - 4
+      conv_kernel_choices:
+      - 31
+      layer_fusion_choices:
+      - last
+      - learned_sum
+      conv_module_type_choices:
+      - single
+      - multiscale
+      pooling_choices:
+      - attention
+      - mean
+      stem_dropout_min: 0.08
+      stem_dropout_max: 0.15
+      projector_dropout_min: 0.08
+      projector_dropout_max: 0.15
+      input_dropout_min: 0.08
+      input_dropout_max: 0.15
+      encoder_dropout_min: 0.12
+      encoder_dropout_max: 0.22
+      classifier_dropout_min: 0.12
+      classifier_dropout_max: 0.22
+      label_smoothing_choices:
+      - 0.0
+      - 0.05
+      time_mask_count_choices:
+      - 0
+      - 1
+      time_mask_width_choices:
+      - 0
+      - 4
+      - 8
+      freq_mask_count_choices:
+      - 0
+      - 1
+      freq_mask_width_choices:
+      - 0
+      - 4
+    hierarchical_window:
+      stem_channel_choices:
+      - 32
+      - 48
+      - 64
+      stage1_dim_choices:
+      - 96
+      - 128
+      stage2_dim_choices:
+      - 128
+      - 160
+      - 192
+      stage1_depth_min: 1
+      stage1_depth_max: 3
+      stage2_depth_min: 1
+      stage2_depth_max: 3
+      num_heads_choices:
+      - 4
+      - 8
+      window_size_choices:
+      - 6
+      - 8
+      - 12
+      ffn_ratio_choices:
+      - 2
+      - 3
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.4
+    bridged_window:
+      stem_pair_choices:
+      - - 32
+        - 48
+      - - 48
+        - 64
+      stage_spec_choices:
+      - stage_dims:
+        - 96
+        - 160
+        num_heads:
+        - 4
+        - 8
+      - stage_dims:
+        - 128
+        - 192
+        num_heads:
+        - 4
+        - 8
+      - stage_dims:
+        - 128
+        - 192
+        num_heads:
+        - 8
+        - 8
+      depth_pair_choices:
+      - - 2
+        - 2
+      - - 2
+        - 3
+      - - 3
+        - 2
+      window_shape_choices:
+      - stage_windows:
+        - - 4
+          - 8
+        - - 5
+          - 8
+      - stage_windows:
+        - - 4
+          - 12
+        - - 5
+          - 12
+      - stage_windows:
+        - - 5
+          - 8
+        - - 5
+          - 8
+      - stage_windows:
+        - - 5
+          - 12
+        - - 5
+          - 12
+      bridge_token_choices:
+      - 2
+      - 4
+      - 6
+      ffn_ratio_choices:
+      - 2
+      - 3
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.25
+    train:
+      lr_min: 0.0001
+      lr_max: 0.0004
+      weight_decay_min: 1.0e-05
+      weight_decay_max: 0.0003
+      batch_choices:
+      - 12
+      - 16
+    logmel:
+      enabled: false
+      n_mels_choices:
+      - 64
+      - 80
+      - 96
+      - 128
+      - 160
+      n_fft_choices:
+      - 512
+      - 1024
+      - 2048
+      hop_length_choices:
+      - 160
+      - 256
+      - 320
+      normalize_choices:
+      - true
+      - false
+      f_min_choices:
+      - 0.0
+      - 20.0
+      - 50.0
+      f_max_choices:
+      - 4000.0
+      - 6000.0
+      - 8000.0
+experiment:
+  name: cnn_conformer_trial_0060
+  family: cnn_conformer
+  tag: struct30x30
+train:
+  seed: 42
+  batch_size: 12
+  epochs: 30
+  learning_rate: 0.00016604469059994047
+  weight_decay: 0.00013378834343713802
+  label_smoothing: 0.0
+  k_folds: 5
+  folds_to_run: 1
+  early_stopping: 10
+  device: auto
+  num_workers: 0
+  objective_metric: f1_macro
+  save_best_to_root: false
+inference:
+  audio_path: ???
+  model_checkpoint: ???
+  output_dir: inference_outputs

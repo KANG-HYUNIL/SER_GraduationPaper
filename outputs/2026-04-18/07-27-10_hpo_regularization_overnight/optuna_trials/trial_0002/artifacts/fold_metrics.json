@@ -1,0 +1,17 @@
+[
+  {
+    "accuracy": 0.4633333333333333,
+    "f1_macro": 0.419188288732167,
+    "f1_weighted": 0.4471341746476448,
+    "uar": 0.43437499999999996,
+    "war": 0.4633333333333333,
+    "mcc": 0.38718905272155796,
+    "kappa": 0.38076923076923075,
+    "ece": 0.09219809263944627,
+    "loss": 1.6655541910727818,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0002\\artifacts\\fold_1_learning_curve.png",
+    "attention_map": "optuna_trials\\trial_0002\\artifacts\\fold_1_attention_map.png",
+    "cnn_feature_map": "optuna_trials\\trial_0002\\artifacts\\fold_1_cnn_feature_map.png"
+  }
+]

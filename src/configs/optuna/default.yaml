@@ -38,15 +38,44 @@ search_space:
     dropout_min: 0.1
     dropout_max: 0.4
   cnn_conformer:
+    stem_pair_choices:
+      - [48, 64]
+      - [64, 96]
     stem_channel_choices: [32, 48, 64, 96]
+    subsampling_choices:
+      - name: "standard_4x"
+        stem_strides: [[2, 2], [2, 2]]
+      - name: "time_preserve_first"
+        stem_strides: [[2, 1], [2, 2]]
+      - name: "freq_only"
+        stem_strides: [[2, 1], [2, 1]]
     embed_dim_choices: [144, 192, 256]
     num_layers_choices: [4, 8, 12, 16]
     num_heads_choices: [4, 8]
     ffn_ratio_choices: [4]
     conv_kernel_choices: [15, 31]
+    layer_fusion_choices: ["last", "learned_sum", "last2_mean"]
+    conv_module_type_choices: ["single", "multiscale"]
+    loss_name_choices: ["cross_entropy", "weighted_cross_entropy", "focal_loss"]
+    sampler_name_choices: ["random", "weighted"]
+    class_weight_mode_choices: ["effective_num"]
+    focal_gamma_choices: [2.0]
     pooling_choices: ["attention", "mean"]
-    dropout_min: 0.1
-    dropout_max: 0.25
+    stem_dropout_min: 0.05
+    stem_dropout_max: 0.2
+    projector_dropout_min: 0.05
+    projector_dropout_max: 0.2
+    input_dropout_min: 0.05
+    input_dropout_max: 0.2
+    encoder_dropout_min: 0.1
+    encoder_dropout_max: 0.3
+    classifier_dropout_min: 0.1
+    classifier_dropout_max: 0.35
+    label_smoothing_choices: [0.0, 0.05, 0.1]
+    time_mask_count_choices: [0, 1, 2]
+    time_mask_width_choices: [0, 4, 8, 12]
+    freq_mask_count_choices: [0, 1, 2]
+    freq_mask_width_choices: [0, 4, 8]
   hierarchical_window:
     stem_channel_choices: [32, 48, 64]
     stage1_dim_choices: [96, 128]
@@ -61,6 +90,31 @@ search_space:
     pooling_choices: ["attention", "mean"]
     dropout_min: 0.1
     dropout_max: 0.4
+  bridged_window:
+    stem_pair_choices:
+      - [32, 48]
+      - [48, 64]
+    stage_spec_choices:
+      - stage_dims: [96, 160]
+        num_heads: [4, 8]
+      - stage_dims: [128, 192]
+        num_heads: [4, 8]
+      - stage_dims: [128, 192]
+        num_heads: [8, 8]
+    depth_pair_choices:
+      - [2, 2]
+      - [2, 3]
+      - [3, 2]
+    window_shape_choices:
+      - stage_windows: [[4, 8], [5, 8]]
+      - stage_windows: [[4, 12], [5, 12]]
+      - stage_windows: [[5, 8], [5, 8]]
+      - stage_windows: [[5, 12], [5, 12]]
+    bridge_token_choices: [2, 4, 6]
+    ffn_ratio_choices: [2, 3]
+    pooling_choices: ["attention", "mean"]
+    dropout_min: 0.1
+    dropout_max: 0.25
   train:
     lr_min: 1.0e-4
     lr_max: 3.0e-3

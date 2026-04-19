@@ -21,6 +21,7 @@ from sklearn.model_selection import GroupKFold
 import src.models
 from src.data.dataset import RavdessDataset
 from src.data.transforms import AudioPipeline
+from src.engine.losses import build_criterion
 from src.engine.trainer import build_dataloaders, resolve_device, sanitize_experiment_name
 from src.engine.trainer import run_cross_validation_experiment
 from src.utils.registry import get_model_class
@@ -232,11 +233,24 @@ def suggest_pure_transformer_params(trial, cfg):
 
 def suggest_cnn_conformer_params(trial, cfg):
     space = cfg.optuna.search_space.cnn_conformer
-    stem_channels = [
-        trial.suggest_categorical("conformer_stem_channel_1", list(space.stem_channel_choices)),
-        trial.suggest_categorical("conformer_stem_channel_2", list(space.stem_channel_choices)),
-    ]
-    stem_channels = sorted(stem_channels)
+    stem_pair_choices = _cfg_get(space, "stem_pair_choices")
+    if stem_pair_choices:
+        stem_channels = _suggest_pair_choice(trial, "conformer_stem_pair", stem_pair_choices, "stem_pair_choices")
+    else:
+        stem_channels = [
+            trial.suggest_categorical("conformer_stem_channel_1", list(space.stem_channel_choices)),
+            trial.suggest_categorical("conformer_stem_channel_2", list(space.stem_channel_choices)),
+        ]
+        stem_channels = sorted(stem_channels)
+
+    raw_subsampling_choices = _cfg_get(space, "subsampling_choices")
+    if not raw_subsampling_choices:
+        raise ValueError("cnn_conformer.subsampling_choices must define at least one candidate.")
+    subsampling_labels = [str(choice["name"]) for choice in raw_subsampling_choices]
+    selected_subsampling = trial.suggest_categorical("conformer_subsampling", subsampling_labels)
+    subsampling_spec = raw_subsampling_choices[subsampling_labels.index(selected_subsampling)]
+    stem_strides = [[int(v) for v in pair] for pair in subsampling_spec["stem_strides"]]
+
     embed_dim = trial.suggest_categorical("conformer_embed_dim", list(space.embed_dim_choices))
     num_layers = trial.suggest_categorical("conformer_num_layers", list(space.num_layers_choices))
     num_heads = trial.suggest_categorical("conformer_num_heads", list(space.num_heads_choices))
@@ -244,18 +258,77 @@ def suggest_cnn_conformer_params(trial, cfg):
         raise optuna.TrialPruned("Conformer embed_dim must be divisible by num_heads.")
     ffn_ratio = trial.suggest_categorical("conformer_ffn_ratio", list(space.ffn_ratio_choices))
     conv_kernel = trial.suggest_categorical("conformer_conv_kernel", list(space.conv_kernel_choices))
+    layer_fusion = trial.suggest_categorical("conformer_layer_fusion", list(space.layer_fusion_choices))
+    conv_module_type = trial.suggest_categorical("conformer_conv_module_type", list(space.conv_module_type_choices))
+    loss_name = trial.suggest_categorical("conformer_loss_name", list(space.loss_name_choices))
+    sampler_name = trial.suggest_categorical("conformer_sampler_name", list(space.sampler_name_choices))
+    class_weight_mode = trial.suggest_categorical("conformer_class_weight_mode", list(space.class_weight_mode_choices))
+    focal_gamma = float(trial.suggest_categorical("conformer_focal_gamma", list(space.focal_gamma_choices)))
     pooling = trial.suggest_categorical("conformer_pooling", list(space.pooling_choices))
-    dropout = trial.suggest_float("conformer_dropout", float(space.dropout_min), float(space.dropout_max))
-    return {
-        "stem_channels": stem_channels,
+    stem_dropout = trial.suggest_float("conformer_stem_dropout", float(space.stem_dropout_min), float(space.stem_dropout_max))
+    projector_dropout = trial.suggest_float(
+        "conformer_projector_dropout",
+        float(space.projector_dropout_min),
+        float(space.projector_dropout_max),
+    )
+    input_dropout = trial.suggest_float("conformer_input_dropout", float(space.input_dropout_min), float(space.input_dropout_max))
+    encoder_dropout = trial.suggest_float(
+        "conformer_encoder_dropout",
+        float(space.encoder_dropout_min),
+        float(space.encoder_dropout_max),
+    )
+    classifier_dropout = trial.suggest_float(
+        "conformer_classifier_dropout",
+        float(space.classifier_dropout_min),
+        float(space.classifier_dropout_max),
+    )
+    label_smoothing = float(trial.suggest_categorical("conformer_label_smoothing", list(space.label_smoothing_choices)))
+    time_mask_count = int(trial.suggest_categorical("conformer_time_mask_count", list(space.time_mask_count_choices)))
+    time_mask_width = int(trial.suggest_categorical("conformer_time_mask_width", list(space.time_mask_width_choices)))
+    freq_mask_count = int(trial.suggest_categorical("conformer_freq_mask_count", list(space.freq_mask_count_choices)))
+    freq_mask_width = int(trial.suggest_categorical("conformer_freq_mask_width", list(space.freq_mask_width_choices)))
+
+    model_updates = {
+        "stem_channels": [int(value) for value in stem_channels],
+        "stem_strides": stem_strides,
         "embed_dim": embed_dim,
         "num_heads": num_heads,
         "num_layers": num_layers,
         "ffn_dim": int(embed_dim * ffn_ratio),
         "conv_kernel_size": int(conv_kernel),
+        "layer_fusion": str(layer_fusion),
+        "conv_module_type": str(conv_module_type),
         "pooling": pooling,
-        "dropout": dropout,
+        "dropout": encoder_dropout,
+        "stem_dropout": stem_dropout,
+        "projector_dropout": projector_dropout,
+        "input_dropout": input_dropout,
+        "encoder_dropout": encoder_dropout,
+        "classifier_dropout": classifier_dropout,
     }
+    train_updates = {
+        "label_smoothing": label_smoothing,
+        "loss": {
+            "name": str(loss_name),
+            "label_smoothing": label_smoothing,
+            "class_weight_mode": str(class_weight_mode),
+            "focal_gamma": focal_gamma,
+        },
+        "sampler": {
+            "name": str(sampler_name),
+            "class_weight_mode": str(class_weight_mode),
+        },
+    }
+    data_updates = {
+        "specaugment": {
+            "enabled": bool(time_mask_count > 0 or freq_mask_count > 0),
+            "time_mask_count": time_mask_count,
+            "time_mask_width": time_mask_width,
+            "freq_mask_count": freq_mask_count,
+            "freq_mask_width": freq_mask_width,
+        }
+    }
+    return model_updates, train_updates, data_updates
 
 
 def suggest_hierarchical_window_params(trial, cfg):
@@ -295,6 +368,45 @@ def suggest_hierarchical_window_params(trial, cfg):
     }
 
 
+def suggest_bridged_window_params(trial, cfg):
+    space = cfg.optuna.search_space.bridged_window
+    stem_channels = _suggest_pair_choice(trial, "bridged_stem_pair", _cfg_get(space, "stem_pair_choices"), "stem_pair_choices")
+    stage_dims, num_heads = _suggest_stage_spec(trial, space)
+    stage_depths = _suggest_pair_choice(trial, "bridged_depth_pair", _cfg_get(space, "depth_pair_choices"), "depth_pair_choices")
+
+    raw_window_choices = _cfg_get(space, "window_shape_choices")
+    if not raw_window_choices:
+        raise ValueError("bridged_window.window_shape_choices must define at least one candidate.")
+    window_pairs = []
+    labels = []
+    for choice in raw_window_choices:
+        stage_windows = [[int(value) for value in pair] for pair in choice["stage_windows"]]
+        if len(stage_windows) != 2 or any(len(pair) != 2 for pair in stage_windows):
+            raise ValueError("Each bridged window shape choice must define two [freq, time] windows.")
+        window_pairs.append(stage_windows)
+        labels.append(f"{stage_windows[0][0]}x{stage_windows[0][1]}_{stage_windows[1][0]}x{stage_windows[1][1]}")
+
+    selected = trial.suggest_categorical("bridged_window_shape", labels)
+    window_sizes = window_pairs[labels.index(selected)]
+    bridge_tokens = int(trial.suggest_categorical("bridged_bridge_tokens", list(space.bridge_token_choices)))
+    ffn_ratio = float(trial.suggest_categorical("bridged_ffn_ratio", list(space.ffn_ratio_choices)))
+    pooling = trial.suggest_categorical("bridged_pooling", list(space.pooling_choices))
+    dropout = trial.suggest_float("bridged_dropout", float(space.dropout_min), float(space.dropout_max))
+
+    return {
+        "stem_channels": [int(value) for value in stem_channels],
+        "stage_dims": [int(value) for value in stage_dims],
+        "stage_depths": [int(value) for value in stage_depths],
+        "num_heads": [int(value) for value in num_heads],
+        "window_sizes": [[int(v) for v in pair] for pair in window_sizes],
+        "bridge_tokens": bridge_tokens,
+        "ffn_ratio": ffn_ratio,
+        "pooling": pooling,
+        "dropout": dropout,
+        "use_shifted_windows": True,
+    }
+
+
 def apply_trial_params(base_cfg: DictConfig, trial: optuna.Trial) -> DictConfig:
     cfg = OmegaConf.create(OmegaConf.to_container(base_cfg, resolve=True))
     if "trial_overrides" in cfg.optuna and cfg.optuna.trial_overrides:
@@ -307,18 +419,24 @@ def apply_trial_params(base_cfg: DictConfig, trial: optuna.Trial) -> DictConfig:
     chunking_params = suggest_chunking_params(trial, cfg)
 
     model_updates = {}
+    train_updates = {}
+    data_updates = {}
     if model_name == "pure_transformer":
         model_updates = suggest_pure_transformer_params(trial, cfg)
     elif model_name == "cnn_conformer":
-        model_updates = suggest_cnn_conformer_params(trial, cfg)
+        model_updates, train_updates, data_updates = suggest_cnn_conformer_params(trial, cfg)
     elif model_name == "hierarchical_window_transformer":
         model_updates = suggest_hierarchical_window_params(trial, cfg)
+    elif model_name == "bridged_window_transformer":
+        model_updates = suggest_bridged_window_params(trial, cfg)
     else:
         raise ValueError(f"Unsupported Optuna model family: {model_name}")
 
     with open_dict(cfg):
         for key, value in model_updates.items():
             cfg.model[key] = value
+        for key, value in train_updates.items():
+            cfg.train[key] = value
         cfg.train.learning_rate = learning_rate
         cfg.train.weight_decay = weight_decay
         cfg.train.batch_size = batch_size
@@ -331,6 +449,14 @@ def apply_trial_params(base_cfg: DictConfig, trial: optuna.Trial) -> DictConfig:
             cfg.data[key] = value
         for key, value in chunking_params.items():
             cfg.data.chunking[key] = value
+        for key, value in data_updates.items():
+            if isinstance(value, dict):
+                if key not in cfg.data or cfg.data[key] is None:
+                    cfg.data[key] = {}
+                for nested_key, nested_value in value.items():
+                    cfg.data[key][nested_key] = nested_value
+            else:
+                cfg.data[key] = value
 
     return cfg
 
@@ -363,7 +489,8 @@ def preflight_trial_config(cfg: DictConfig) -> None:
 
     model_class = get_model_class(cfg.model.name)
     model = model_class(cfg).to(device)
-    criterion = nn.CrossEntropyLoss()
+    fold_train_labels = [dataset.labels[int(idx)] for idx in train_idx]
+    criterion = build_criterion(cfg, fold_train_labels, num_classes=8).to(device)
 
     try:
         logits = model(inputs, lengths=lengths) if lengths is not None else model(inputs)

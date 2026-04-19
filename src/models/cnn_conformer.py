@@ -72,6 +72,21 @@ class FlattenFrequencyProjector(nn.Module):
         return self.dropout(x), flattened_freq
 
 
+class LayerWeightedSum(nn.Module):
+    def __init__(self, num_layers: int):
+        super().__init__()
+        self.logits = nn.Parameter(torch.zeros(num_layers))
+
+    def forward(self, layer_outputs: list[torch.Tensor]) -> torch.Tensor:
+        if len(layer_outputs) != self.logits.numel():
+            raise ValueError(
+                f"LayerWeightedSum expected {self.logits.numel()} layer outputs, got {len(layer_outputs)}."
+            )
+        weights = torch.softmax(self.logits, dim=0)
+        stacked = torch.stack(layer_outputs, dim=0)
+        return torch.sum(stacked * weights.view(-1, 1, 1, 1), dim=0)
+
+
 @register_model("cnn_conformer")
 class CNNConformerSER(nn.Module):
     def __init__(self, cfg: DictConfig):
@@ -85,17 +100,30 @@ class CNNConformerSER(nn.Module):
         ffn_dim = int(cfg.model.get("ffn_dim", embed_dim * 4))
         conv_kernel_size = int(cfg.model.get("conv_kernel_size", 31))
         dropout = float(cfg.model.get("dropout", 0.1))
+        stem_dropout = float(cfg.model.get("stem_dropout", dropout))
+        projector_dropout = float(cfg.model.get("projector_dropout", dropout))
+        input_dropout = float(cfg.model.get("input_dropout", dropout))
+        encoder_dropout = float(cfg.model.get("encoder_dropout", dropout))
+        classifier_dropout = float(cfg.model.get("classifier_dropout", dropout))
         pooling = str(cfg.model.get("pooling", "attention"))
         attention_type = str(cfg.model.get("attention_type", "relative"))
         max_relative_position = int(cfg.model.get("max_relative_position", 128))
+        stem_strides = [[int(v) for v in pair] for pair in cfg.model.get("stem_strides", [[2, 2], [2, 2]])]
+        layer_fusion = str(cfg.model.get("layer_fusion", "last"))
+        conv_module_type = str(cfg.model.get("conv_module_type", "single"))
+        multiscale_kernel_sizes = [int(v) for v in cfg.model.get("multiscale_kernel_sizes", [15, 31])]
         n_mels = int(cfg.data.get("n_mels", 80))
+        if len(stem_strides) != len(stem_channels):
+            raise ValueError("model.stem_strides must match the number of stem_channels stages.")
+        if layer_fusion not in {"last", "learned_sum", "last2_mean"}:
+            raise ValueError(f"Unsupported layer_fusion: {layer_fusion}")
 
         layers = []
         in_channels = 1
         remaining_freq = n_mels
-        for out_channels in stem_channels:
-            stride = (2, 2)
-            layers.append(ConvStemBlock(in_channels, out_channels, stride=stride, dropout=dropout))
+        for out_channels, raw_stride in zip(stem_channels, stem_strides):
+            stride = (int(raw_stride[0]), int(raw_stride[1]))
+            layers.append(ConvStemBlock(in_channels, out_channels, stride=stride, dropout=stem_dropout))
             remaining_freq = downsample_size_2d(remaining_freq, kernel_size=3, stride=stride[0], padding=1)
             in_channels = out_channels
         if remaining_freq <= 0:
@@ -107,9 +135,9 @@ class CNNConformerSER(nn.Module):
             stem_channels[-1],
             remaining_freq=self.remaining_freq,
             embed_dim=embed_dim,
-            dropout=dropout,
+            dropout=projector_dropout,
         )
-        self.pos_dropout = nn.Dropout(dropout)
+        self.pos_dropout = nn.Dropout(input_dropout)
         self.encoder = nn.ModuleList(
             [
                 CNNConformerBlock(
@@ -117,17 +145,21 @@ class CNNConformerSER(nn.Module):
                     num_heads=num_heads,
                     ffn_dim=ffn_dim,
                     conv_kernel_size=conv_kernel_size,
-                    dropout=dropout,
+                    dropout=encoder_dropout,
                     attention_type=attention_type,
                     max_relative_position=max_relative_position,
+                    conv_module_type=conv_module_type,
+                    multiscale_kernel_sizes=multiscale_kernel_sizes,
                 )
                 for _ in range(num_layers)
             ]
         )
+        self.layer_fusion = layer_fusion
+        self.layer_fuser = LayerWeightedSum(num_layers) if layer_fusion == "learned_sum" else None
         self.norm = nn.LayerNorm(embed_dim)
         self.pooling_type = pooling
         self.attentive_pool = AttentivePooling(embed_dim) if pooling == "attention" else None
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(classifier_dropout)
         self.classifier = nn.Linear(embed_dim, num_classes)
 
         self.capture_visualizations = False
@@ -162,9 +194,21 @@ class CNNConformerSER(nn.Module):
         key_padding_mask = lengths_to_padding_mask(lengths, x.size(1))
         x = apply_sequence_mask(self.pos_dropout(x), key_padding_mask)
 
+        layer_outputs: list[torch.Tensor] = []
         for block in self.encoder:
             x = block(x, key_padding_mask=key_padding_mask)
             x = apply_sequence_mask(x, key_padding_mask)
+            layer_outputs.append(x)
+
+        if self.layer_fuser is not None:
+            x = self.layer_fuser(layer_outputs)
+        elif self.layer_fusion == "last2_mean":
+            if len(layer_outputs) >= 2:
+                x = 0.5 * (layer_outputs[-1] + layer_outputs[-2])
+            elif layer_outputs:
+                x = layer_outputs[-1]
+        elif layer_outputs:
+            x = layer_outputs[-1]
 
         x = self.norm(apply_sequence_mask(x, key_padding_mask))
         return apply_sequence_mask(x, key_padding_mask), key_padding_mask

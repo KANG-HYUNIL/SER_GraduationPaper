@@ -1,20 +1,38 @@
 # Hierarchical Window Transformer
 
-## 모델 개요
+## 1. 문서 범위
 
-`hierarchical_window_transformer`는 CNN stem으로 초기 시간-주파수 패턴을 추출한 뒤, 계층형 window attention으로 지역 문맥을 쌓아 올리는 SER 모델이다. 이번 개편의 목적은 기존의 1D 시간 윈도우 기반 구현에서 벗어나, Speech Swin-Transformer와 DWFormer가 강조하는 “주파수 축을 보존한 상태의 window modeling”에 더 가깝게 맞추는 것이다.
+- 대상 모델: `hierarchical_window_transformer`
+- 목적: 2-stage window 계열 SER 모델의 구조, 실험 결과, 한계 분석을 공통 템플릿으로 정리
+- 상태: `reference`
 
-현재 구조의 핵심은 다음과 같다.
+## 2. 모델 스냅샷
 
-- CNN stem: `stem_channels`
-- stage 1: 2D shifted window attention
-- patch merging: stage 1과 stage 2 사이의 계층형 다운샘플링
-- stage 2: 더 넓은 receptive field를 가진 2D shifted window attention
-- 최종 pooling: 주파수 평균을 마지막에만 수행하고 시간축에서 utterance pooling
+### 2.1 한 줄 요약
 
-## 기존 Optuna 결과 Top 5
+`hierarchical_window_transformer`는 CNN stem으로 초기 시간-주파수 특징을 추출한 뒤, 2단계의 2D shifted window attention으로 지역 문맥을 계층적으로 확장하는 SER 모델이다.
 
-실험 경로: `outputs/2026-04-16/01-09-06_hierarchical_window_cnnfixed_stage2`
+### 2.2 핵심 구성 요소
+
+| 항목 | 값 또는 설명 |
+|---|---|
+| 입력 표현 | log-Mel spectrogram |
+| 핵심 블록 | CNN stem + 2-stage 2D shifted window attention |
+| 주요 구조 파라미터 | `stem_channels`, `stage_dims`, `stage_depths`, `num_heads`, `window_sizes`, `ffn_ratio` |
+| 출력 pooling | `attention`, `mean` |
+| 분류 대상 | 8-class SER |
+
+### 2.3 비교 관점
+
+- `pure_transformer`처럼 처음부터 전역 attention을 쓰지 않고 계산량을 줄이려는 목적이 있었다.
+- `cnn_conformer`처럼 시간축만 보는 구조가 아니라, 주파수축을 stage 후반까지 유지하면서 spectro-temporal 지역 구조를 직접 모델링하려는 모델이었다.
+- 현재 구현은 Speech Swin-Transformer와 DWFormer에서 영감을 받았지만, 둘 중 하나를 그대로 재현한 모델은 아니다. 정확히는 "Swin 계열 아이디어를 SER 코드베이스에 맞게 단순화한 2-stage 2D window transformer"에 가깝다.
+
+## 3. 실험 라운드 기록
+
+### 3.1 주요 결과 요약
+
+실험 경로: `../outputs/2026-04-16/01-09-06_hierarchical_window_cnnfixed_stage2`
 
 | Rank | Trial | F1-macro | Accuracy | UAR | train_batch | train_lr | train_wd | window_stem_pair | window_stage_spec | window_depth_pair | window_size | window_ffn | window_dropout | window_pooling |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|---|---:|---:|---:|---|
@@ -24,124 +42,106 @@
 | 4 | `trial_0033` | 0.47570 | 0.50000 | 0.51250 | 8 | 2.20e-4 | 1.80e-5 | `[48, 64]` | `128x192_h4x8` | `2x3` | 12 | 2 | 0.101 | attention |
 | 5 | `trial_0012` | 0.47271 | 0.48333 | 0.48750 | 16 | 2.08e-4 | 2.78e-5 | `[48, 64]` | `128x192_h4x8` | `2x3` | 12 | 2 | 0.103 | attention |
 
-## 수정 후 Optuna 결과 기록
+### 3.2 결과 요약 메모
 
-아직 이번 2D window 개편 버전으로 Optuna 학습 실험은 수행하지 않았다. 현재 서버에서 다른 실험이 동작 중이므로, 이번 작업에서는 실제 학습 대신 shape 정합성과 파이프라인 호환성만 검증했다.
+- 현재 구조는 `cnn_conformer`의 0.63대 성능과 비교하면 상당한 격차가 있다.
+- search 결과도 매우 좁은 한 지점으로 수렴했다.
+- 상위 trial이 거의 모두 `stem=[48,64]`, `stage=[128,192]`, `depth=2x3`, `window=12`, `attention pooling` 근처에 몰렸다.
 
-| Rank | Trial | F1-macro | Accuracy | UAR | train_batch | train_lr | train_wd | window_stem_pair | window_stage_spec | window_depth_pair | window_size | window_ffn | window_dropout | window_pooling |
-|---|---|---:|---:|---:|---:|---:|---:|---|---|---|---:|---:|---:|---|
-| 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 2 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+## 4. 설계 배경 및 구현 메모
 
-## 기존 구현의 한계
+### 4.1 현재 코드 기준 구조
 
-기존 구현은 stem 이후 `AdaptiveAvgPool2d`로 주파수 축을 소수의 band로 줄인 다음, 사실상 1D 시간 시퀀스로 window attention을 수행했다. 이 구조의 문제는 다음과 같다.
+관련 파일:
 
-- window attention이 시간축 기준 local sequence 모델처럼 동작한다.
-- 같은 시간 구간 내의 주파수 조합 정보를 window 내부에서 직접 다루지 못한다.
-- stage downsample 역시 `Conv1d`라서 Swin 계열의 patch merging과 성격이 다르다.
+- `../src/models/hierarchical_window_transformer.py`
+- `../src/models/hierarchical_window_blocks.py`
+- `../src/configs/model/hierarchical_window_transformer.yaml`
+- `../src/configs/optuna/hierarchical_window_cnnfixed.yaml`
 
-즉, 기존 구조는 이름은 window transformer이지만 실제로는 “주파수 collapse 이후의 1D shifted window”에 더 가까웠다.
+처리 흐름은 다음과 같다.
 
-## 논문 기준 분석과 채택 방안
+1. 입력은 log-Mel spectrogram `[B, 1, F, T]`이다.
+2. `ConvStemBlock` 두 개가 `stride=(2, 2)`로 시간축과 주파수축을 각각 4배 downsample한다.
+3. `SpatialProjector`가 stem 출력을 `stage_dims[0]` 채널로 투영한다.
+4. Stage 1에서 `WindowTransformerBlock2D`를 여러 층 반복한다.
+5. `PatchMerging2D`가 2x2 이웃 patch를 합쳐 해상도를 줄이고 채널을 늘린다.
+6. Stage 2에서 다시 `WindowTransformerBlock2D`를 반복한다.
+7. 마지막에 주파수축 평균을 거친 뒤 시간축 utterance pooling을 수행한다.
+8. classifier가 8개 감정을 분류한다.
 
-참고 자료:
+즉, "2-stage 2D shifted-window backbone + late temporal pooling" 구조다.
 
-- `ref.bib`
-- Wang et al., 2024, *Speech Swin-Transformer: Exploring a Hierarchical Transformer with Shifted Windows for Speech Emotion Recognition*
-- Chen et al., 2023, *DWFormer: Dynamic Window Transformer for Speech Emotion Recognition*
+### 4.2 실제 SOTA 원본과의 차이
 
-핵심 해석은 다음과 같다.
+#### Speech Swin-Transformer와의 차이
 
-- Speech Swin-Transformer는 spectrogram patch를 2D 시간-주파수 격자로 유지한 뒤, shifted window와 patch merging으로 계층형 표현을 만든다.
-- DWFormer는 window 크기를 내용에 따라 더 유연하게 다루려는 접근이지만, 공통된 방향은 “중요 구간을 1D 평균으로 너무 빨리 붕괴시키지 않는다”는 점이다.
+Speech Swin-Transformer는 4-stage 구조이며, time-domain patch 분할과 stage별 patch merging을 통해 receptive field를 점진적으로 넓힌다. 반면 현재 `hierarchical_window_transformer`는 다음 차이가 있다.
 
-이번 코드베이스에서는 두 논문의 공통 철학을 반영하면서도 Optuna 파이프라인과 시각화 도구를 유지해야 했기 때문에, 다음 설계를 채택했다.
+- 4-stage가 아니라 2-stage다.
+- 논문처럼 relative position bias를 두지 않고, PyTorch `nn.MultiheadAttention` 기반의 단순 window attention이다.
+- shifted window도 Swin의 cyclic-shift + mask가 아니라 padding 기반 이동에 가깝다.
+- window 크기가 stage별로 충분히 세분화되어 있지 않다.
 
-- **채택:** 2D time-frequency shifted window + patch merging
-- **미채택:** 주파수 flatten 후 1D window
+#### DWFormer와의 차이
 
-채택 이유:
+DWFormer는 더 강한 아이디어를 사용한다.
 
-- Speech Swin-Transformer와 더 직접적으로 정합된다.
-- 주파수 축을 stage 전반에서 유지할 수 있다.
-- shift가 시간축과 주파수축 모두에서 의미 있게 작동한다.
-- stage 간 다운샘플링을 Swin식 patch merging으로 바꿀 수 있다.
+- 입력으로 `Pre-trained WavLM-Large` feature를 사용
+- 중요도 기반 dynamic window split
+- local window attention + cross-window interaction
 
-## 수정 후 구조
+현재 `hierarchical_window_transformer`에는 다음이 없다.
 
-이번 개편에서 바뀐 점은 다음과 같다.
+- SSL feature backbone
+- dynamic window partition
+- local/global dynamic window interaction block
 
-- `FrequencyBandProjector` 제거
-- `SpatialProjector` 추가
-  - stem 출력의 2D feature map을 그대로 `stage_dims[0]` 채널로 투영
-  - 주파수 평균 pooling 없음
-- `WindowTransformerBlock2D` 추가
-  - 2D window partition
-  - 2축 shifted window
-  - window 내부 attention
-- `PatchMerging2D` 추가
-  - 인접 2x2 patch를 채널로 합친 뒤 선형 축소
-  - stage 1 -> stage 2 계층형 다운샘플링
-- 최종 pooling만 late collapse
-  - stage 2 이후에만 주파수 평균
-  - utterance pooling은 기존 attention/mean 인터페이스 유지
+따라서 DWFormer와는 구조적 거리가 더 멀다.
 
-즉, 이제 이 모델은 “주파수를 미리 접은 1D window transformer”가 아니라, “2D spectro-temporal grid 위에서 local-global receptive field를 키워 가는 구조”가 됐다.
+### 4.3 왜 성능이 낮은가
 
-## 파일 분리와 기존 실험 보호
+1. 전역 정보 주입이 약하다.  
+현재 구조는 local window와 shifted window를 거의 기계적으로만 사용한다. `cnn_conformer`처럼 전체 시간축 attention을 쓰는 구조보다 utterance-level 정서를 모으는 능력이 약하다.
 
-이번 작업에서는 window 전용 block를 별도 파일로 분리했다.
+2. Swin의 핵심 구현 요소가 일부 비어 있다.  
+relative position bias와 정식 shifted-window attention mask가 없으면 window 경계 근처 모델링 이득이 약해진다.
 
-- 새 파일: [hierarchical_window_blocks.py](C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\models\hierarchical_window_blocks.py)
-- 메인 모델: [hierarchical_window_transformer.py](C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\models\hierarchical_window_transformer.py)
+3. stage 수가 적다.  
+2-stage는 계산량 면에서는 유리하지만 hierarchical receptive field를 충분히 확장하기엔 부족할 수 있다.
 
-이렇게 한 이유는 다음과 같다.
+4. 현재 search space가 구조적으로 좁다.  
+결과가 한 지점으로만 몰린 것은 좋은 구조를 찾았다기보다, 실험 가능한 구조 다양성이 적었음을 시사한다.
 
-- `cnn_conformer`, `pure_transformer`와 block 구현이 섞이지 않는다.
-- window 관련 실험을 모델 단위로 독립적으로 수정할 수 있다.
-- 이후 `dynamic window`, `rectangular window`, `cross-stage bridge` 같은 실험도 이 파일 안에서 확장하기 쉽다.
+## 5. 아티팩트 분석
 
-## Optuna 파이프라인 정합성
+- 현재 문서에는 대표 trial artifact를 별도 분석하지 않았다.
+- 이 모델은 결과 요약과 구조적 한계 분석 위주로 유지한다.
 
-이번 구조에서는 `freq_bins`가 더 이상 존재하지 않으므로, Optuna 쪽도 같이 정리했다.
+## 6. 종합 인사이트 및 다음 액션
 
-- [optuna_search.py](C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\optuna_search.py)
-  - `suggest_hierarchical_window_params()`에서 `window_freq_bins` 제거
-- [default.yaml](C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\configs\optuna\default.yaml)
-- [hierarchical_window_cnnfixed.yaml](C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\configs\optuna\hierarchical_window_cnnfixed.yaml)
-  - `hierarchical_window.freq_bin_choices` 제거
-- [hierarchical_window_transformer.yaml](C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\configs\model\hierarchical_window_transformer.yaml)
-  - `freq_bins` 제거
+### 6.1 현재 판단
 
-즉, 현재 Optuna는 새 모델 인터페이스와 충돌하지 않는다.
+- 이 모델을 그대로 추가 Optuna로 오래 미는 것은 우선순위가 낮다.
+- 구조적 약점이 분명해 후속 확장 모델의 출발점으로 보는 편이 맞다.
 
-## 검증 결과
+### 6.2 다음 액션
 
-실제 학습은 의도적으로 수행하지 않았다. 대신 `torch.randn` 기반의 shape 검증만 수행했다.
+이번 작업에서 이 한계를 바탕으로 분기 모델 `bridged_window_transformer`를 추가했다. 핵심 차이는 다음과 같다.
 
-검증 조건:
+- relative position bias를 포함한 window attention
+- Swin 방식에 가까운 cyclic shift + attention mask
+- rectangular window 탐색
+- local window backbone은 유지하되, stage 사이와 최종 표현에 global bridge context를 주입
 
-- 입력: `x.shape = (2, 1, 80, 96)`
-- 길이: `lengths = [96, 61]`
-- 설정: `stage_dims=[128,192]`, `stage_depths=[2,2]`, `window_sizes=[8,8]`
+관련 문서:
 
-검증 결과:
+- `./KR_MODEL_BRIDGED_WINDOW_TRANSFORMER.md`
 
-- `logits.shape == (2, 8)`
-- `embedding.shape == (2, 192)`
-- stem 이후 남는 주파수 해상도: `20`
+즉, 기존 `hierarchical_window_transformer`는 "window 계열의 출발점"으로 두고, thesis의 확장 실험은 bridge 계열로 넘어가는 것이 적절하다.
 
-즉, 표준 `n_mels=80` 입력에서 새 구조는 에러 없이 끝까지 요약 벡터를 만든다.
+## 7. 변경 이력
 
-## 후속 실험 제안
-
-- `window_sizes=[6,6]`, `[8,8]`, `[12,12]` 비교
-- `stage_dims=[96,128]` vs `[128,192]` 비교
-- `patch merging` 유지 vs `Conv1d downsample` 회귀 비교
-- `shifted window on/off` ablation
-
-현재 상태는 “구조 재설계 완료, shape 검증 완료, 실제 학습 미실행”이다.
+| 날짜 | 변경 내용 |
+|---|---|
+| 2026-04-19 | 공통 템플릿 기준으로 문서 구조 정리 |

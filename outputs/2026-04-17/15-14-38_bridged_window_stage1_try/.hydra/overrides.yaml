@@ -1,0 +1,8 @@
+- optuna=bridged_window_cnnfixed
+- model=bridged_window_transformer
+- experiment.family=bridged_window_transformer
+- experiment.name=bridged_window_stage1_try
+- train.device=cuda
+- train.epochs=30
+- train.folds_to_run=1
+- optuna.trials=30

@@ -15,7 +15,7 @@ import torch.nn as nn
 import torch.optim as optim
 from omegaconf import OmegaConf
 from sklearn.model_selection import GroupKFold
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Subset, WeightedRandomSampler
 
 import src.models
 from src.data.dataset import (
@@ -26,6 +26,7 @@ from src.data.dataset import (
     collate_utterance_chunks,
 )
 from src.data.transforms import AudioPipeline
+from src.engine.losses import build_class_weights, build_criterion
 from src.models.utterance_aggregators import aggregate_chunk_embeddings, aggregate_chunk_logits
 from src.utils.metrics_eval import calculate_comprehensive_metrics
 from src.utils.registry import get_model_class
@@ -95,16 +96,29 @@ def get_aggregation_params(cfg) -> tuple[str, float]:
 
 def build_dataloaders(cfg, dataset, train_idx, val_idx):
     pin_memory = torch.cuda.is_available()
+    sampler_cfg = cfg.train.get("sampler", {})
+    sampler_name = str(sampler_cfg.get("name", "random"))
+    sampler_weight_mode = str(sampler_cfg.get("class_weight_mode", "none"))
     if chunking_enabled(cfg):
         chunk_frames, hop_frames, eval_hop_frames = get_chunking_params(cfg)
         train_subset = ChunkedTrainDataset(dataset, train_idx, chunk_frames=chunk_frames, hop_frames=hop_frames)
         val_subset = UtteranceChunkDataset(dataset, val_idx, chunk_frames=chunk_frames, hop_frames=eval_hop_frames)
         if len(train_subset) == 0:
             raise RuntimeError("ChunkedTrainDataset is empty. Reduce chunk_frames or adjust log-Mel parameters.")
+        sampler = None
+        shuffle = True
+        if sampler_name == "weighted":
+            chunk_labels = [dataset.labels[utterance_idx] for utterance_idx, _, _ in train_subset.chunk_index]
+            class_weights = build_class_weights(chunk_labels, num_classes=len(EMOTION_NAMES), mode=sampler_weight_mode)
+            if class_weights is not None:
+                sample_weights = [float(class_weights[label]) for label in chunk_labels]
+                sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
+                shuffle = False
         train_loader = DataLoader(
             train_subset,
             batch_size=cfg.train.batch_size,
-            shuffle=True,
+            shuffle=shuffle,
+            sampler=sampler,
             num_workers=cfg.train.num_workers,
             pin_memory=pin_memory,
             collate_fn=collate_fixed_chunks,
@@ -126,7 +140,16 @@ def build_dataloaders(cfg, dataset, train_idx, val_idx):
         "num_workers": cfg.train.num_workers,
         "pin_memory": pin_memory,
     }
-    train_loader = DataLoader(train_subset, shuffle=True, **loader_kwargs)
+    sampler = None
+    shuffle = True
+    if sampler_name == "weighted":
+        train_labels = [dataset.labels[int(idx)] for idx in train_idx]
+        class_weights = build_class_weights(train_labels, num_classes=len(EMOTION_NAMES), mode=sampler_weight_mode)
+        if class_weights is not None:
+            sample_weights = [float(class_weights[label]) for label in train_labels]
+            sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
+            shuffle = False
+    train_loader = DataLoader(train_subset, shuffle=shuffle, sampler=sampler, **loader_kwargs)
     val_loader = DataLoader(val_subset, shuffle=False, **loader_kwargs)
     return train_loader, val_loader
 
@@ -148,7 +171,45 @@ def forward_model(model, inputs, lengths=None):
         return model(inputs)
 
 
-def train_one_epoch(model, loader, criterion, optimizer, device):
+def apply_specaugment(inputs: torch.Tensor, cfg) -> torch.Tensor:
+    specaug_cfg = cfg.data.get("specaugment", {})
+    if not bool(specaug_cfg.get("enabled", False)):
+        return inputs
+    if inputs.ndim != 4:
+        return inputs
+
+    augmented = inputs.clone()
+    _, _, freq_size, time_size = augmented.shape
+    time_mask_count = int(specaug_cfg.get("time_mask_count", 0))
+    time_mask_width = int(specaug_cfg.get("time_mask_width", 0))
+    freq_mask_count = int(specaug_cfg.get("freq_mask_count", 0))
+    freq_mask_width = int(specaug_cfg.get("freq_mask_width", 0))
+
+    for sample_idx in range(augmented.size(0)):
+        for _ in range(freq_mask_count):
+            max_width = min(freq_mask_width, freq_size)
+            if max_width <= 0:
+                continue
+            width = random.randint(0, max_width)
+            if width <= 0:
+                continue
+            start = random.randint(0, freq_size - width)
+            augmented[sample_idx, :, start : start + width, :] = 0.0
+
+        for _ in range(time_mask_count):
+            max_width = min(time_mask_width, time_size)
+            if max_width <= 0:
+                continue
+            width = random.randint(0, max_width)
+            if width <= 0:
+                continue
+            start = random.randint(0, time_size - width)
+            augmented[sample_idx, :, :, start : start + width] = 0.0
+
+    return augmented
+
+
+def train_one_epoch(model, loader, criterion, optimizer, device, cfg):
     model.train()
     total_loss = 0.0
     all_preds = []
@@ -156,6 +217,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 
     for batch in loader:
         inputs, labels, lengths = unpack_batch(batch, device)
+        inputs = apply_specaugment(inputs, cfg)
 
         optimizer.zero_grad()
         logits = forward_model(model, inputs, lengths)
@@ -456,8 +518,6 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
     weights_dir = ensure_artifact_dir(Path("weights"))
 
     model_class = get_model_class(cfg.model.name)
-    criterion = nn.CrossEntropyLoss()
-
     x_dummy = np.zeros(len(dataset))
     y_dummy = np.array(dataset.labels)
     groups = np.array(dataset.actor_ids)
@@ -482,6 +542,8 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
 
         logger.info("Starting fold %s/%s", fold, folds_to_run)
         train_loader, val_loader = build_dataloaders(cfg, dataset, train_idx, val_idx)
+        fold_train_labels = [dataset.labels[int(idx)] for idx in train_idx]
+        criterion = build_criterion(cfg, fold_train_labels, num_classes=len(EMOTION_NAMES)).to(device)
 
         model = model_class(cfg).to(device)
         optimizer = optim.Adam(
@@ -501,7 +563,7 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
         best_model_path = weights_dir / f"best_model_fold{fold}.pt"
 
         for epoch in range(1, cfg.train.epochs + 1):
-            train_metrics = train_one_epoch(model, train_loader, criterion, optimizer, device)
+            train_metrics = train_one_epoch(model, train_loader, criterion, optimizer, device, cfg)
             val_output = evaluate(model, val_loader, criterion, device, cfg)
             val_metrics = val_output["metrics"]
             score = val_metrics[cfg.train.objective_metric]

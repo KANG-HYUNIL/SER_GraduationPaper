@@ -1,11 +1,20 @@
 name: "cnn_conformer"
 stem_channels: [32, 64]
+stem_strides: [[2, 2], [2, 2]]
 embed_dim: 192
 num_heads: 4
 num_layers: 8
 ffn_dim: 768
 conv_kernel_size: 31
+conv_module_type: "single"
+multiscale_kernel_sizes: [15, 31]
+layer_fusion: "last"
 pooling: "attention"
 dropout: 0.1
+stem_dropout: 0.1
+projector_dropout: 0.1
+input_dropout: 0.1
+encoder_dropout: 0.1
+classifier_dropout: 0.1
 attention_type: "relative"
 max_relative_position: 128
