@@ -164,17 +164,19 @@ flowchart LR
 | 2026-04-17 | [2026-04-17.md](./cnn_conformer/2026-04-17.md) | fixed log-Mel relative Conformer champion과 artifact 분석 |
 | 2026-04-18 | [2026-04-18.md](./cnn_conformer/2026-04-18.md) | regularization HPO 실패와 underfitting 신호 |
 | 2026-04-19 | [2026-04-19.md](./cnn_conformer/2026-04-19.md) | 구조 축 탐색과 subsampling/layer fusion/conv branch 검증 |
-| 2026-04-19 Round 2 | [2026-04-19_round2.md](./cnn_conformer/2026-04-19_round2.md) | layer fusion + loss + sampler 결합 탐색 계획서 |
+| 2026-04-19 Round 2 | [2026-04-19_round2.md](./cnn_conformer/2026-04-19_round2.md) | layer fusion + loss + sampler 결합 탐색 결과와 중단 결론 |
+| 2026-04-20 Redesign | [2026-04-20_backbone_redesign.md](./cnn_conformer/2026-04-20_backbone_redesign.md) | conformer backbone 재설계 결과와 artifact 인사이트 |
+| 2026-04-21 Generalization | [2026-04-21_nostem_generalization.md](./cnn_conformer/2026-04-21_nostem_generalization.md) | `nostem_patch` winner 기반 overfitting 완화 실험 계획 |
 
 ## 6. 다음 실험 권장 방향
 
 ### 6.1 결론부터
 
-다음 라운드는 “구조를 더 복잡하게 추가”보다 아래 3축이 적합하다.
+현재 시점의 다음 라운드는 “구조를 더 복잡하게 추가”보다 아래 3갈래 중 하나를 명확히 선택하는 편이 적합하다.
 
 1. champion 회복형 미세탐색
-2. 선택적 late fusion
-3. loss / sampler 결합 탐색
+2. scratch conformer 재설계
+3. 새로운 non-SSL transformer 계열
 
 ### 6.2 권장안 1: champion 회복형 미세탐색
 
@@ -194,33 +196,48 @@ flowchart LR
 - 2026-04-18 regularization HPO는 강한 규제가 오히려 peak를 깎았다.
 - 즉 현재 병목은 “더 많은 장치 추가”가 아니라 “승자 구조를 덜 흐리게 조율하는 것”에 가깝다.
 
-### 6.3 권장안 2: 전층 융합 대신 선택적 late fusion
+### 6.3 권장안 2: scratch conformer 재설계
 
-추천 형태:
+round2까지의 결과를 보면 현 구조의 국면은 어느 정도 정리됐다.
 
-- `last2_concat_gate`
-- `last2_weighted_sum`
-- `layer3_4_fusion`
+- 2026-04-17 champion `0.63168`
+- 2026-04-19 구조 탐색 최고 `0.62017`
+- 2026-04-19 round2 최고 `0.61282`
 
-근거:
+즉 현재 `CNN stem -> flatten frequency -> Conformer` 조합은 미세 설정 차이로 움직이더라도 큰 폭 개선이 어려운 상태다.  
+conformer를 유지하되 새로 볼 가치가 있는 재설계 축은 다음 두 가지다.
 
-- Zou et al. 2022는 multi-level acoustic information의 유효성을 보여준다.
-- 하지만 현재 저장소 실험에서는 전층 `learned_sum`이 평균은 올려도 최고점을 깎았다.
-- 이 결과는 “multi-level 자체가 틀렸다”보다 “저층부터 전부 섞는 현재 방식이 과도하다”는 해석이 더 맞다.
+- 앞단 CNN 압축 약화 또는 제거
+  - 너무 이른 국소 압축이 감정 cue를 깎는지 검증
+  - 예: `linear patch/projection -> conformer` 또는 `single-stage light conv -> conformer`
+- frequency flatten 방식 재설계
+  - 현재는 `channels x freq` 전체 flatten 후 projection인데, 이 방식이 주파수 구조를 보존하는 대신 과도한 차원 혼합을 만들 수 있다.
+  - 예: `freq-aware projection`, `band-wise tokenization`, `time-first patch tokenization`
 
-### 6.4 권장안 3: loss / sampler 결합 탐색
+이 방향은 “conformer를 계속 보되, 현재 backbone 가정을 다시 열어보는 것”이다.
 
-추천 형태:
+### 6.4 권장안 3: 새로운 non-SSL transformer 계열
 
-- `loss`: `cross_entropy`, `weighted_cross_entropy`, `focal_loss`
-- `sampler`: `random`, `weighted`
-- `layer_fusion`: `last`, `learned_sum`, `last2_mean`
+`ref.bib` 기준으로, SSL 없이도 다음 후보들은 SER 특화 transformer 방향으로 의미가 있다.
 
-근거:
+- `Multi-Scale Temporal Transformer`
+  - 기준 문헌: `li2023multiscaletransformer`
+  - 장점: 현재 conformer에서 kernel/stride로 우회적으로 보던 시간 스케일 문제를 transformer 단계에서 직접 다룰 수 있다.
+- `Multiple Acoustic Features + Cross-Attention Transformer`
+  - 기준 문헌: `he2023multiple`, `zhao2025crosslingual`, `ryu2025pcm`
+  - 장점: log-Mel 고정은 유지하되, pitch contour나 energy 같은 제한된 보조 acoustic feature를 추가해 transformer가 상호작용을 배우게 할 수 있다.
+  - 주의: feature engineering이 과해지면 논문 주제가 흐려지므로 보조 feature는 최소화해야 한다.
+- `Conditional Transformer`
+  - 기준 문헌: `chung2025conditionaltransformer`
+  - 장점: 감정 판별에 중요한 지역을 conditioning 또는 gating으로 강조하는 방향
 
-- 현재 artifact에서 가장 일관된 오류는 `sad`, `neutral`, `calm`, `happy`, `fearful` 경계의 겹침이다.
-- 구조 자체보다 학습 신호를 이 구간에 더 강하게 주는 편이 다음 검증 축으로 적합하다.
-- 이 실험은 [2026-04-19_round2.md](./cnn_conformer/2026-04-19_round2.md)에 계획서 형태로 분리해 두었다.
+이 중 현재 프로젝트와 논문 주제에 가장 잘 맞는 우선순위는 다음과 같다.
+
+1. `Multi-Scale Temporal Transformer`
+2. `log-Mel + pitch contour` 수준의 경량 cross-attention transformer
+3. 조건부 transformer 계열
+
+backbone 재설계 결과는 [2026-04-20_backbone_redesign.md](./cnn_conformer/2026-04-20_backbone_redesign.md)에, 그 후속 overfitting 완화 실험은 [2026-04-21_nostem_generalization.md](./cnn_conformer/2026-04-21_nostem_generalization.md)에 정리했다.
 
 ## 7. 변경 이력
 

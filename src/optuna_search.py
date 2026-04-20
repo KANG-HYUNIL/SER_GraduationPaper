@@ -233,6 +233,8 @@ def suggest_pure_transformer_params(trial, cfg):
 
 def suggest_cnn_conformer_params(trial, cfg):
     space = cfg.optuna.search_space.cnn_conformer
+    backbone_variant_choices = list(_cfg_get(space, "backbone_variant_choices", ["standard"]))
+    backbone_variant = str(trial.suggest_categorical("conformer_backbone_variant", backbone_variant_choices))
     stem_pair_choices = _cfg_get(space, "stem_pair_choices")
     if stem_pair_choices:
         stem_channels = _suggest_pair_choice(trial, "conformer_stem_pair", stem_pair_choices, "stem_pair_choices")
@@ -250,6 +252,35 @@ def suggest_cnn_conformer_params(trial, cfg):
     selected_subsampling = trial.suggest_categorical("conformer_subsampling", subsampling_labels)
     subsampling_spec = raw_subsampling_choices[subsampling_labels.index(selected_subsampling)]
     stem_strides = [[int(v) for v in pair] for pair in subsampling_spec["stem_strides"]]
+    lightstem_cfg = {"channels": int(_cfg_get(space, "lightstem_default_channels", stem_channels[-1])), "stride": [2, 1]}
+    raw_lightstem_stride_choices = _cfg_get(space, "lightstem_stride_choices", [])
+    if raw_lightstem_stride_choices:
+        labels = [str(choice["name"]) for choice in raw_lightstem_stride_choices]
+        selected = trial.suggest_categorical("conformer_lightstem_stride", labels)
+        spec = raw_lightstem_stride_choices[labels.index(selected)]
+        lightstem_cfg["stride"] = [int(v) for v in spec["stride"]]
+    raw_lightstem_channel_choices = _cfg_get(space, "lightstem_channel_choices", [])
+    if raw_lightstem_channel_choices:
+        lightstem_cfg["channels"] = int(trial.suggest_categorical("conformer_lightstem_channels", list(raw_lightstem_channel_choices)))
+    nostem_patch_cfg = {"time_patch": int(_cfg_get(space, "nostem_patch_default_time_patch", 4))}
+    raw_patch_choices = _cfg_get(space, "nostem_patch_time_patch_choices", [])
+    if raw_patch_choices:
+        nostem_patch_cfg["time_patch"] = int(trial.suggest_categorical("conformer_nostem_time_patch", list(raw_patch_choices)))
+    band_token_cfg = {"num_bands": int(_cfg_get(space, "band_token_default_num_bands", 4))}
+    raw_band_choices = _cfg_get(space, "band_token_num_bands_choices", [])
+    if raw_band_choices:
+        band_token_cfg["num_bands"] = int(trial.suggest_categorical("conformer_band_num_bands", list(raw_band_choices)))
+    sequence_shrinking_cfg = {"enabled": False, "factor": 2, "at_layers": []}
+    raw_shrinking_choices = _cfg_get(space, "sequence_shrinking_choices", [])
+    if raw_shrinking_choices:
+        labels = [str(choice["name"]) for choice in raw_shrinking_choices]
+        selected = trial.suggest_categorical("conformer_sequence_shrinking", labels)
+        spec = raw_shrinking_choices[labels.index(selected)]
+        sequence_shrinking_cfg = {
+            "enabled": bool(spec.get("enabled", False)),
+            "factor": int(spec.get("factor", 2)),
+            "at_layers": [int(v) for v in spec.get("at_layers", [])],
+        }
 
     embed_dim = trial.suggest_categorical("conformer_embed_dim", list(space.embed_dim_choices))
     num_layers = trial.suggest_categorical("conformer_num_layers", list(space.num_layers_choices))
@@ -289,6 +320,7 @@ def suggest_cnn_conformer_params(trial, cfg):
     freq_mask_width = int(trial.suggest_categorical("conformer_freq_mask_width", list(space.freq_mask_width_choices)))
 
     model_updates = {
+        "backbone_variant": backbone_variant,
         "stem_channels": [int(value) for value in stem_channels],
         "stem_strides": stem_strides,
         "embed_dim": embed_dim,
@@ -305,6 +337,13 @@ def suggest_cnn_conformer_params(trial, cfg):
         "input_dropout": input_dropout,
         "encoder_dropout": encoder_dropout,
         "classifier_dropout": classifier_dropout,
+        "lightstem": lightstem_cfg,
+        "nostem_patch": nostem_patch_cfg,
+        "band_token": {
+            "num_bands": band_token_cfg["num_bands"],
+            "use_band_embedding": True,
+        },
+        "sequence_shrinking": sequence_shrinking_cfg,
     }
     train_updates = {
         "label_smoothing": label_smoothing,

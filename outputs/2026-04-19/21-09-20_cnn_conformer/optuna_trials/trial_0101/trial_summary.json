@@ -1,0 +1,125 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "cnn_conformer",
+      "stem_channels": [
+        64,
+        96
+      ],
+      "stem_strides": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "embed_dim": 256,
+      "num_heads": 8,
+      "num_layers": 4,
+      "ffn_dim": 1024,
+      "conv_kernel_size": 31,
+      "conv_module_type": "single",
+      "multiscale_kernel_sizes": [
+        15,
+        31
+      ],
+      "layer_fusion": "learned_sum",
+      "pooling": "attention",
+      "dropout": 0.16583047173961712,
+      "stem_dropout": 0.10746318295543354,
+      "projector_dropout": 0.0886100940718422,
+      "input_dropout": 0.1313948822098138,
+      "encoder_dropout": 0.16583047173961712,
+      "classifier_dropout": 0.1304932233460308,
+      "attention_type": "relative",
+      "max_relative_position": 128
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 80,
+      "n_fft": 1024,
+      "hop_length": 160,
+      "f_min": 0.0,
+      "f_max": 6000.0,
+      "normalize": true,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512,
+      "cache_features": true,
+      "specaugment": {
+        "enabled": false,
+        "time_mask_count": 0,
+        "time_mask_width": 0,
+        "freq_mask_count": 0,
+        "freq_mask_width": 0
+      },
+      "chunking": {
+        "enabled": true,
+        "chunk_frames": 48,
+        "hop_frames": 12,
+        "eval_hop_frames": 12,
+        "aggregation_mode": "confidence_weighted_logit",
+        "topk_ratio": 0.75
+      }
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 12,
+      "epochs": 30,
+      "learning_rate": 0.00013057498624477742,
+      "weight_decay": 4.048286844115011e-05,
+      "label_smoothing": 0.0,
+      "loss": {
+        "name": "focal_loss",
+        "label_smoothing": 0.0,
+        "class_weight_mode": "effective_num",
+        "focal_gamma": 2.0
+      },
+      "sampler": {
+        "name": "random",
+        "class_weight_mode": "effective_num"
+      },
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "auto",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.5766666666666667,
+    "f1_macro": 0.5671182159751456,
+    "f1_weighted": 0.5760372081512664,
+    "uar": 0.58125,
+    "war": 0.5766666666666667,
+    "mcc": 0.5193181569631827,
+    "kappa": 0.516497461928934,
+    "ece": 0.15082930217186613,
+    "fold_accuracy_mean": 0.5766666666666667,
+    "fold_f1_macro_mean": 0.5671182159751456
+  },
+  "best_fold": {
+    "accuracy": 0.5766666666666667,
+    "f1_macro": 0.5671182159751456,
+    "f1_weighted": 0.5760372081512664,
+    "uar": 0.58125,
+    "war": 0.5766666666666667,
+    "mcc": 0.5193181569631827,
+    "kappa": 0.516497461928934,
+    "ece": 0.15082930217186613,
+    "loss": 0.8433990446881702,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0101\\artifacts\\fold_1_learning_curve.png",
+    "attention_map": "optuna_trials\\trial_0101\\artifacts\\fold_1_attention_map.png",
+    "cnn_feature_map": "optuna_trials\\trial_0101\\artifacts\\fold_1_cnn_feature_map.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}
