@@ -235,6 +235,12 @@ def suggest_cnn_conformer_params(trial, cfg):
     space = cfg.optuna.search_space.cnn_conformer
     backbone_variant_choices = list(_cfg_get(space, "backbone_variant_choices", ["standard"]))
     backbone_variant = str(trial.suggest_categorical("conformer_backbone_variant", backbone_variant_choices))
+    overfit_strategy_choices = list(_cfg_get(space, "overfit_strategy_choices", []))
+    overfit_strategy = (
+        str(trial.suggest_categorical("conformer_overfit_strategy", overfit_strategy_choices))
+        if overfit_strategy_choices
+        else "default"
+    )
     stem_pair_choices = _cfg_get(space, "stem_pair_choices")
     if stem_pair_choices:
         stem_channels = _suggest_pair_choice(trial, "conformer_stem_pair", stem_pair_choices, "stem_pair_choices")
@@ -272,7 +278,7 @@ def suggest_cnn_conformer_params(trial, cfg):
         band_token_cfg["num_bands"] = int(trial.suggest_categorical("conformer_band_num_bands", list(raw_band_choices)))
     sequence_shrinking_cfg = {"enabled": False, "factor": 2, "at_layers": []}
     raw_shrinking_choices = _cfg_get(space, "sequence_shrinking_choices", [])
-    if raw_shrinking_choices:
+    if raw_shrinking_choices and overfit_strategy == "tapering":
         labels = [str(choice["name"]) for choice in raw_shrinking_choices]
         selected = trial.suggest_categorical("conformer_sequence_shrinking", labels)
         spec = raw_shrinking_choices[labels.index(selected)]
@@ -281,6 +287,37 @@ def suggest_cnn_conformer_params(trial, cfg):
             "factor": int(spec.get("factor", 2)),
             "at_layers": [int(v) for v in spec.get("at_layers", [])],
         }
+    layer_dim_schedule = []
+    raw_layer_dim_schedule_choices = _cfg_get(space, "layer_dim_schedule_choices", [])
+    if raw_layer_dim_schedule_choices and overfit_strategy == "tapering":
+        labels = [str(choice["name"]) for choice in raw_layer_dim_schedule_choices]
+        selected = trial.suggest_categorical("conformer_layer_dim_schedule", labels)
+        spec = raw_layer_dim_schedule_choices[labels.index(selected)]
+        layer_dim_schedule = [int(v) for v in spec["values"]]
+    layer_ffn_schedule = []
+    raw_layer_ffn_schedule_choices = _cfg_get(space, "layer_ffn_schedule_choices", [])
+    if raw_layer_ffn_schedule_choices and overfit_strategy == "tapering":
+        labels = [str(choice["name"]) for choice in raw_layer_ffn_schedule_choices]
+        selected = trial.suggest_categorical("conformer_layer_ffn_schedule", labels)
+        spec = raw_layer_ffn_schedule_choices[labels.index(selected)]
+        layer_ffn_schedule = [int(v) for v in spec["values"]]
+    nostem_norm_variant_choices = list(_cfg_get(space, "nostem_norm_variant_choices", []))
+    nostem_norm_variant = str(_cfg_get(space, "nostem_patch_default_norm_variant", "layernorm"))
+    if nostem_norm_variant_choices and overfit_strategy == "normalization":
+        nostem_norm_variant = str(
+            trial.suggest_categorical("conformer_nostem_norm_variant", nostem_norm_variant_choices)
+        )
+    mixup_enabled = False
+    mixup_alpha = float(_cfg_get(space, "mixup_default_alpha", 0.2))
+    mixup_level = str(_cfg_get(space, "mixup_default_level", "spectrogram"))
+    mixup_alpha_choices = list(_cfg_get(space, "mixup_alpha_choices", []))
+    mixup_level_choices = list(_cfg_get(space, "mixup_level_choices", []))
+    if overfit_strategy == "mixup":
+        mixup_enabled = True
+        if mixup_alpha_choices:
+            mixup_alpha = float(trial.suggest_categorical("conformer_mixup_alpha", mixup_alpha_choices))
+        if mixup_level_choices:
+            mixup_level = str(trial.suggest_categorical("conformer_mixup_level", mixup_level_choices))
 
     embed_dim = trial.suggest_categorical("conformer_embed_dim", list(space.embed_dim_choices))
     num_layers = trial.suggest_categorical("conformer_num_layers", list(space.num_layers_choices))
@@ -321,6 +358,8 @@ def suggest_cnn_conformer_params(trial, cfg):
 
     model_updates = {
         "backbone_variant": backbone_variant,
+        "layer_dim_schedule": layer_dim_schedule,
+        "layer_ffn_schedule": layer_ffn_schedule,
         "stem_channels": [int(value) for value in stem_channels],
         "stem_strides": stem_strides,
         "embed_dim": embed_dim,
@@ -345,6 +384,7 @@ def suggest_cnn_conformer_params(trial, cfg):
         },
         "sequence_shrinking": sequence_shrinking_cfg,
     }
+    model_updates["nostem_patch"]["norm_variant"] = nostem_norm_variant
     train_updates = {
         "label_smoothing": label_smoothing,
         "loss": {
@@ -352,6 +392,11 @@ def suggest_cnn_conformer_params(trial, cfg):
             "label_smoothing": label_smoothing,
             "class_weight_mode": str(class_weight_mode),
             "focal_gamma": focal_gamma,
+        },
+        "mixup": {
+            "enabled": bool(mixup_enabled),
+            "alpha": float(mixup_alpha),
+            "level": str(mixup_level),
         },
         "sampler": {
             "name": str(sampler_name),

@@ -6,6 +6,8 @@ embed_dim: 192
 num_heads: 4
 num_layers: 8
 ffn_dim: 768
+layer_dim_schedule: []
+layer_ffn_schedule: []
 conv_kernel_size: 31
 conv_module_type: "single"
 multiscale_kernel_sizes: [15, 31]
@@ -24,6 +26,7 @@ lightstem:
   stride: [2, 1]
 nostem_patch:
   time_patch: 4
+  norm_variant: "layernorm"
 band_token:
   num_bands: 4
   use_band_embedding: true

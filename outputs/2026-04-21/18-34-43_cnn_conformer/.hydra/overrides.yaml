@@ -1,0 +1,8 @@
+- model=cnn_conformer
+- optuna=cnn_conformer_overfit_screening
+- optuna.enabled=true
+- optuna.trials=1
+- train.epochs=1
+- train.folds_to_run=1
+- experiment.tag=smoke_norm_seq
+- optuna.search_space.cnn_conformer.overfit_strategy_choices=[normalization]

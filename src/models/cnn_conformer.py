@@ -162,11 +162,21 @@ class LightStemFrontEnd(nn.Module):
 
 
 class NoStemPatchFrontEnd(nn.Module):
-    def __init__(self, n_mels: int, time_patch: int, embed_dim: int, projector_dropout: float):
+    def __init__(self, n_mels: int, time_patch: int, embed_dim: int, projector_dropout: float, norm_variant: str = "layernorm"):
         super().__init__()
         self.time_patch = int(time_patch)
+        self.norm_variant = str(norm_variant)
         self.patch_proj = nn.Conv2d(1, int(embed_dim), kernel_size=(int(n_mels), self.time_patch), stride=(int(n_mels), self.time_patch), bias=False)
-        self.norm = nn.LayerNorm(int(embed_dim))
+        if self.norm_variant == "layernorm":
+            self.norm = nn.LayerNorm(int(embed_dim))
+        elif self.norm_variant == "batchnorm":
+            self.norm = nn.BatchNorm1d(int(embed_dim))
+        elif self.norm_variant == "instancenorm":
+            self.norm = nn.InstanceNorm1d(int(embed_dim), affine=False)
+        elif self.norm_variant == "identity":
+            self.norm = nn.Identity()
+        else:
+            raise ValueError(f"Unsupported nostem_patch norm_variant: {self.norm_variant}")
         self.dropout = nn.Dropout(projector_dropout)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor | None, dict[str, torch.Tensor]]:
@@ -174,7 +184,13 @@ class NoStemPatchFrontEnd(nn.Module):
         lengths = _downsample_time_lengths(lengths, kernel_size=self.time_patch, stride=self.time_patch, padding=0)
         patch_map = x[0].mean(dim=0)
         seq = x.squeeze(2).transpose(1, 2)
-        seq = self.dropout(self.norm(seq))
+        if self.norm_variant == "layernorm":
+            seq = self.norm(seq)
+        elif self.norm_variant in {"batchnorm", "instancenorm"}:
+            seq = self.norm(seq.transpose(1, 2)).transpose(1, 2)
+        else:
+            seq = self.norm(seq)
+        seq = self.dropout(seq)
         visuals = {
             "cnn_feature_map": patch_map,
             "frequency_feature_map": patch_map,
@@ -283,6 +299,18 @@ class CNNConformerSER(nn.Module):
         self.sequence_shrinking_enabled = bool(sequence_shrinking_cfg.get("enabled", False))
         self.sequence_shrinking_factor = int(sequence_shrinking_cfg.get("factor", 2))
         self.sequence_shrinking_layers = {int(v) for v in sequence_shrinking_cfg.get("at_layers", [])}
+        layer_dim_schedule = [int(v) for v in cfg.model.get("layer_dim_schedule", [])]
+        layer_ffn_schedule = [int(v) for v in cfg.model.get("layer_ffn_schedule", [])]
+        if layer_dim_schedule and len(layer_dim_schedule) != num_layers:
+            raise ValueError("model.layer_dim_schedule length must match model.num_layers.")
+        if layer_ffn_schedule and len(layer_ffn_schedule) != num_layers:
+            raise ValueError("model.layer_ffn_schedule length must match model.num_layers.")
+        self.layer_dims = layer_dim_schedule if layer_dim_schedule else [embed_dim] * num_layers
+        self.layer_ffn_dims = layer_ffn_schedule if layer_ffn_schedule else [ffn_dim] * num_layers
+        if any(dim % num_heads != 0 for dim in self.layer_dims):
+            raise ValueError("Every layer dimension in model.layer_dim_schedule must be divisible by model.num_heads.")
+        if layer_fusion != "last" and len(set(self.layer_dims)) > 1:
+            raise ValueError("layer_fusion modes other than 'last' are only supported for uniform layer_dim_schedule.")
 
         if self.backbone_variant == "standard":
             self.front_end = StandardCNNFrontEnd(
@@ -310,6 +338,7 @@ class CNNConformerSER(nn.Module):
                 time_patch=int(patch_cfg.get("time_patch", 4)),
                 embed_dim=embed_dim,
                 projector_dropout=projector_dropout,
+                norm_variant=str(patch_cfg.get("norm_variant", "layernorm")),
             )
         elif self.backbone_variant == "band_token":
             band_cfg = cfg.model.get("band_token", {})
@@ -322,13 +351,19 @@ class CNNConformerSER(nn.Module):
             )
         else:
             raise ValueError(f"Unsupported backbone_variant: {self.backbone_variant}")
+        first_layer_dim = int(self.layer_dims[0])
+        self.input_projection = (
+            nn.Identity()
+            if embed_dim == first_layer_dim
+            else nn.Sequential(nn.LayerNorm(embed_dim), nn.Linear(embed_dim, first_layer_dim))
+        )
         self.pos_dropout = nn.Dropout(input_dropout)
         self.encoder = nn.ModuleList(
             [
                 CNNConformerBlock(
-                    embed_dim=embed_dim,
+                    embed_dim=layer_dim,
                     num_heads=num_heads,
-                    ffn_dim=ffn_dim,
+                    ffn_dim=layer_ffn_dim,
                     conv_kernel_size=conv_kernel_size,
                     dropout=encoder_dropout,
                     attention_type=attention_type,
@@ -336,16 +371,27 @@ class CNNConformerSER(nn.Module):
                     conv_module_type=conv_module_type,
                     multiscale_kernel_sizes=multiscale_kernel_sizes,
                 )
-                for _ in range(num_layers)
+                for layer_dim, layer_ffn_dim in zip(self.layer_dims, self.layer_ffn_dims)
             ]
         )
+        self.encoder_transitions = nn.ModuleList()
+        for in_dim, out_dim in zip(self.layer_dims[:-1], self.layer_dims[1:]):
+            if int(in_dim) == int(out_dim):
+                self.encoder_transitions.append(nn.Identity())
+            else:
+                self.encoder_transitions.append(
+                    nn.Sequential(
+                        nn.LayerNorm(int(in_dim)),
+                        nn.Linear(int(in_dim), int(out_dim)),
+                    )
+                )
         self.layer_fusion = layer_fusion
         self.layer_fuser = LayerWeightedSum(num_layers) if layer_fusion == "learned_sum" else None
-        self.norm = nn.LayerNorm(embed_dim)
+        self.norm = nn.LayerNorm(int(self.layer_dims[-1]))
         self.pooling_type = pooling
-        self.attentive_pool = AttentivePooling(embed_dim) if pooling == "attention" else None
+        self.attentive_pool = AttentivePooling(int(self.layer_dims[-1])) if pooling == "attention" else None
         self.dropout = nn.Dropout(classifier_dropout)
-        self.classifier = nn.Linear(embed_dim, num_classes)
+        self.classifier = nn.Linear(int(self.layer_dims[-1]), num_classes)
 
         self.capture_visualizations = False
         self._visual_cache: dict[str, torch.Tensor] = {}
@@ -372,6 +418,7 @@ class CNNConformerSER(nn.Module):
         for key, value in visuals.items():
             self._cache_visual(key, value)
 
+        x = self.input_projection(x)
         key_padding_mask = lengths_to_padding_mask(lengths, x.size(1))
         x = apply_sequence_mask(self.pos_dropout(x), key_padding_mask)
 
@@ -383,6 +430,9 @@ class CNNConformerSER(nn.Module):
                 x, key_padding_mask = shrink_sequence(x, key_padding_mask, self.sequence_shrinking_factor)
                 x = apply_sequence_mask(x, key_padding_mask)
             layer_outputs.append(x)
+            if layer_idx < len(self.encoder):
+                x = self.encoder_transitions[layer_idx - 1](x)
+                x = apply_sequence_mask(x, key_padding_mask)
 
         if self.layer_fuser is not None:
             x = self.layer_fuser(layer_outputs)

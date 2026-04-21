@@ -1,0 +1,7 @@
+- model=cnn_conformer
+- optuna=cnn_conformer_nostem_generalization
+- optuna.enabled=true
+- optuna.trials=30
+- train.epochs=30
+- train.folds_to_run=1
+- experiment.tag=nostem_generalization

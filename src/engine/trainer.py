@@ -209,6 +209,23 @@ def apply_specaugment(inputs: torch.Tensor, cfg) -> torch.Tensor:
     return augmented
 
 
+def mixup_enabled(cfg) -> bool:
+    return bool(cfg.train.get("mixup", {}).get("enabled", False))
+
+
+def apply_mixup(inputs: torch.Tensor, labels: torch.Tensor, cfg) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
+    mixup_cfg = cfg.train.get("mixup", {})
+    alpha = float(mixup_cfg.get("alpha", 0.2))
+    if alpha <= 0.0 or inputs.size(0) < 2:
+        return inputs, labels, labels, 1.0
+
+    lam = float(np.random.beta(alpha, alpha))
+    lam = max(lam, 1.0 - lam)
+    index = torch.randperm(inputs.size(0), device=inputs.device)
+    mixed_inputs = lam * inputs + (1.0 - lam) * inputs[index]
+    return mixed_inputs, labels, labels[index], lam
+
+
 def train_one_epoch(model, loader, criterion, optimizer, device, cfg):
     model.train()
     total_loss = 0.0
@@ -218,17 +235,24 @@ def train_one_epoch(model, loader, criterion, optimizer, device, cfg):
     for batch in loader:
         inputs, labels, lengths = unpack_batch(batch, device)
         inputs = apply_specaugment(inputs, cfg)
+        metric_labels = labels
 
         optimizer.zero_grad()
-        logits = forward_model(model, inputs, lengths)
-        loss = criterion(logits, labels)
+        if mixup_enabled(cfg):
+            inputs, labels_a, labels_b, lam = apply_mixup(inputs, labels, cfg)
+            logits = forward_model(model, inputs, lengths)
+            loss = lam * criterion(logits, labels_a) + (1.0 - lam) * criterion(logits, labels_b)
+            metric_labels = labels_a if lam >= 0.5 else labels_b
+        else:
+            logits = forward_model(model, inputs, lengths)
+            loss = criterion(logits, labels)
         loss.backward()
         optimizer.step()
 
         total_loss += loss.item() * inputs.size(0)
         preds = torch.argmax(logits, dim=1)
         all_preds.extend(preds.detach().cpu().numpy())
-        all_labels.extend(labels.detach().cpu().numpy())
+        all_labels.extend(metric_labels.detach().cpu().numpy())
 
     metrics = calculate_comprehensive_metrics(np.array(all_labels), np.array(all_preds))
     metrics["loss"] = total_loss / len(loader.dataset)

@@ -1,0 +1,7 @@
+- model=cnn_conformer
+- optuna=cnn_conformer_nostem_generalization
+- optuna.enabled=true
+- optuna.trials=1
+- train.epochs=1
+- train.folds_to_run=1
+- experiment.tag=smoke_legacy_repro

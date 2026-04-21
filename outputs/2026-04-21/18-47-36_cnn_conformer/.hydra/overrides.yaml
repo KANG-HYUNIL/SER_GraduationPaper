@@ -1,0 +1,7 @@
+- model=cnn_conformer
+- optuna=cnn_conformer_overfit_screening
+- optuna.enabled=true
+- optuna.trials=36
+- train.epochs=30
+- train.folds_to_run=1
+- experiment.tag=overfit_screening
