@@ -1,0 +1,61 @@
+﻿<mxfile host="app.diagrams.net" modified="2026-04-22T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram name="cnn_conformer_architecture" id="f131b93176e047fd82abd4e0adccdffd">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1460" pageHeight="740" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="对数梅尔频谱" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="70" y="100" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="无卷积前端时间分块输入&#xa;每个标记覆盖全部频带&#xa;沿时间轴按四帧切分" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="360" y="70" width="260" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="线性投影与归一化" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="720" y="100" width="200" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="卷积增强Transformer编码器堆叠&#xa;四层重复编码块&#xa;相对位置注意力&#xa;卷积核三十一" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="50" width="260" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="末层序列输出" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="280" width="260" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="注意力池化&#xa;压缩为句级表示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="720" y="460" width="220" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="丢弃层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="400" y="470" width="160" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="线性分类器" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="140" y="470" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="八类输出" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="140" y="610" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c1" target="c2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c2" target="c3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c3" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c4" target="c5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c5" target="c6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c6" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c7" target="c8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="c8" target="c9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

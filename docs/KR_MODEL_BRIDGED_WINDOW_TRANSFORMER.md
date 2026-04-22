@@ -8,7 +8,7 @@
 
 ## 2. 모델 스냅샷
 
-`bridged_window_transformer`는 기존 `hierarchical_window_transformer`를 그대로 반복 개선한 모델이 아니라, window 기반 SER의 약점을 보완하기 위해 새로 추가한 분기 모델이다.
+`bridged_window_transformer`는 기존 `hierarchical_window_transformer`를 그대로 반복 개선한 모델이 아니라, window 기반 SER의 약점을 보완하기 위해 새로 추가한 분기 모델이다. winner 기준 구조는 `stage_dims=[96,160]`, `stage_depths=[3,2]`, `bridge_tokens=2`, `mean pooling` 조합이다.
 
 설계 목표는 세 가지다.
 
@@ -116,61 +116,44 @@
 
 ### 전체 파이프라인
 
+winner 기준:
+
 1. 입력 spectrogram `[B, 1, F, T]`
 2. CNN stem 2개로 시간/주파수 downsampling
-3. `SpatialProjector`로 stage 1 차원으로 projection
-4. stage 1 window transformer block 반복
-5. `BridgeContext2D`로 stage 1 전역 bridge token 추출 및 channel gate 적용
+3. `SpatialProjector`로 `stage_dims=[96,160]` 중 첫 단계 차원으로 projection
+4. stage 1 window transformer block을 `3`층 반복
+5. `BridgeContext2D`로 stage 1 전역 bridge token (`bridge_tokens=2`) 추출 및 channel gate 적용
 6. `PatchMerging2D`로 stage 2 해상도 축소
 7. `BridgeProjector`로 stage 1 bridge summary를 stage 2 feature에 주입
-8. stage 2 window transformer block 반복
+8. stage 2 window transformer block을 `2`층 반복
 9. 다시 `BridgeContext2D`로 stage 2 전역 bridge token 추출
-10. 주파수축 평균 후 시간축 pooling
+10. 주파수축 평균 후 `mean pooling`
 11. 최종 pooled embedding에 stage 2 bridge summary를 더해 classifier 입력 생성
 
 ### 세부 흐름도
 
 ```mermaid
 flowchart TD
-    A[Input log-Mel<br/>B x 1 x F x T] --> B1[ConvStemBlock 1<br/>Conv2d stride 2x2 -> LN -> GELU -> Conv2d -> LN -> GELU]
-    B1 --> B2[ConvStemBlock 2<br/>Conv2d stride 2x2 -> LN -> GELU -> Conv2d -> LN -> GELU]
-    B2 --> C[SpatialProjector<br/>1x1 Conv -> ChannelLayerNorm2d -> GELU -> Dropout2d]
-    C --> D[2D valid mask 생성<br/>lengths_to_2d_valid_mask]
-    D --> E[Stage 1 Block Stack]
-    E --> E1[Block 1<br/>Window partition -> relative window attention -> MLP]
-    E1 --> E2[Block 2<br/>cyclic shift -> shifted window mask -> relative window attention -> reverse shift -> MLP]
-    E2 --> F[BridgeContext2D Stage 1]
-    F --> F1[feature map flatten -> spatial tokens]
-    F1 --> F2[learnable bridge tokens as query]
-    F2 --> F3[cross-attention over all stage-1 tokens]
-    F3 --> F4[bridge token mean]
-    F4 --> F5[channel gate 생성<br/>LayerNorm -> Linear -> Sigmoid]
-    F5 --> F6[stage-1 feature reweighting<br/>x = x * 1 + gate]
-    F6 --> G[PatchMerging2D]
-    G --> G1[2x2 neighbor concat]
-    G1 --> G2[LayerNorm]
-    G2 --> G3[Linear reduction to stage-2 dim]
-    F4 --> H[BridgeProjector]
-    H --> H1[LayerNorm -> Linear -> Tanh]
-    H1 --> I[Stage-2 input conditioning<br/>x = merged_x + projected_bridge]
-    G3 --> I
-    I --> J[Stage 2 Block Stack]
-    J --> J1[Block 1<br/>Window partition -> relative window attention -> MLP]
-    J1 --> J2[Block 2<br/>cyclic shift -> shifted window mask -> relative window attention -> reverse shift -> MLP]
-    J2 --> K[BridgeContext2D Stage 2]
-    K --> K1[global bridge summary 생성]
-    K1 --> L[Frequency mean collapse]
+    A[Input log-Mel<br/>B x 1 x F x T] --> B1[ConvStemBlock 1<br/>48 channels]
+    B1 --> B2[ConvStemBlock 2<br/>64 channels]
+    B2 --> C[SpatialProjector<br/>stage dim 96]
+    C --> D[2D valid mask 생성]
+    D --> E[Stage 1 Block Stack x3<br/>window 4x8, heads 4]
+    E --> F[BridgeContext2D Stage 1<br/>bridge tokens 2]
+    F --> G[PatchMerging2D]
+    F --> H[BridgeProjector]
+    G --> I[Stage-2 input<br/>stage dim 160]
+    H --> I
+    I --> J[Stage 2 Block Stack x2<br/>window 5x8, heads 8]
+    J --> K[BridgeContext2D Stage 2<br/>bridge tokens 2]
+    K --> L[Frequency mean collapse]
     L --> M[Temporal sequence<br/>B x T' x C]
-    M --> N{Pooling}
-    N -->|attention| O[AttentivePooling]
-    N -->|mean| P[Masked Mean Pooling]
-    O --> Q[pooled embedding]
-    P --> Q
-    K1 --> R[bridge2_proj<br/>LayerNorm -> Linear]
-    Q --> S[Final fusion<br/>embedding = pooled + bridge_summary]
-    R --> S
-    S --> T[Dropout]
-    T --> U[Linear classifier -> 8 emotions]
+    M --> N[Masked Mean Pooling]
+    K --> O[bridge2_proj]
+    N --> P[Final fusion<br/>embedding = pooled + bridge_summary]
+    O --> P
+    P --> Q[Dropout 0.1008]
+    Q --> R[Linear classifier -> 8 emotions]
 ```
 
 ### 기존 hierarchical과의 차이 흐름도
@@ -234,17 +217,17 @@ stage 1에서 만든 bridge summary는 `BridgeProjector`를 통해 stage 2 차�
 
 ## 4. 실험 라운드 기록
 
-기본 모델 설정:
+최종 winner 설정:
 
 - `stem_channels: [48, 64]`
-- `stage_dims: [128, 192]`
-- `stage_depths: [2, 2]`
+- `stage_dims: [96, 160]`
+- `stage_depths: [3, 2]`
 - `num_heads: [4, 8]`
 - `window_sizes: [[4, 8], [5, 8]]`
-- `ffn_ratio: 2.0`
-- `bridge_tokens: 4`
-- `pooling: attention`
-- `dropout: 0.15`
+- `ffn_ratio: 3.0`
+- `bridge_tokens: 2`
+- `pooling: mean`
+- `dropout: 0.1008`
 
 ### Optuna 탐색 후보군
 

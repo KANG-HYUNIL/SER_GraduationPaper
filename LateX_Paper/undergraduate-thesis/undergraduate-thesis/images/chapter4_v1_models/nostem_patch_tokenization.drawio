@@ -1,0 +1,49 @@
+﻿<mxfile host="app.diagrams.net" modified="2026-04-22T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram name="nostem_patch_tokenization" id="34b9fb478d1f456a9a9d78fffc679ebf">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="580" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n1" value="输入频谱图&#xa;频带数八十" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="70" y="90" width="190" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="n2" value="整频带卷积切块&#xa;卷积核高度等于全部频带&#xa;卷积核宽度等于四帧" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="380" y="60" width="250" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="n3" value="沿时间轴滑动&#xa;步长等于四帧&#xa;形成不重叠时间块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="760" y="60" width="230" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="n4" value="每个时间块映射为一个标记&#xa;标记已包含全频带信息" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="760" y="280" width="230" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="n5" value="层归一化" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="380" y="310" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="n6" value="丢弃层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="120" y="310" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="n7" value="送入卷积增强Transformer序列编码" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="120" y="450" width="220" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="n1" target="n2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="n2" target="n3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="n3" target="n4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="n4" target="n5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="n5" target="n6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="n6" target="n7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

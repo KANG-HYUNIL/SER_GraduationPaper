@@ -13,20 +13,37 @@
 
 ### 2.1 한 줄 요약
 
-`cnn_conformer`는 Log-Mel spectrogram에서 CNN stem으로 국소 시간-주파수 패턴을 먼저 압축하고, 이후 Conformer encoder로 장단기 문맥을 함께 읽어 감정을 분류하는 SER 모델이다.
+`cnn_conformer`는 최종 winner 기준으로, Log-Mel spectrogram을 `nostem_patch` 방식으로 시간 분할한 뒤 Conformer encoder로 장단기 문맥을 함께 읽어 감정을 분류하는 SER 모델이다.
 
 ### 2.2 핵심 구성 요소
 
 | 항목 | 값 또는 설명 |
 |---|---|
 | 입력 표현 | `log-Mel spectrogram`, 기본 실험 축은 주로 `n_mels=80`, `hop_length=160` |
-| 입력 stem | 2-stage `ConvStemBlock` |
-| 시퀀스 투영 | `FlattenFrequencyProjector` |
+| 입력 stem | winner 기준 `nostem_patch` |
+| 시퀀스 투영 | `LayerNorm + Linear` |
 | 핵심 블록 | `CNNConformerBlock` = `FFN -> MHSA -> Conv -> FFN` |
 | attention | 기본 `relative positional MHSA` |
-| 계층 융합 | `last` 또는 `learned_sum` |
-| utterance pooling | `attention` 또는 `mean` |
+| 계층 융합 | winner 기준 `last` |
+| utterance pooling | winner 기준 `attention` |
 | 출력 | 8-class emotion classifier |
+
+### 2.2.1 최종 winner 설정
+
+| 항목 | 값 |
+|---|---|
+| backbone | `nostem_patch` |
+| `time_patch` | `4` |
+| `norm_variant` | `layernorm` |
+| `embed_dim` | `192` |
+| `num_layers` | `4` |
+| `num_heads` | `8` |
+| `ffn_dim` | `768` |
+| `conv_kernel_size` | `31` |
+| `layer_fusion` | `last` |
+| `pooling` | `attention` |
+| regularization | `mixup alpha=0.4` |
+| best metric | `F1 0.70563`, `Accuracy 0.70000`, `UAR 0.70938` |
 
 ### 2.3 프로젝트 내 비교 관점
 
@@ -39,47 +56,40 @@
 ### 3.1 전체 흐름
 
 1. 입력은 `[B, 1, F, T]` 형태의 spectrogram이다.
-2. `ConvStemBlock` 두 개가 시간축과 주파수축을 줄이면서 국소 패턴을 추출한다.
-3. stem 출력의 주파수 축을 평균 내지 않고 그대로 펼쳐 `FlattenFrequencyProjector`가 `embed_dim`으로 투영한다.
-4. 투영된 시퀀스를 `CNNConformerBlock` 여러 층에 통과시킨다.
-5. 계층 융합 전략에 따라 마지막 층만 쓰거나 `learned_sum`으로 합친다.
-6. sequence norm 후 `attention pooling` 또는 `mean pooling`으로 utterance embedding을 만든다.
+2. winner에서는 CNN stem을 쓰지 않고, `nostem_patch`가 전체 주파수 대역을 한 번에 덮는 시간 분할 token을 만든다.
+3. `LayerNorm + Linear`로 token을 `embed_dim=192` 공간으로 투영한다.
+4. 투영된 시퀀스를 `CNNConformerBlock` 4층에 통과시킨다.
+5. winner에서는 `layer_fusion=last`를 사용해 마지막 층 출력만 사용한다.
+6. final norm 후 `attention pooling`으로 utterance embedding을 만든다.
 7. 분류기에서 8개 감정 클래스로 예측한다.
 
 ### 3.2 전체 파이프라인 Mermaid
 
 ```mermaid
 flowchart LR
-    A[Log-Mel Spectrogram\nB x 1 x F x T] --> B[ConvStemBlock 1\nConv2d + Norm + GELU]
-    B --> C[ConvStemBlock 2\nConv2d + Norm + GELU]
-    C --> D[FlattenFrequencyProjector\nflatten freq bins\nLayerNorm + Linear]
-    D --> E[Positional Dropout]
-    E --> F[CNNConformerBlock x N]
-    F --> G{Layer Fusion}
-    G -->|last| H[Last Layer Output]
-    G -->|learned_sum| I[Weighted Sum of Layers]
-    H --> J[LayerNorm]
-    I --> J
-    J --> K{Pooling}
-    K -->|attention| L[AttentivePooling]
-    K -->|mean| M[Masked Mean Pooling]
-    L --> N[Classifier]
-    M --> N
-    N --> O[8 Emotion Logits]
+    A[Log-Mel Spectrogram\nB x 1 x F x T] --> B[NoStem Patch Projection\ntime_patch 4]
+    B --> C[LayerNorm + Linear Projection\nembed 192]
+    C --> D[Positional Dropout]
+    D --> E[CNNConformerBlock x4\nheads 8, ffn 768, kernel 31]
+    E --> F[Last Layer Output]
+    F --> G[LayerNorm]
+    G --> H[AttentivePooling]
+    H --> I[Classifier]
+    I --> J[8 Emotion Logits]
 ```
 
 ### 3.3 Conformer block 상세
 
-현재 구현의 `CNNConformerBlock`은 macaron-style FFN과 convolution module을 유지하면서, attention만 `relative`와 `absolute`를 바꿔 ablation할 수 있게 분리되어 있다.
+winner에서 사용하는 `CNNConformerBlock`은 macaron-style FFN과 single convolution module을 유지하면서, `relative positional MHSA`를 사용한다.
 
 ```mermaid
 flowchart TD
     X[Input Sequence] --> A[FFN 1]
     A --> B[Residual Add x0.5]
     B --> C[LayerNorm]
-    C --> D[Self-Attention\nrelative or absolute]
+    C --> D[Self-Attention\nrelative]
     D --> E[Residual Add]
-    E --> F[Conv Module\nsingle or multiscale]
+    E --> F[Conv Module\nsingle, kernel 31]
     F --> G[Residual Add]
     G --> H[FFN 2]
     H --> I[Residual Add x0.5]
@@ -87,19 +97,16 @@ flowchart TD
     J --> K[Final LayerNorm]
 ```
 
-### 3.4 Stem stride 해석
+### 3.4 winner 기준 front-end 해석
 
-이 코드베이스에서 `stem_strides`는 `(freq, time)` 순서다.  
-따라서 time subsampling 완화는 `[[2,1],[2,2]]` 같은 형태로 표현되고, `[[2,1],[2,1]]`는 시간축을 거의 보존하는 설정이다.
+winner에서는 `stem_strides` 자체를 쓰지 않는다.  
+즉, 표준 CNN stem 압축이 아니라 `nostem_patch`로 직접 시간축 token을 만든다.
 
 ```mermaid
 flowchart LR
-    A[n_mels x time] --> B1[standard_4x\n[[2,2],[2,2]]]
-    A --> B2[time_preserve_first\n[[2,1],[2,2]]]
-    A --> B3[freq_only\n[[2,1],[2,1]]]
-    B1 --> C1[freq 1/4,\ntime 1/4]
-    B2 --> C2[freq 1/4,\ntime 1/2]
-    B3 --> C3[freq 1/4,\ntime 유지]
+    A[n_mels x time] --> B[NoStem Patch\nfull-frequency kernel]
+    B --> C[time_patch 4]
+    C --> D[Sequence Tokens]
 ```
 
 ### 3.5 핵심 파라미터와 역할

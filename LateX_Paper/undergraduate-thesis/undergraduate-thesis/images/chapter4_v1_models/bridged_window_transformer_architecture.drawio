@@ -1,0 +1,67 @@
+﻿<mxfile host="app.diagrams.net" modified="2026-04-22T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram name="bridged_window_transformer_architecture" id="2ef1b92e2f554c65b4632a410c6ffd36">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="w1" value="对数梅尔频谱" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="60" y="90" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="w2" value="卷积前端&#xa;两层卷积压缩&#xa;提取局部时频模式" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="340" y="70" width="220" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="w3" value="空间投影模块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="660" y="90" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="w4" value="第一阶段窗口编码&#xa;局部窗口注意力&#xa;移位窗口&#xa;相对位置偏置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="940" y="60" width="240" height="136" as="geometry" />
+        </mxCell>
+        <mxCell id="w5" value="桥接上下文模块一&#xa;聚合阶段级全局摘要&#xa;回注入第一阶段特征" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="940" y="280" width="240" height="136" as="geometry" />
+        </mxCell>
+        <mxCell id="w6" value="分块合并" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="660" y="500" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="w7" value="第二阶段窗口编码&#xa;更大感受野&#xa;更高语义层级" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="340" y="470" width="220" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="w8" value="桥接上下文模块二&#xa;最终全局融合" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="60" y="470" width="220" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="w9" value="均值池化" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="60" y="620" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="w10" value="八类输出" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="340" y="620" width="180" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w1" target="w2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w2" target="w3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w3" target="w4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w4" target="w5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w5" target="w6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w6" target="w7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w7" target="w8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w8" target="w9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" edge="1" parent="1" source="w9" target="w10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -86,6 +86,23 @@ CNN baseline은 현재 프로젝트의 가장 단순한 기준선이면서도, �
 | f1_macro | `0.62196` |
 | uar | `0.61563` |
 
+### 3.5 최종 선택 구조
+
+현재 문서에서 기준으로 삼는 CNN baseline 구조는 `trial_0023`의 winner 설정 하나만 의미한다.  
+즉, 이후 논문 도식도나 Mermaid는 아래 구조만 반영하면 된다.
+
+```mermaid
+flowchart LR
+    A[Resize Log-Mel\n96 x 512] --> B1[Conv Block 1\n3x3 Conv 1->32 + BN + ReLU + MaxPool 2x2]
+    B1 --> B2[Conv Block 2\n3x3 Conv 32->64 + BN + ReLU + MaxPool 2x2]
+    B2 --> B3[Conv Block 3\n3x3 Conv 64->256 + BN + ReLU + MaxPool 2x2]
+    B3 --> B4[Conv Block 4\n3x3 Conv 256->512 + BN + ReLU + MaxPool 2x2]
+    B4 --> C[AdaptiveAvgPool2d 4x4]
+    C --> D[Flatten]
+    D --> E[Dropout 0.33238]
+    E --> F[Linear 8-class]
+```
+
 ## 4. 설계 배경 및 구현 메모
 
 ### 4.1 왜 baseline이 강했는가
@@ -99,6 +116,19 @@ CNN baseline은 현재 프로젝트의 가장 단순한 기준선이면서도, �
 - 상위권 trial은 거의 모두 `batch_size=16`, `n_fft=1024`, `hop_length=160`, `resize=96x512`, `normalize=true`로 모였다.
 - 채널 구성은 `32`로 시작하고 마지막 stage를 `512`로 유지하는 구조가 강했다.
 - 이후 transformer 계열 실험에서 이 조합은 비교 기준으로 사용할 가치가 있다.
+
+### 4.3 현재 코드 기준 구현 해설
+
+최종 선택 구조는 4개의 동일 패턴 convolution block으로 이루어진다.
+
+1. block 1은 입력 채널 `1`을 `32`로 늘리며 가장 저수준의 시간-주파수 edge와 energy pattern을 추출한다.
+2. block 2는 채널을 `64`로 확장하며 초기 국소 패턴을 더 안정적으로 묶는다.
+3. block 3과 block 4는 채널을 각각 `256`, `512`까지 넓혀 상위 감정 cue를 압축 표현한다.
+4. 각 block 끝의 `MaxPool2d(2x2)`가 해상도를 줄이며 receptive field를 키운다.
+5. 마지막의 `AdaptiveAvgPool2d(4x4)`는 feature map 크기를 고정해 분류 head 입력을 안정화한다.
+6. 이후 `Flatten -> Dropout -> Linear` 순서로 8개 감정 클래스를 예측한다.
+
+즉 이 모델은 복잡한 attention이나 residual branch 없이, "국소 시공간 패턴 추출 -> 단계적 압축 -> 고정 크기 표현 -> 선형 분류"라는 가장 직선적인 SER baseline 구조다.
 
 ## 5. 아티팩트 분석
 

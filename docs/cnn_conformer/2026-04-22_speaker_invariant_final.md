@@ -4,7 +4,7 @@
 
 - 대상 모델: `cnn_conformer`
 - 문서 목적: 2026-04-22 overfitting screening 종료 후, winner branch를 고정한 상태에서 마지막 일반화 개선 축으로 `speaker-invariant adversarial regularization` 실험을 설계하고 구현 범위를 기록
-- 현재 문서 상태: `planned`
+- 현재 문서 상태: `active`
 
 ## 2. 모델 개요
 
@@ -124,17 +124,117 @@ L_total = L_emotion + lambda_speaker * L_speaker_adv
 .\.venv\Scripts\python.exe -m src.optuna_search model=cnn_conformer optuna=cnn_conformer_speaker_invariant_final optuna.enabled=true optuna.trials=30 train.epochs=30 train.folds_to_run=1 experiment.tag=speaker_invariant_final
 ```
 
-## 6. 검증 계획
+## 6. 실험 로그 기록
+
+### 6.1 공통 고정 조건
+
+| 분류 | 항목 | 값 | 비고 |
+|---|---|---|---|
+| 데이터 | dataset | RAVDESS | actor-group split |
+| log-Mel | `n_mels / n_fft / hop_length` | `80 / 1024 / 160` | screening winner line 유지 |
+| backbone | front-end | `nostem_patch` | `time_patch=4` 중심 |
+| chunking | `frames / hop / aggregation` | `48 / 12 / confidence_weighted_logit` | 고정 |
+| optimizer | epochs / folds | `30 / 1` | Optuna screening |
+
+### 6.2 실행 회차
+
+| 회차 | 날짜 | 목적 | 설정 요약 | 결과 요약 | 산출 경로 |
+|---|---|---|---|---|---|
+| Round 8-1 | 2026-04-22 | mixup winner에 `speaker_adversarial` 보조 branch를 추가해 unseen actor 일반화가 개선되는지 검증 | `mixup alpha`, `speaker_adversarial on/off`, `loss_weight`, `GRL lambda`, `hidden_dim`, `norm_variant` 탐색 | 출력 폴더 기준 complete 4개, 최고 `F1 0.70042`, 최고점은 `speaker_adversarial=false` | [../../outputs/2026-04-22/02-33-33_cnn_conformer](../../outputs/2026-04-22/02-33-33_cnn_conformer) |
+
+### 6.3 주요 결과 요약
+
+| Rank | Trial | F1-macro | Accuracy | UAR | ECE | 핵심 파라미터 요약 |
+|---|---|---:|---:|---:|---:|---|
+| 1 | [trial_0004](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/trial_summary.json) | 0.70042 | 0.70333 | 0.70000 | 0.22023 | `speaker_adv=false`, `mixup=0.4`, `layernorm` |
+| 2 | [trial_0003](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0003/trial_summary.json) | 0.69110 | 0.67333 | 0.66875 | 0.23241 | `speaker_adv=true`, `mixup=0.5`, `loss_weight=0.2`, `hidden=128`, `layernorm` |
+| 3 | [trial_0001](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0001/trial_summary.json) | 0.67084 | 0.67333 | 0.68125 | 0.17531 | `speaker_adv=false`, `mixup=0.3`, `layernorm` |
+| 4 | [trial_0002](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0002/trial_summary.json) | 0.65893 | 0.66000 | 0.65625 | 0.17464 | `speaker_adv=true`, `mixup=0.5`, `loss_weight=0.2`, `hidden=64`, `batchnorm` |
+
+### 6.4 전략 비교
+
+| 비교축 | complete 수 | best F1 | 해석 |
+|---|---|---|---|
+| `speaker_adversarial=false` | 2 | `0.70042` | 현재 run 내부 winner |
+| `speaker_adversarial=true` | 2 | `0.69110` | 새 branch는 baseline을 넘지 못함 |
+
+추가 상태 메모:
+
+- 출력 폴더 기준 complete trial summary는 4개다.
+- 공유 study DB 전체 상태는 `COMPLETE 6 / PRUNED 110 / FAIL 1`이다.
+- complete 2개는 같은 study 이름을 공유한 사전 smoke run 기록이므로, 본실험 폴더 해석에서는 제외한다.
+- 본실험 폴더만 보면 complete 수는 적지만, pruning 규모까지 포함하면 plateau 판단에는 충분한 신호가 쌓였다.
+
+기준선 비교:
+
+- 2026-04-21 overfitting screening winner: `F1 0.70563`
+- 2026-04-22 final round current best: `F1 0.70042`
+- 차이: `-0.00521`
+
+즉 이번 final round는 speaker adversarial 추가 여부를 떠나, 아직 screening winner를 회복하지 못했다.
+
+## 7. Artifact 분석
+
+### 7.1 대상 trial
+
+- 최고 trial summary: [../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/trial_summary.json](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/trial_summary.json)
+- 최고 trial artifact 폴더: [../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/artifacts](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/artifacts)
+- adversarial 최고 trial summary: [../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0003/trial_summary.json](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0003/trial_summary.json)
+- adversarial 최고 trial artifact 폴더: [../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0003/artifacts](../../outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0003/artifacts)
+
+### 7.2 항목별 해석
+
+- learning curve:
+  - `speaker_adversarial=true` trial들은 train loss가 크게 남아 있는 초반에는 val F1가 빠르게 오르지만, 0.69 부근에서 더 이상 screening winner를 넘는 상승이 보이지 않았다.
+  - log 상으로 adversarial trial은 emotion head가 안정화되기 전 auxiliary loss가 학습을 더 어렵게 만드는 모습이 있다.
+
+- confusion / macro-F1:
+  - `trial_0004`가 `trial_0003`보다 accuracy와 UAR를 모두 앞선다.
+  - 즉 adversarial branch가 특정 클래스만 살리고 다른 클래스를 희생하는 패턴도 현재는 보상되지 않았다.
+
+- 추가 메모:
+  - pruned trial 중 최고 intermediate도 약 `0.6587` 수준이라 남은 조합에서 late breakthrough가 나올 신호도 약하다.
+
+- calibration:
+  - `trial_0004` ECE `0.22023`, `trial_0003` ECE `0.23241`로 둘 다 calibration은 좋지 않다.
+  - 이번 라운드는 speaker regularization이 calibration 안정화로도 이어지지 않았다.
+
+- representation / feature map:
+  - artifact는 모두 정상 생성되었지만, 현재 지표 수준에서는 새로운 speaker branch가 feature quality를 실질적으로 개선했다는 정량 증거가 없다.
+
+## 8. 종합 인사이트 및 다음 액션
+
+### 8.1 현재 판단
+
+- 이번 lightweight `speaker-invariant adversarial regularization`은 **검증 가치는 있었지만 winner 갱신에는 실패했다.**
+- 현재 complete trial 기준 최고점은 여전히 `speaker_adversarial=false`에서 나왔고, baseline mixup winner line이 더 강하다.
+- 따라서 이 축은 “도입했으나 본 프로젝트 설정에서는 실효성이 약했다”로 정리하는 편이 맞다.
+
+### 8.2 다음 액션
+
+- 이 final round는 중단하고 결과를 기록한다.
+- 이후 선택지는 두 가지다.
+  - `논문 작성 시작`: 현재 `~0.70` 성능과 다수의 실패/성공 ablation을 근거로 비교·분석 중심 서술
+  - `한 번 더 후속 실험`: overfitting 해결을 더 하되, speaker adversarial처럼 새 학습 branch를 늘리기보다 더 단순하고 방어적인 축만 제한적으로 시도
+
+## 9. 검증 계획
 
 1. `1 trial / 1 epoch / folds_to_run=1` smoke로 auxiliary path가 정상 동작하는지 확인
 2. `speaker_adversarial=false`와 `true`가 모두 trial 생성되는지 확인
 3. per-trial weights가 trial-local 디렉터리에 저장되는지 확인
 4. 그 다음 30-trial 본실험 실행
 
-## 7. 중단 기준
+## 10. 중단 기준
 
 - best F1가 screening winner `0.70563`을 넘지 못하고
 - `speaker_adversarial=true` trial이 baseline보다 일관되게 낮으며
 - calibration 개선만 있고 F1/UAR 개선이 없으면
 
 이 축은 종료하고, 문서 결론에서는 `mixup winner 유지 + adversarial regularization 비효율`로 정리한다.
+
+## 11. 변경 이력
+
+| 날짜 | 변경 내용 |
+|---|---|
+| 2026-04-22 | final round 설계 문서 초안 작성 |
+| 2026-04-22 | `02-33-33_cnn_conformer` 실제 결과, top trial 표, artifact 해석, 중단 권고 반영 |

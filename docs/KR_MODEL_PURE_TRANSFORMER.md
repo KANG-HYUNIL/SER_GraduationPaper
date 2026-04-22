@@ -18,8 +18,8 @@
 |---|---|
 | 입력 표현 | log-Mel spectrogram |
 | 핵심 블록 | patch embedding + transformer encoder |
-| 주요 구조 파라미터 | `patch_size`, `patch_stride`, `embed_dim`, `num_layers`, `num_heads`, `ffn_dim` |
-| 출력 pooling | `attention`, `mean`, `cls` |
+| 주요 구조 파라미터 | winner 기준 `patch_size=32`, `patch_stride=8`, `embed_dim=256`, `num_layers=5`, `num_heads=4`, `ffn_dim=1024` |
+| 출력 pooling | winner 기준 `mean` |
 | 분류 대상 | 8-class SER |
 
 ### 2.3 비교 관점
@@ -49,6 +49,29 @@ python -m src.optuna_search model=pure_transformer experiment.family=pure_transf
 | 3 | `trial_0042` | 0.48262 | 0.49000 | 0.48438 | 64 | 2048 | 256 | 50.0 | 8000.0 | True | 16 | 1.81e-4 | 4.87e-5 | 0.286 | 256 | 2 | 4 | 5 | 32 | 16 | cls |
 | 4 | `trial_0156` | 0.48111 | 0.48667 | 0.47187 | 64 | 1024 | 160 | 20.0 | 8000.0 | True | 8 | 1.47e-4 | 3.88e-5 | 0.102 | 256 | 2 | 4 | 5 | 32 | 16 | cls |
 | 5 | `trial_0154` | 0.47742 | 0.47667 | 0.47188 | 64 | 1024 | 160 | 20.0 | 8000.0 | True | 8 | 1.78e-4 | 4.41e-5 | 0.100 | 256 | 2 | 4 | 5 | 32 | 16 | cls |
+
+### 3.3 최종 winner 구조
+
+- winner trial: `trial_0016`
+- `embed_dim=256`
+- `num_heads=4`
+- `num_layers=5`
+- `ffn_dim=1024`
+- `patch_size=32`
+- `patch_stride=8`
+- `pooling=mean`
+- `dropout=0.271`
+
+```mermaid
+flowchart LR
+    A[Log-Mel Spectrogram] --> B[Conv2d Patch Embedding\n32x32, stride 8]
+    B --> C[Flatten Patch Tokens]
+    C --> D[Sinusoidal Positional Encoding]
+    D --> E[TransformerEncoder x5\nembed 256, heads 4, ffn 1024]
+    E --> F[Masked Mean Pooling]
+    F --> G[Dropout 0.271]
+    G --> H[Linear 8-class]
+```
 
 ## 4. 설계 배경 및 구현 메모
 
