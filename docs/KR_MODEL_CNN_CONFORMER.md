@@ -168,6 +168,7 @@ flowchart LR
 | 2026-04-20 Redesign | [2026-04-20_backbone_redesign.md](./cnn_conformer/2026-04-20_backbone_redesign.md) | conformer backbone 재설계 결과와 artifact 인사이트 |
 | 2026-04-21 Generalization | [2026-04-21_nostem_generalization.md](./cnn_conformer/2026-04-21_nostem_generalization.md) | `nostem_patch` winner 기반 overfitting 완화 실험 계획 |
 | 2026-04-22 Follow-up | [2026-04-22_overfitting_followup.md](./cnn_conformer/2026-04-22_overfitting_followup.md) | 중복 축 제외 후 overfitting 후속 실험 설계 |
+| 2026-04-22 Final Round | [2026-04-22_speaker_invariant_final.md](./cnn_conformer/2026-04-22_speaker_invariant_final.md) | winner branch 고정 후 speaker-invariant adversarial regularization 최종 실험 |
 
 ## 6. 다음 실험 권장 방향
 

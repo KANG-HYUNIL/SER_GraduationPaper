@@ -1,0 +1,8 @@
+- model=cnn_conformer
+- optuna=cnn_conformer_speaker_invariant_final
+- optuna.enabled=true
+- optuna.trials=1
+- train.epochs=1
+- train.folds_to_run=1
+- experiment.tag=smoke_speaker_invariant_adv
+- optuna.search_space.cnn_conformer.speaker_adversarial_enabled_choices=[true]

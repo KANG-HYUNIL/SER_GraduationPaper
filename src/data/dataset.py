@@ -104,6 +104,9 @@ class RavdessDataset(Dataset):
         feature, length = self.get_feature(idx)
         return feature, torch.tensor(label, dtype=torch.long), length
 
+    def get_actor_id(self, idx: int) -> int:
+        return int(self.actor_ids[idx])
+
 
 def build_chunk_spans(length: int, chunk_frames: int, hop_frames: int) -> list[tuple[int, int]]:
     if chunk_frames <= 0:
@@ -124,11 +127,12 @@ def build_chunk_spans(length: int, chunk_frames: int, hop_frames: int) -> list[t
 
 
 class ChunkedTrainDataset(Dataset):
-    def __init__(self, base_dataset: RavdessDataset, indices, chunk_frames: int, hop_frames: int):
+    def __init__(self, base_dataset: RavdessDataset, indices, chunk_frames: int, hop_frames: int, include_actor_id: bool = False):
         self.base_dataset = base_dataset
         self.indices = [int(idx) for idx in indices]
         self.chunk_frames = int(chunk_frames)
         self.hop_frames = int(hop_frames)
+        self.include_actor_id = bool(include_actor_id)
         self.chunk_index: list[tuple[int, int, int]] = []
         self._build_index()
 
@@ -141,11 +145,14 @@ class ChunkedTrainDataset(Dataset):
     def __len__(self) -> int:
         return len(self.chunk_index)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int):
         utterance_idx, start, end = self.chunk_index[idx]
         feature, _ = self.base_dataset.get_feature(utterance_idx)
         chunk = feature[..., start:end]
         label = self.base_dataset.labels[utterance_idx]
+        if self.include_actor_id:
+            actor_id = self.base_dataset.get_actor_id(utterance_idx)
+            return chunk.contiguous(), torch.tensor(label, dtype=torch.long), torch.tensor(actor_id, dtype=torch.long)
         return chunk.contiguous(), torch.tensor(label, dtype=torch.long)
 
 
@@ -168,8 +175,36 @@ class UtteranceChunkDataset(Dataset):
 
 
 def collate_fixed_chunks(batch):
+    if len(batch[0]) == 3:
+        features, labels, actor_ids = zip(*batch)
+        return torch.stack(features, dim=0), torch.stack(labels, dim=0), torch.stack(actor_ids, dim=0)
     features, labels = zip(*batch)
     return torch.stack(features, dim=0), torch.stack(labels, dim=0)
+
+
+class TrainSubsetWithActor(Dataset):
+    def __init__(self, base_dataset: RavdessDataset, indices):
+        self.base_dataset = base_dataset
+        self.indices = [int(idx) for idx in indices]
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+    def __getitem__(self, idx: int):
+        base_idx = self.indices[idx]
+        feature, label, length = self.base_dataset[base_idx]
+        actor_id = self.base_dataset.get_actor_id(base_idx)
+        return feature, label, length, torch.tensor(actor_id, dtype=torch.long)
+
+
+def collate_with_actor(batch):
+    features, labels, lengths, actor_ids = zip(*batch)
+    return (
+        torch.stack(features, dim=0),
+        torch.stack(labels, dim=0),
+        torch.as_tensor(lengths, dtype=torch.long),
+        torch.stack(actor_ids, dim=0),
+    )
 
 
 def collate_utterance_chunks(batch):

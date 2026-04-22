@@ -21,9 +21,11 @@ import src.models
 from src.data.dataset import (
     ChunkedTrainDataset,
     RavdessDataset,
+    TrainSubsetWithActor,
     UtteranceChunkDataset,
     collate_fixed_chunks,
     collate_utterance_chunks,
+    collate_with_actor,
 )
 from src.data.transforms import AudioPipeline
 from src.engine.losses import build_class_weights, build_criterion
@@ -50,6 +52,35 @@ EMOTION_NAMES = [
     "disgust",
     "surprised",
 ]
+
+
+class GradientReversalFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x: torch.Tensor, lambd: float) -> torch.Tensor:
+        ctx.lambd = float(lambd)
+        return x.view_as(x)
+
+    @staticmethod
+    def backward(ctx, grad_output: torch.Tensor):
+        return grad_output.neg() * ctx.lambd, None
+
+
+def grad_reverse(x: torch.Tensor, lambd: float) -> torch.Tensor:
+    return GradientReversalFunction.apply(x, float(lambd))
+
+
+class SpeakerAdversary(nn.Module):
+    def __init__(self, input_dim: int, hidden_dim: int, num_speakers: int, dropout: float):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(int(input_dim), int(hidden_dim)),
+            nn.GELU(),
+            nn.Dropout(float(dropout)),
+            nn.Linear(int(hidden_dim), int(num_speakers)),
+        )
+
+    def forward(self, x: torch.Tensor, grl_lambda: float) -> torch.Tensor:
+        return self.net(grad_reverse(x, grl_lambda))
 
 
 def sanitize_experiment_name(name: str) -> str:
@@ -79,6 +110,10 @@ def chunking_enabled(cfg) -> bool:
     return bool(cfg.data.get("chunking", {}).get("enabled", False))
 
 
+def speaker_adversarial_enabled(cfg) -> bool:
+    return bool(cfg.train.get("speaker_adversarial", {}).get("enabled", False))
+
+
 def get_chunking_params(cfg) -> tuple[int, int, int]:
     chunk_cfg = cfg.data.get("chunking", {})
     chunk_frames = int(chunk_cfg.get("chunk_frames", 64))
@@ -99,9 +134,16 @@ def build_dataloaders(cfg, dataset, train_idx, val_idx):
     sampler_cfg = cfg.train.get("sampler", {})
     sampler_name = str(sampler_cfg.get("name", "random"))
     sampler_weight_mode = str(sampler_cfg.get("class_weight_mode", "none"))
+    include_actor_id = speaker_adversarial_enabled(cfg)
     if chunking_enabled(cfg):
         chunk_frames, hop_frames, eval_hop_frames = get_chunking_params(cfg)
-        train_subset = ChunkedTrainDataset(dataset, train_idx, chunk_frames=chunk_frames, hop_frames=hop_frames)
+        train_subset = ChunkedTrainDataset(
+            dataset,
+            train_idx,
+            chunk_frames=chunk_frames,
+            hop_frames=hop_frames,
+            include_actor_id=include_actor_id,
+        )
         val_subset = UtteranceChunkDataset(dataset, val_idx, chunk_frames=chunk_frames, hop_frames=eval_hop_frames)
         if len(train_subset) == 0:
             raise RuntimeError("ChunkedTrainDataset is empty. Reduce chunk_frames or adjust log-Mel parameters.")
@@ -133,7 +175,7 @@ def build_dataloaders(cfg, dataset, train_idx, val_idx):
         )
         return train_loader, val_loader
 
-    train_subset = Subset(dataset, train_idx)
+    train_subset = TrainSubsetWithActor(dataset, train_idx) if include_actor_id else Subset(dataset, train_idx)
     val_subset = Subset(dataset, val_idx)
     loader_kwargs = {
         "batch_size": cfg.train.batch_size,
@@ -149,17 +191,28 @@ def build_dataloaders(cfg, dataset, train_idx, val_idx):
             sample_weights = [float(class_weights[label]) for label in train_labels]
             sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
             shuffle = False
-    train_loader = DataLoader(train_subset, shuffle=shuffle, sampler=sampler, **loader_kwargs)
+    train_loader = DataLoader(
+        train_subset,
+        shuffle=shuffle,
+        sampler=sampler,
+        collate_fn=collate_with_actor if include_actor_id else None,
+        **loader_kwargs,
+    )
     val_loader = DataLoader(val_subset, shuffle=False, **loader_kwargs)
     return train_loader, val_loader
 
 
-def unpack_batch(batch, device):
+def unpack_batch(batch, device, expect_actor_id: bool = False):
+    if len(batch) == 4:
+        inputs, labels, lengths, actor_ids = batch
+        return inputs.to(device), labels.to(device), lengths.to(device), actor_ids.to(device)
     if len(batch) == 3:
-        inputs, labels, lengths = batch
-        return inputs.to(device), labels.to(device), lengths.to(device)
+        inputs, labels, third = batch
+        if expect_actor_id:
+            return inputs.to(device), labels.to(device), None, third.to(device)
+        return inputs.to(device), labels.to(device), third.to(device), None
     inputs, labels = batch
-    return inputs.to(device), labels.to(device), None
+    return inputs.to(device), labels.to(device), None, None
 
 
 def forward_model(model, inputs, lengths=None):
@@ -169,6 +222,21 @@ def forward_model(model, inputs, lengths=None):
         return model(inputs, lengths=lengths)
     except TypeError:
         return model(inputs)
+
+
+def forward_model_with_embedding(model, inputs, lengths=None):
+    if not hasattr(model, "get_embedding") or not hasattr(model, "classifier"):
+        raise ValueError("speaker_adversarial requires model.get_embedding() and model.classifier.")
+    if lengths is None:
+        embedding = model.get_embedding(inputs)
+    else:
+        try:
+            embedding = model.get_embedding(inputs, lengths=lengths)
+        except TypeError:
+            embedding = model.get_embedding(inputs)
+    dropout_layer = getattr(model, "dropout", nn.Identity())
+    logits = model.classifier(dropout_layer(embedding))
+    return logits, embedding
 
 
 def apply_specaugment(inputs: torch.Tensor, cfg) -> torch.Tensor:
@@ -226,26 +294,61 @@ def apply_mixup(inputs: torch.Tensor, labels: torch.Tensor, cfg) -> tuple[torch.
     return mixed_inputs, labels, labels[index], lam
 
 
-def train_one_epoch(model, loader, criterion, optimizer, device, cfg):
+def train_one_epoch(model, loader, criterion, optimizer, device, cfg, speaker_head=None, speaker_criterion=None):
     model.train()
+    if speaker_head is not None:
+        speaker_head.train()
     total_loss = 0.0
     all_preds = []
     all_labels = []
 
     for batch in loader:
-        inputs, labels, lengths = unpack_batch(batch, device)
+        inputs, labels, lengths, actor_ids = unpack_batch(batch, device, expect_actor_id=speaker_head is not None)
         inputs = apply_specaugment(inputs, cfg)
         metric_labels = labels
 
         optimizer.zero_grad()
+        speaker_loss = None
+        speaker_cfg = cfg.train.get("speaker_adversarial", {})
+        speaker_loss_weight = float(speaker_cfg.get("loss_weight", 0.1))
+        speaker_grl_lambda = float(speaker_cfg.get("grl_lambda", 1.0))
         if mixup_enabled(cfg):
-            inputs, labels_a, labels_b, lam = apply_mixup(inputs, labels, cfg)
-            logits = forward_model(model, inputs, lengths)
+            alpha = float(cfg.train.get("mixup", {}).get("alpha", 0.2))
+            if alpha <= 0.0 or inputs.size(0) < 2:
+                lam = 1.0
+                perm = torch.arange(inputs.size(0), device=inputs.device)
+                labels_a = labels
+                labels_b = labels
+                mixed_inputs = inputs
+            else:
+                lam = float(np.random.beta(alpha, alpha))
+                lam = max(lam, 1.0 - lam)
+                perm = torch.randperm(inputs.size(0), device=inputs.device)
+                labels_a = labels
+                labels_b = labels[perm]
+                mixed_inputs = lam * inputs + (1.0 - lam) * inputs[perm]
+            inputs = mixed_inputs
+            if speaker_head is not None and actor_ids is not None and speaker_criterion is not None:
+                logits, embedding = forward_model_with_embedding(model, inputs, lengths)
+                actor_logits = speaker_head(embedding, grl_lambda=speaker_grl_lambda)
+                speaker_loss = (
+                    lam * speaker_criterion(actor_logits, actor_ids)
+                    + (1.0 - lam) * speaker_criterion(actor_logits, actor_ids[perm])
+                )
+            else:
+                logits = forward_model(model, inputs, lengths)
             loss = lam * criterion(logits, labels_a) + (1.0 - lam) * criterion(logits, labels_b)
             metric_labels = labels_a if lam >= 0.5 else labels_b
         else:
-            logits = forward_model(model, inputs, lengths)
+            if speaker_head is not None and actor_ids is not None and speaker_criterion is not None:
+                logits, embedding = forward_model_with_embedding(model, inputs, lengths)
+                actor_logits = speaker_head(embedding, grl_lambda=speaker_grl_lambda)
+                speaker_loss = speaker_criterion(actor_logits, actor_ids)
+            else:
+                logits = forward_model(model, inputs, lengths)
             loss = criterion(logits, labels)
+        if speaker_loss is not None:
+            loss = loss + speaker_loss_weight * speaker_loss
         loss.backward()
         optimizer.step()
 
@@ -290,7 +393,7 @@ def evaluate_standard(model, loader, criterion, device):
 
     with torch.no_grad():
         for batch in loader:
-            inputs, labels, lengths = unpack_batch(batch, device)
+            inputs, labels, lengths, _ = unpack_batch(batch, device)
 
             logits = forward_model(model, inputs, lengths)
             loss = criterion(logits, labels)
@@ -416,7 +519,7 @@ def save_model_visualizations(model, loader, device, artifact_dir: Path, cfg, fo
         inputs = chunks[:1].to(device)
         lengths = None
     else:
-        inputs, _, lengths = unpack_batch(batch, device)
+        inputs, _, lengths, _ = unpack_batch(batch, device)
         inputs = inputs[:1]
         lengths = None if lengths is None else lengths[:1]
 
@@ -539,7 +642,7 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
         raise RuntimeError("Dataset is empty. Check cfg.data.dataset_path.")
 
     artifact_dir = ensure_artifact_dir(Path(artifact_root or "artifacts"))
-    weights_dir = ensure_artifact_dir(Path("weights"))
+    weights_dir = ensure_artifact_dir(Path(artifact_root) / "weights") if artifact_root is not None else ensure_artifact_dir(Path("weights"))
 
     model_class = get_model_class(cfg.model.name)
     x_dummy = np.zeros(len(dataset))
@@ -570,8 +673,25 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
         criterion = build_criterion(cfg, fold_train_labels, num_classes=len(EMOTION_NAMES)).to(device)
 
         model = model_class(cfg).to(device)
+        speaker_head = None
+        speaker_criterion = None
+        trainable_params = list(model.parameters())
+        if speaker_adversarial_enabled(cfg):
+            classifier = getattr(model, "classifier", None)
+            if classifier is None or not hasattr(classifier, "in_features"):
+                raise ValueError("speaker_adversarial requires model.classifier.in_features.")
+            speaker_cfg = cfg.train.get("speaker_adversarial", {})
+            speaker_head = SpeakerAdversary(
+                input_dim=int(classifier.in_features),
+                hidden_dim=int(speaker_cfg.get("hidden_dim", 128)),
+                num_speakers=len(sorted(set(dataset.actor_ids))),
+                dropout=float(speaker_cfg.get("dropout", 0.1)),
+            ).to(device)
+            speaker_criterion = nn.CrossEntropyLoss().to(device)
+            trainable_params.extend(list(speaker_head.parameters()))
+
         optimizer = optim.Adam(
-            model.parameters(),
+            trainable_params,
             lr=cfg.train.learning_rate,
             weight_decay=cfg.train.weight_decay,
         )
@@ -587,7 +707,16 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
         best_model_path = weights_dir / f"best_model_fold{fold}.pt"
 
         for epoch in range(1, cfg.train.epochs + 1):
-            train_metrics = train_one_epoch(model, train_loader, criterion, optimizer, device, cfg)
+            train_metrics = train_one_epoch(
+                model,
+                train_loader,
+                criterion,
+                optimizer,
+                device,
+                cfg,
+                speaker_head=speaker_head,
+                speaker_criterion=speaker_criterion,
+            )
             val_output = evaluate(model, val_loader, criterion, device, cfg)
             val_metrics = val_output["metrics"]
             score = val_metrics[cfg.train.objective_metric]
@@ -653,7 +782,7 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
         global_prob.append(fold_output["y_prob"])
         global_features.append(fold_output["features"])
 
-        del best_model, model, optimizer, train_loader, val_loader, fold_output
+        del best_model, model, optimizer, train_loader, val_loader, fold_output, speaker_head, speaker_criterion
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()

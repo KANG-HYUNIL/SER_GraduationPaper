@@ -303,21 +303,58 @@ def suggest_cnn_conformer_params(trial, cfg):
         layer_ffn_schedule = [int(v) for v in spec["values"]]
     nostem_norm_variant_choices = list(_cfg_get(space, "nostem_norm_variant_choices", []))
     nostem_norm_variant = str(_cfg_get(space, "nostem_patch_default_norm_variant", "layernorm"))
-    if nostem_norm_variant_choices and overfit_strategy == "normalization":
+    sample_norm_always = bool(_cfg_get(space, "sample_nostem_norm_variant_always", False))
+    if nostem_norm_variant_choices and (overfit_strategy == "normalization" or sample_norm_always):
         nostem_norm_variant = str(
             trial.suggest_categorical("conformer_nostem_norm_variant", nostem_norm_variant_choices)
         )
-    mixup_enabled = False
+    mixup_enabled = bool(_cfg_get(space, "mixup_default_enabled", False))
     mixup_alpha = float(_cfg_get(space, "mixup_default_alpha", 0.2))
     mixup_level = str(_cfg_get(space, "mixup_default_level", "spectrogram"))
+    mixup_enabled_choices = _cfg_get(space, "mixup_enabled_choices", [])
     mixup_alpha_choices = list(_cfg_get(space, "mixup_alpha_choices", []))
     mixup_level_choices = list(_cfg_get(space, "mixup_level_choices", []))
-    if overfit_strategy == "mixup":
+    if mixup_enabled_choices:
+        mixup_enabled = bool(trial.suggest_categorical("conformer_mixup_enabled", list(mixup_enabled_choices)))
+    elif overfit_strategy == "mixup":
         mixup_enabled = True
+    if mixup_enabled:
         if mixup_alpha_choices:
             mixup_alpha = float(trial.suggest_categorical("conformer_mixup_alpha", mixup_alpha_choices))
         if mixup_level_choices:
             mixup_level = str(trial.suggest_categorical("conformer_mixup_level", mixup_level_choices))
+
+    speaker_adv_enabled = bool(_cfg_get(space, "speaker_adversarial_default_enabled", False))
+    speaker_adv_enabled_choices = _cfg_get(space, "speaker_adversarial_enabled_choices", [])
+    if speaker_adv_enabled_choices:
+        speaker_adv_enabled = bool(
+            trial.suggest_categorical("conformer_speaker_adv_enabled", list(speaker_adv_enabled_choices))
+        )
+    speaker_adv_loss_weight = float(_cfg_get(space, "speaker_adversarial_default_loss_weight", 0.1))
+    speaker_adv_grl_lambda = float(_cfg_get(space, "speaker_adversarial_default_grl_lambda", 1.0))
+    speaker_adv_hidden_dim = int(_cfg_get(space, "speaker_adversarial_default_hidden_dim", 128))
+    speaker_adv_dropout = float(_cfg_get(space, "speaker_adversarial_default_dropout", 0.1))
+    if speaker_adv_enabled:
+        loss_weight_choices = list(_cfg_get(space, "speaker_adversarial_loss_weight_choices", []))
+        grl_lambda_choices = list(_cfg_get(space, "speaker_adversarial_grl_lambda_choices", []))
+        hidden_dim_choices = list(_cfg_get(space, "speaker_adversarial_hidden_dim_choices", []))
+        dropout_choices = list(_cfg_get(space, "speaker_adversarial_dropout_choices", []))
+        if loss_weight_choices:
+            speaker_adv_loss_weight = float(
+                trial.suggest_categorical("conformer_speaker_adv_loss_weight", loss_weight_choices)
+            )
+        if grl_lambda_choices:
+            speaker_adv_grl_lambda = float(
+                trial.suggest_categorical("conformer_speaker_adv_grl_lambda", grl_lambda_choices)
+            )
+        if hidden_dim_choices:
+            speaker_adv_hidden_dim = int(
+                trial.suggest_categorical("conformer_speaker_adv_hidden_dim", hidden_dim_choices)
+            )
+        if dropout_choices:
+            speaker_adv_dropout = float(
+                trial.suggest_categorical("conformer_speaker_adv_dropout", dropout_choices)
+            )
 
     embed_dim = trial.suggest_categorical("conformer_embed_dim", list(space.embed_dim_choices))
     num_layers = trial.suggest_categorical("conformer_num_layers", list(space.num_layers_choices))
@@ -401,6 +438,13 @@ def suggest_cnn_conformer_params(trial, cfg):
         "sampler": {
             "name": str(sampler_name),
             "class_weight_mode": str(class_weight_mode),
+        },
+        "speaker_adversarial": {
+            "enabled": bool(speaker_adv_enabled),
+            "loss_weight": float(speaker_adv_loss_weight),
+            "grl_lambda": float(speaker_adv_grl_lambda),
+            "hidden_dim": int(speaker_adv_hidden_dim),
+            "dropout": float(speaker_adv_dropout),
         },
     }
     data_updates = {

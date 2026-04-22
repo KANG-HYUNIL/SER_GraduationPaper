@@ -176,6 +176,48 @@
 - 병렬 smoke 실행 시 MLflow SQLite migration 충돌이 1회 발생했다. 이는 코드 구조 문제가 아니라 DB 초기화 동시 접근 문제였고, 순차 실행에서는 재현되지 않았다.
 - tapering 초기 smoke에서 `layer_fusion` 참조 순서 버그가 발견되었고, `cnn_conformer.py` 초기화 검증 순서를 수정하여 해결했다.
 
+### 3.12 Actual Run Result
+
+| 항목 | 값 |
+|---|---|
+| 실행 경로 | [../../outputs/2026-04-21/18-47-36_cnn_conformer](../../outputs/2026-04-21/18-47-36_cnn_conformer) |
+| Optuna DB | [../../optuna_studies/cnn_conformer_optuna_overfit_screening.db](../../optuna_studies/cnn_conformer_optuna_overfit_screening.db) |
+| 총 trial | 64 |
+| COMPLETE | 10 |
+| PRUNED | 53 |
+| FAIL | 1 |
+| 최고 trial | `trial_0003` |
+| 최고 F1-macro | `0.705629` |
+| 최고 Accuracy | `0.700000` |
+| 최고 UAR | `0.709375` |
+| 최고 ECE | `0.207591` |
+
+Top complete trials:
+
+| 순위 | trial | 전략 | F1-macro | Accuracy | UAR | ECE | 핵심 설정 |
+|---|---|---|---|---|---|---|---|
+| 1 | [trial_0003](../../outputs/2026-04-21/18-47-36_cnn_conformer/optuna_trials/trial_0003/trial_summary.json) | `mixup` | `0.70563` | `0.70000` | `0.70938` | `0.20759` | `time_patch=4`, `mixup alpha=0.4`, `layernorm`, no shrinking |
+| 2 | [trial_0001](../../outputs/2026-04-21/18-47-36_cnn_conformer/optuna_trials/trial_0001/trial_summary.json) | `normalization` | `0.68728` | `0.68667` | `0.67813` | `0.07966` | `time_patch=2`, `batchnorm`, no mixup |
+| 3 | [trial_0002](../../outputs/2026-04-21/18-47-36_cnn_conformer/optuna_trials/trial_0002/trial_summary.json) | `mixup` | `0.67739` | `0.68000` | `0.68125` | `0.19000` | `time_patch=4`, `mixup alpha=0.4` |
+| 4 | [trial_0041](../../outputs/2026-04-21/18-47-36_cnn_conformer/optuna_trials/trial_0041/trial_summary.json) | `tapering` | `0.66888` | `0.67333` | `0.66563` | `0.04561` | `late_2x`, `flat_192 + mild_taper FFN` |
+
+전략별 요약:
+
+| 전략 | complete 수 | best F1 | 평균 complete F1 | 해석 |
+|---|---|---|---|---|
+| `mixup` | 2 | `0.70563` | `0.69151` | 최고점 확보, 성능 이득은 가장 큼 |
+| `normalization` | 2 | `0.68728` | `0.66783` | 최고점은 mixup보다 낮지만 calibration은 가장 안정적 |
+| `tapering` | 6 | `0.66888` | `0.66215` | 과적합 억제는 일부 보였으나 winner 갱신 실패 |
+
+### 3.13 Stop Decision
+
+이 round는 중단하는 편이 맞다.
+
+- 최고점 `0.70563`이 `trial_0003`에서 매우 이르게 나왔고, 이후 59개 추가 trial 동안 갱신되지 않았다.
+- 최근 complete trial도 `trial_0041`, `trial_0042`, `trial_0062` 수준으로 `0.656~0.669` 범위에 머물렀다.
+- pruned trial의 최고 중간값도 `mixup 0.5919`, `normalization 0.6020`, `tapering 0.6445` 수준이라 현재 search space 안에서 late breakthrough 가능성은 낮다.
+- 따라서 같은 preset을 더 늘리는 것보다, winner branch를 기준선으로 고정하고 새 일반화 축을 추가하는 것이 낫다.
+
 ## 4. 설계 배경 및 구현 메모
 
 ### 4.1 설계 배경

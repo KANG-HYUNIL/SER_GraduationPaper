@@ -1,0 +1,293 @@
+data:
+  dataset_path: C:\Users\KANG\Desktop\BIT_Uni_record\GraudationPaper\SER_GraduationPaper\src\$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 80
+  n_fft: 1024
+  hop_length: 160
+  f_min: 0.0
+  f_max: 6000.0
+  normalize: true
+  resize_enabled: false
+  resize_height: 128
+  resize_width: 512
+  cache_features: true
+  specaugment:
+    enabled: false
+    time_mask_count: 0
+    time_mask_width: 0
+    freq_mask_count: 0
+    freq_mask_width: 0
+  chunking:
+    enabled: true
+    chunk_frames: 48
+    hop_frames: 12
+    eval_hop_frames: 12
+    aggregation_mode: confidence_weighted_logit
+    topk_ratio: 0.75
+model:
+  name: cnn_conformer
+  backbone_variant: nostem_patch
+  stem_channels:
+  - 64
+  - 96
+  stem_strides:
+  - - 2
+    - 1
+  - - 2
+    - 2
+  embed_dim: 192
+  num_heads: 8
+  num_layers: 4
+  ffn_dim: 768
+  layer_dim_schedule: []
+  layer_ffn_schedule: []
+  conv_kernel_size: 31
+  conv_module_type: single
+  multiscale_kernel_sizes:
+  - 15
+  - 31
+  layer_fusion: last
+  pooling: attention
+  dropout: 0.21638025242405282
+  stem_dropout: 0.10634549316905759
+  projector_dropout: 0.11653565639384396
+  input_dropout: 0.11896174350544395
+  encoder_dropout: 0.21638025242405282
+  classifier_dropout: 0.1933007218139847
+  attention_type: relative
+  max_relative_position: 128
+  lightstem:
+    channels: 96
+    stride:
+    - 2
+    - 1
+  nostem_patch:
+    time_patch: 4
+    norm_variant: layernorm
+  band_token:
+    num_bands: 4
+    use_band_embedding: true
+  sequence_shrinking:
+    enabled: false
+    factor: 2
+    at_layers: []
+optuna:
+  enabled: true
+  study_name: cnn_conformer_optuna_speaker_invariant_final_53c6693ac2
+  namespace_by_search_space: true
+  storage: sqlite:///optuna_studies/cnn_conformer_optuna_speaker_invariant_final.db
+  direction: maximize
+  trials: 30
+  timeout: null
+  sampler_seed: 42
+  pruner:
+    warmup_steps: 0
+  parallel_workers: 1
+  trials_per_worker: 10
+  metric: f1_macro
+  visualization:
+    save_html: true
+    save_png: false
+    png_scale: 3
+  trial_overrides:
+    train:
+      folds_to_run: 1
+      loss:
+        name: cross_entropy
+        label_smoothing: 0.0
+        class_weight_mode: none
+        focal_gamma: 2.0
+      mixup:
+        enabled: true
+        alpha: 0.4
+        level: spectrogram
+      sampler:
+        name: random
+        class_weight_mode: none
+      speaker_adversarial:
+        enabled: false
+        loss_weight: 0.1
+        grl_lambda: 1.0
+        hidden_dim: 128
+        dropout: 0.1
+    model:
+      backbone_variant: nostem_patch
+      num_heads: 8
+      conv_kernel_size: 31
+      conv_module_type: single
+      pooling: attention
+      layer_fusion: last
+    data:
+      n_mels: 80
+      n_fft: 1024
+      hop_length: 160
+      normalize: true
+      f_min: 0.0
+      f_max: 6000.0
+  search_space:
+    chunking:
+      enabled: true
+      chunk_frames_choices:
+      - 48
+      chunk_hop_ratio_choices:
+      - 0.25
+      eval_hop_ratio_choices:
+      - 0.25
+      aggregation_mode_choices:
+      - confidence_weighted_logit
+      topk_ratio_choices:
+      - 0.75
+    cnn_conformer:
+      backbone_variant_choices:
+      - nostem_patch
+      stem_pair_choices:
+      - - 64
+        - 96
+      subsampling_choices:
+      - name: time_preserve_first
+        stem_strides:
+        - - 2
+          - 1
+        - - 2
+          - 2
+      nostem_patch_time_patch_choices:
+      - 4
+      nostem_patch_default_norm_variant: layernorm
+      nostem_norm_variant_choices:
+      - layernorm
+      - batchnorm
+      sample_nostem_norm_variant_always: true
+      sequence_shrinking_choices:
+      - name: none
+        enabled: false
+        factor: 2
+        at_layers: []
+      mixup_default_enabled: true
+      mixup_alpha_choices:
+      - 0.3
+      - 0.4
+      - 0.5
+      mixup_level_choices:
+      - spectrogram
+      speaker_adversarial_enabled_choices:
+      - false
+      - true
+      speaker_adversarial_loss_weight_choices:
+      - 0.05
+      - 0.1
+      - 0.2
+      speaker_adversarial_grl_lambda_choices:
+      - 0.5
+      - 1.0
+      speaker_adversarial_hidden_dim_choices:
+      - 64
+      - 128
+      speaker_adversarial_dropout_choices:
+      - 0.1
+      - 0.2
+      embed_dim_choices:
+      - 192
+      num_layers_choices:
+      - 4
+      num_heads_choices:
+      - 8
+      ffn_ratio_choices:
+      - 4
+      conv_kernel_choices:
+      - 31
+      layer_fusion_choices:
+      - last
+      conv_module_type_choices:
+      - single
+      loss_name_choices:
+      - cross_entropy
+      sampler_name_choices:
+      - random
+      class_weight_mode_choices:
+      - none
+      focal_gamma_choices:
+      - 2.0
+      pooling_choices:
+      - attention
+      stem_dropout_min: 0.08
+      stem_dropout_max: 0.12
+      projector_dropout_min: 0.08
+      projector_dropout_max: 0.12
+      input_dropout_min: 0.08
+      input_dropout_max: 0.12
+      encoder_dropout_min: 0.14
+      encoder_dropout_max: 0.22
+      classifier_dropout_min: 0.18
+      classifier_dropout_max: 0.26
+      label_smoothing_choices:
+      - 0.0
+      time_mask_count_choices:
+      - 0
+      time_mask_width_choices:
+      - 0
+      freq_mask_count_choices:
+      - 0
+      freq_mask_width_choices:
+      - 0
+    train:
+      lr_min: 8.0e-05
+      lr_max: 0.00015
+      weight_decay_min: 1.0e-05
+      weight_decay_max: 0.0002
+      batch_choices:
+      - 12
+    logmel:
+      enabled: false
+      n_mels_choices:
+      - 80
+      n_fft_choices:
+      - 1024
+      hop_length_choices:
+      - 160
+      normalize_choices:
+      - true
+      f_min_choices:
+      - 0.0
+      f_max_choices:
+      - 6000.0
+experiment:
+  name: cnn_conformer_trial_0089
+  family: cnn_conformer
+  tag: speaker_invariant_final
+train:
+  seed: 42
+  batch_size: 12
+  epochs: 30
+  learning_rate: 0.00010322883281942542
+  weight_decay: 2.15732844442788e-05
+  label_smoothing: 0.0
+  loss:
+    name: cross_entropy
+    label_smoothing: 0.0
+    class_weight_mode: none
+    focal_gamma: 2.0
+  mixup:
+    enabled: true
+    alpha: 0.5
+    level: spectrogram
+  speaker_adversarial:
+    enabled: true
+    loss_weight: 0.2
+    grl_lambda: 1.0
+    hidden_dim: 128
+    dropout: 0.1
+  sampler:
+    name: random
+    class_weight_mode: none
+  k_folds: 5
+  folds_to_run: 1
+  early_stopping: 10
+  device: auto
+  num_workers: 0
+  objective_metric: f1_macro
+  save_best_to_root: false
+inference:
+  audio_path: ???
+  model_checkpoint: ???
+  output_dir: inference_outputs

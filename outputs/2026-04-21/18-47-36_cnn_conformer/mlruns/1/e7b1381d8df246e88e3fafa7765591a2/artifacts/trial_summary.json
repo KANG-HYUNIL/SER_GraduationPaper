@@ -1,0 +1,163 @@
+{
+  "trial_params": {
+    "model": {
+      "name": "cnn_conformer",
+      "backbone_variant": "nostem_patch",
+      "stem_channels": [
+        64,
+        96
+      ],
+      "stem_strides": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "embed_dim": 192,
+      "num_heads": 8,
+      "num_layers": 4,
+      "ffn_dim": 768,
+      "layer_dim_schedule": [
+        192,
+        160,
+        160,
+        128
+      ],
+      "layer_ffn_schedule": [
+        768,
+        768,
+        768,
+        768
+      ],
+      "conv_kernel_size": 31,
+      "conv_module_type": "single",
+      "multiscale_kernel_sizes": [
+        15,
+        31
+      ],
+      "layer_fusion": "last",
+      "pooling": "attention",
+      "dropout": 0.17455560149136928,
+      "stem_dropout": 0.08733618039413735,
+      "projector_dropout": 0.0921696897183815,
+      "input_dropout": 0.10099025726528951,
+      "encoder_dropout": 0.17455560149136928,
+      "classifier_dropout": 0.1691229140198042,
+      "attention_type": "relative",
+      "max_relative_position": 128,
+      "lightstem": {
+        "channels": 96,
+        "stride": [
+          2,
+          1
+        ]
+      },
+      "nostem_patch": {
+        "time_patch": 2,
+        "norm_variant": "layernorm"
+      },
+      "band_token": {
+        "num_bands": 4,
+        "use_band_embedding": true
+      },
+      "sequence_shrinking": {
+        "enabled": false,
+        "factor": 2,
+        "at_layers": []
+      }
+    },
+    "data": {
+      "dataset_path": "C:\\Users\\KANG\\Desktop\\BIT_Uni_record\\GraudationPaper\\SER_GraduationPaper\\src\\$RVNS6MQ",
+      "sample_rate": 16000,
+      "duration": 3.0,
+      "n_mels": 80,
+      "n_fft": 1024,
+      "hop_length": 160,
+      "f_min": 0.0,
+      "f_max": 6000.0,
+      "normalize": true,
+      "resize_enabled": false,
+      "resize_height": 128,
+      "resize_width": 512,
+      "cache_features": true,
+      "specaugment": {
+        "enabled": false,
+        "time_mask_count": 0,
+        "time_mask_width": 0,
+        "freq_mask_count": 0,
+        "freq_mask_width": 0
+      },
+      "chunking": {
+        "enabled": true,
+        "chunk_frames": 48,
+        "hop_frames": 12,
+        "eval_hop_frames": 12,
+        "aggregation_mode": "confidence_weighted_logit",
+        "topk_ratio": 0.75
+      }
+    },
+    "train": {
+      "seed": 42,
+      "batch_size": 12,
+      "epochs": 30,
+      "learning_rate": 0.00010371409864396374,
+      "weight_decay": 0.00017254716573280335,
+      "label_smoothing": 0.0,
+      "loss": {
+        "name": "cross_entropy",
+        "label_smoothing": 0.0,
+        "class_weight_mode": "none",
+        "focal_gamma": 2.0
+      },
+      "mixup": {
+        "enabled": false,
+        "alpha": 0.2,
+        "level": "spectrogram"
+      },
+      "sampler": {
+        "name": "random",
+        "class_weight_mode": "none"
+      },
+      "k_folds": 5,
+      "folds_to_run": 1,
+      "early_stopping": 10,
+      "device": "auto",
+      "num_workers": 0,
+      "objective_metric": "f1_macro",
+      "save_best_to_root": false
+    }
+  },
+  "summary_metrics": {
+    "accuracy": 0.65,
+    "f1_macro": 0.6547301620342302,
+    "f1_weighted": 0.659669162083824,
+    "uar": 0.6375,
+    "war": 0.65,
+    "mcc": 0.6023134856578666,
+    "kappa": 0.5972896957299924,
+    "ece": 0.21916003902753192,
+    "fold_accuracy_mean": 0.65,
+    "fold_f1_macro_mean": 0.6547301620342302
+  },
+  "best_fold": {
+    "accuracy": 0.65,
+    "f1_macro": 0.6547301620342302,
+    "f1_weighted": 0.659669162083824,
+    "uar": 0.6375,
+    "war": 0.65,
+    "mcc": 0.6023134856578666,
+    "kappa": 0.5972896957299924,
+    "ece": 0.21916003902753192,
+    "loss": 1.2106777642667295,
+    "fold": 1,
+    "learning_curve": "optuna_trials\\trial_0000\\artifacts\\fold_1_learning_curve.png",
+    "attention_map": "optuna_trials\\trial_0000\\artifacts\\fold_1_attention_map.png",
+    "cnn_feature_map": "optuna_trials\\trial_0000\\artifacts\\fold_1_cnn_feature_map.png"
+  },
+  "best_model_path": "weights\\best_model_fold1.pt",
+  "exported_model_path": null
+}
