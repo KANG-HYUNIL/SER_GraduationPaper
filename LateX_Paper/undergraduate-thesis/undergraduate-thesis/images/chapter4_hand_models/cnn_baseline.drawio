@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="페이지-1" id="g93fSapX5NtzGR4AwysU">
+    <mxGraphModel dx="1311" dy="880" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="b1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" value="对数梅尔频谱" vertex="1">
+          <mxGeometry height="92" width="180" x="20" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="b2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" value="卷积块 * 4&lt;br&gt;3X3 卷积&lt;br&gt;批归一化 + 激活&lt;br&gt;二乘二最大池化" vertex="1">
+          <mxGeometry height="132" width="220" x="250" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="o_891Jss-5CcXUlf_yB5-2" edge="1" parent="1" source="b6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="b7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" value="自适应平均池化&lt;br&gt;4 X 4" vertex="1">
+          <mxGeometry height="92" width="180" x="520" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="b7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" value="展平 + 丢弃层" vertex="1">
+          <mxGeometry height="92" width="160" x="760" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="b8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=17;fontColor=#1F2B37;" value="线性分类器&#xa;八类输出" vertex="1">
+          <mxGeometry height="92" width="180" x="980" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_6" edge="1" parent="1" source="b6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" target="b7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_7" edge="1" parent="1" source="b7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;" target="b8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="o_891Jss-5CcXUlf_yB5-3" edge="1" parent="1" source="b1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="560" as="sourcePoint" />
+            <mxPoint x="250" y="386" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="o_891Jss-5CcXUlf_yB5-4" edge="1" parent="1" source="b2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#4C6274;strokeWidth=2.2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="b6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="490" y="500" as="sourcePoint" />
+            <mxPoint x="560" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
