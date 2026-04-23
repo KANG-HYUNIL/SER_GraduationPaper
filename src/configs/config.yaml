@@ -2,6 +2,7 @@ defaults:
   - data: default
   - model: cnn_baseline
   - optuna: default
+  - noise: default
   - _self_
 
 hydra:

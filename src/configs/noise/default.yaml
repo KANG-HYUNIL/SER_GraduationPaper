@@ -1,0 +1,43 @@
+eval:
+  enabled: false
+  # Optional resolved config from the selected clean-condition trial.
+  # When set, the evaluator merges this config first, then applies this noise config.
+  resolved_config_path: ""
+  checkpoint_path: ""
+  fold: 1
+  batch_size: 16
+  output_dir: "noise_eval"
+  noise_types:
+    - white
+    - pink
+    - babble
+    - cafe
+  snr_db:
+    - clean
+    - 20
+    - 10
+    - 5
+    - 0
+    - -5
+  save_condition_artifacts: true
+  max_artifact_conditions: 12
+
+generation:
+  seed: 42
+  babble_speakers: 4
+  cafe_transient_count: 6
+
+train:
+  enabled: false
+  # Reserved for a later noise-augmentation training round.
+  probability: 0.5
+  noise_types:
+    - white
+    - pink
+    - babble
+    - cafe
+  snr_db:
+    - 20
+    - 10
+    - 5
+    - 0

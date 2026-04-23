@@ -1,0 +1,447 @@
+data:
+  dataset_path: ${hydra:runtime.cwd}/src/$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 128
+  n_fft: 1024
+  hop_length: 512
+  f_min: 0.0
+  f_max: 8000.0
+  normalize: true
+  resize_enabled: true
+  resize_height: 128
+  resize_width: 512
+  cache_features: true
+  specaugment:
+    enabled: false
+    time_mask_count: 0
+    time_mask_width: 0
+    freq_mask_count: 0
+    freq_mask_width: 0
+  chunking:
+    enabled: false
+    chunk_frames: 64
+    hop_frames: 32
+    eval_hop_frames: 16
+    aggregation_mode: mean_logit
+    topk_ratio: 0.5
+model:
+  name: cnn_conformer
+  backbone_variant: standard
+  stem_channels:
+  - 32
+  - 64
+  stem_strides:
+  - - 2
+    - 2
+  - - 2
+    - 2
+  embed_dim: 192
+  num_heads: 4
+  num_layers: 8
+  ffn_dim: 768
+  layer_dim_schedule: []
+  layer_ffn_schedule: []
+  conv_kernel_size: 31
+  conv_module_type: single
+  multiscale_kernel_sizes:
+  - 15
+  - 31
+  layer_fusion: last
+  pooling: attention
+  dropout: 0.1
+  stem_dropout: 0.1
+  projector_dropout: 0.1
+  input_dropout: 0.1
+  encoder_dropout: 0.1
+  classifier_dropout: 0.1
+  attention_type: relative
+  max_relative_position: 128
+  lightstem:
+    channels: 64
+    stride:
+    - 2
+    - 1
+  nostem_patch:
+    time_patch: 4
+    norm_variant: layernorm
+  band_token:
+    num_bands: 4
+    use_band_embedding: true
+  sequence_shrinking:
+    enabled: false
+    factor: 2
+    at_layers: []
+optuna:
+  enabled: false
+  study_name: ${experiment.family}_optuna
+  namespace_by_search_space: true
+  storage: sqlite:///optuna_studies/${experiment.family}_optuna.db
+  direction: maximize
+  trials: 20
+  timeout: null
+  sampler_seed: 42
+  pruner:
+    warmup_steps: 0
+  parallel_workers: 1
+  trials_per_worker: 10
+  metric: f1_macro
+  visualization:
+    save_html: true
+    save_png: false
+    png_scale: 3
+  trial_overrides:
+    train:
+      folds_to_run: 1
+  search_space:
+    chunking:
+      enabled: true
+      chunk_frames_choices:
+      - 48
+      - 64
+      - 80
+      - 96
+      chunk_hop_ratio_choices:
+      - 0.25
+      - 0.5
+      eval_hop_ratio_choices:
+      - 0.25
+      - 0.5
+      aggregation_mode_choices:
+      - mean_logit
+      - confidence_weighted_logit
+      - topk_logit
+      topk_ratio_choices:
+      - 0.25
+      - 0.5
+      - 0.75
+    transformer:
+      patch_size_choices:
+      - 8
+      - 16
+      - 32
+      patch_stride_choices:
+      - 8
+      - 16
+      embed_dim_choices:
+      - 128
+      - 192
+      - 256
+      num_layers_min: 2
+      num_layers_max: 6
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 2
+      - 4
+      pooling_choices:
+      - attention
+      - mean
+      - cls
+      dropout_min: 0.1
+      dropout_max: 0.4
+    cnn_conformer:
+      stem_pair_choices:
+      - - 48
+        - 64
+      - - 64
+        - 96
+      stem_channel_choices:
+      - 32
+      - 48
+      - 64
+      - 96
+      subsampling_choices:
+      - name: standard_4x
+        stem_strides:
+        - - 2
+          - 2
+        - - 2
+          - 2
+      - name: time_preserve_first
+        stem_strides:
+        - - 2
+          - 1
+        - - 2
+          - 2
+      - name: freq_only
+        stem_strides:
+        - - 2
+          - 1
+        - - 2
+          - 1
+      embed_dim_choices:
+      - 144
+      - 192
+      - 256
+      num_layers_choices:
+      - 4
+      - 8
+      - 12
+      - 16
+      num_heads_choices:
+      - 4
+      - 8
+      ffn_ratio_choices:
+      - 4
+      conv_kernel_choices:
+      - 15
+      - 31
+      layer_fusion_choices:
+      - last
+      - learned_sum
+      - last2_mean
+      conv_module_type_choices:
+      - single
+      - multiscale
+      loss_name_choices:
+      - cross_entropy
+      - weighted_cross_entropy
+      - focal_loss
+      sampler_name_choices:
+      - random
+      - weighted
+      class_weight_mode_choices:
+      - effective_num
+      focal_gamma_choices:
+      - 2.0
+      pooling_choices:
+      - attention
+      - mean
+      stem_dropout_min: 0.05
+      stem_dropout_max: 0.2
+      projector_dropout_min: 0.05
+      projector_dropout_max: 0.2
+      input_dropout_min: 0.05
+      input_dropout_max: 0.2
+      encoder_dropout_min: 0.1
+      encoder_dropout_max: 0.3
+      classifier_dropout_min: 0.1
+      classifier_dropout_max: 0.35
+      label_smoothing_choices:
+      - 0.0
+      - 0.05
+      - 0.1
+      time_mask_count_choices:
+      - 0
+      - 1
+      - 2
+      time_mask_width_choices:
+      - 0
+      - 4
+      - 8
+      - 12
+      freq_mask_count_choices:
+      - 0
+      - 1
+      - 2
+      freq_mask_width_choices:
+      - 0
+      - 4
+      - 8
+    hierarchical_window:
+      stem_channel_choices:
+      - 32
+      - 48
+      - 64
+      stage1_dim_choices:
+      - 96
+      - 128
+      stage2_dim_choices:
+      - 128
+      - 160
+      - 192
+      stage1_depth_min: 1
+      stage1_depth_max: 3
+      stage2_depth_min: 1
+      stage2_depth_max: 3
+      num_heads_choices:
+      - 4
+      - 8
+      window_size_choices:
+      - 6
+      - 8
+      - 12
+      ffn_ratio_choices:
+      - 2
+      - 3
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.4
+    bridged_window:
+      stem_pair_choices:
+      - - 32
+        - 48
+      - - 48
+        - 64
+      stage_spec_choices:
+      - stage_dims:
+        - 96
+        - 160
+        num_heads:
+        - 4
+        - 8
+      - stage_dims:
+        - 128
+        - 192
+        num_heads:
+        - 4
+        - 8
+      - stage_dims:
+        - 128
+        - 192
+        num_heads:
+        - 8
+        - 8
+      depth_pair_choices:
+      - - 2
+        - 2
+      - - 2
+        - 3
+      - - 3
+        - 2
+      window_shape_choices:
+      - stage_windows:
+        - - 4
+          - 8
+        - - 5
+          - 8
+      - stage_windows:
+        - - 4
+          - 12
+        - - 5
+          - 12
+      - stage_windows:
+        - - 5
+          - 8
+        - - 5
+          - 8
+      - stage_windows:
+        - - 5
+          - 12
+        - - 5
+          - 12
+      bridge_token_choices:
+      - 2
+      - 4
+      - 6
+      ffn_ratio_choices:
+      - 2
+      - 3
+      pooling_choices:
+      - attention
+      - mean
+      dropout_min: 0.1
+      dropout_max: 0.25
+    train:
+      lr_min: 0.0001
+      lr_max: 0.003
+      weight_decay_min: 1.0e-06
+      weight_decay_max: 0.001
+      batch_choices:
+      - 16
+      - 24
+      - 32
+    logmel:
+      n_mels_choices:
+      - 64
+      - 80
+      - 96
+      - 128
+      - 160
+      n_fft_choices:
+      - 512
+      - 1024
+      - 2048
+      hop_length_choices:
+      - 160
+      - 256
+      - 320
+      normalize_choices:
+      - true
+      - false
+      f_min_choices:
+      - 0.0
+      - 20.0
+      - 50.0
+      f_max_choices:
+      - 4000.0
+      - 6000.0
+      - 8000.0
+noise:
+  eval:
+    enabled: false
+    resolved_config_path: outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/resolved_config.yaml
+    checkpoint_path: outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/artifacts/weights/best_model_fold1.pt
+    fold: 1
+    batch_size: 16
+    output_dir: noise_eval_smoke
+    noise_types:
+    - white
+    - babble
+    - cafe
+    snr_db:
+    - clean
+    - 20
+    save_condition_artifacts: false
+    max_artifact_conditions: 12
+  generation:
+    seed: 42
+    babble_speakers: 4
+    cafe_transient_count: 6
+  train:
+    enabled: false
+    probability: 0.5
+    noise_types:
+    - white
+    - pink
+    - babble
+    - cafe
+    snr_db:
+    - 20
+    - 10
+    - 5
+    - 0
+experiment:
+  name: noise_smoke
+  family: ${model.name}
+  tag: ''
+train:
+  seed: 42
+  batch_size: 32
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.0
+  label_smoothing: 0.0
+  loss:
+    name: cross_entropy
+    label_smoothing: 0.0
+    class_weight_mode: none
+    focal_gamma: 2.0
+  mixup:
+    enabled: false
+    alpha: 0.2
+    level: spectrogram
+  speaker_adversarial:
+    enabled: false
+    loss_weight: 0.1
+    grl_lambda: 1.0
+    hidden_dim: 128
+    dropout: 0.1
+  sampler:
+    name: random
+    class_weight_mode: none
+  k_folds: 5
+  folds_to_run: null
+  early_stopping: 10
+  device: auto
+  num_workers: 0
+  objective_metric: f1_macro
+  save_best_to_root: true
+inference:
+  audio_path: ???
+  model_checkpoint: ???
+  output_dir: inference_outputs

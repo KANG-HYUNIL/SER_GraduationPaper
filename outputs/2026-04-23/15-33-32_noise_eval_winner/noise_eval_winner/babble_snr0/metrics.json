@@ -1,0 +1,16 @@
+{
+  "condition": "babble_snr0",
+  "noise_type": "babble",
+  "snr_db": 0,
+  "accuracy": 0.4533333333333333,
+  "f1_macro": 0.4373644829420731,
+  "uar": 0.434375,
+  "war": 0.4533333333333333,
+  "mcc": 0.3745947718422488,
+  "kappa": 0.37003841229193346,
+  "ece": 0.03827767098943394,
+  "loss": 1.4998680701851845,
+  "accuracy_delta_from_clean": -0.25000000000000006,
+  "f1_macro_delta_from_clean": -0.26305155415967585,
+  "uar_delta_from_clean": -0.26562499999999994
+}

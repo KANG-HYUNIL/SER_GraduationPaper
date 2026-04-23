@@ -1,0 +1,16 @@
+{
+  "condition": "white_snr10",
+  "noise_type": "white",
+  "snr_db": 10,
+  "accuracy": 0.49,
+  "f1_macro": 0.44717133595970804,
+  "uar": 0.46562499999999996,
+  "war": 0.49,
+  "mcc": 0.42919020325281415,
+  "kappa": 0.41184008200922606,
+  "ece": 0.13429977506399157,
+  "loss": 1.5352363607784112,
+  "accuracy_delta_from_clean": -0.21333333333333337,
+  "f1_macro_delta_from_clean": -0.2532447011420409,
+  "uar_delta_from_clean": -0.234375
+}

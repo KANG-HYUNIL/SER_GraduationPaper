@@ -1,0 +1,16 @@
+{
+  "condition": "cafe_snrm5",
+  "noise_type": "cafe",
+  "snr_db": -5,
+  "accuracy": 0.34,
+  "f1_macro": 0.3037878207323762,
+  "uar": 0.32499999999999996,
+  "war": 0.34,
+  "mcc": 0.2683154162157747,
+  "kappa": 0.238851870835469,
+  "ece": 0.03569530044992764,
+  "loss": 1.7753249779343605,
+  "accuracy_delta_from_clean": -0.36333333333333334,
+  "f1_macro_delta_from_clean": -0.39662821636937273,
+  "uar_delta_from_clean": -0.375
+}

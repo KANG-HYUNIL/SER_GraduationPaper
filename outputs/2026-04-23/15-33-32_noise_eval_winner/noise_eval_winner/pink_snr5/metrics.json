@@ -1,0 +1,16 @@
+{
+  "condition": "pink_snr5",
+  "noise_type": "pink",
+  "snr_db": 5,
+  "accuracy": 0.27,
+  "f1_macro": 0.19737057045212958,
+  "uar": 0.253125,
+  "war": 0.27,
+  "mcc": 0.20243796257127297,
+  "kappa": 0.1576923076923077,
+  "ece": 0.11451159914334615,
+  "loss": 1.9586800456047058,
+  "accuracy_delta_from_clean": -0.43333333333333335,
+  "f1_macro_delta_from_clean": -0.5030454666496194,
+  "uar_delta_from_clean": -0.44687499999999997
+}

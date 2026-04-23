@@ -1,0 +1,9 @@
+- model=cnn_conformer
+- noise.eval.enabled=true
+- noise.eval.resolved_config_path=outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/resolved_config.yaml
+- noise.eval.checkpoint_path=outputs/2026-04-22/02-33-33_cnn_conformer/optuna_trials/trial_0004/artifacts/weights/best_model_fold1.pt
+- noise.eval.noise_types=[white,pink,babble,cafe]
+- noise.eval.snr_db=[clean,20,10,5,0,-5]
+- noise.eval.save_condition_artifacts=true
+- noise.eval.output_dir=noise_eval_winner
+- experiment.name=noise_eval_winner

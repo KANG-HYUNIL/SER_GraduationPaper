@@ -1,0 +1,16 @@
+{
+  "condition": "clean",
+  "noise_type": "clean",
+  "snr_db": "clean",
+  "accuracy": 0.7033333333333334,
+  "f1_macro": 0.7004160371017489,
+  "uar": 0.7,
+  "war": 0.7033333333333334,
+  "mcc": 0.6619326598556307,
+  "kappa": 0.6592649310872893,
+  "ece": 0.2202301877737045,
+  "loss": 1.0948218852778275,
+  "accuracy_delta_from_clean": 0.0,
+  "f1_macro_delta_from_clean": 0.0,
+  "uar_delta_from_clean": 0.0
+}

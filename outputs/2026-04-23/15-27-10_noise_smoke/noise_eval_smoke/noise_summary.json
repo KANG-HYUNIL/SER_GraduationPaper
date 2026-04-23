@@ -1,0 +1,72 @@
+{
+  "conditions": [
+    {
+      "condition": "clean",
+      "noise_type": "clean",
+      "snr_db": "clean",
+      "accuracy": 0.7033333333333334,
+      "f1_macro": 0.7004160371017489,
+      "uar": 0.7,
+      "war": 0.7033333333333334,
+      "mcc": 0.6619326598556307,
+      "kappa": 0.6592649310872893,
+      "ece": 0.2202301877737045,
+      "loss": 1.0948218852778275,
+      "accuracy_delta_from_clean": 0.0,
+      "f1_macro_delta_from_clean": 0.0,
+      "uar_delta_from_clean": 0.0,
+      "artifact_paths": []
+    },
+    {
+      "condition": "white_snr20",
+      "noise_type": "white",
+      "snr_db": 20,
+      "accuracy": 0.61,
+      "f1_macro": 0.5638853690772817,
+      "uar": 0.578125,
+      "war": 0.61,
+      "mcc": 0.5582063280620994,
+      "kappa": 0.5503458877786318,
+      "ece": 0.22776191050807637,
+      "loss": 1.3312059759596984,
+      "accuracy_delta_from_clean": -0.09333333333333338,
+      "f1_macro_delta_from_clean": -0.13653066802446723,
+      "uar_delta_from_clean": -0.12187499999999996,
+      "artifact_paths": []
+    },
+    {
+      "condition": "babble_snr20",
+      "noise_type": "babble",
+      "snr_db": 20,
+      "accuracy": 0.5966666666666667,
+      "f1_macro": 0.5740707405273937,
+      "uar": 0.575,
+      "war": 0.5966666666666667,
+      "mcc": 0.5395398418592601,
+      "kappa": 0.5359243160317055,
+      "ece": 0.15642412766814234,
+      "loss": 1.2726974392930666,
+      "accuracy_delta_from_clean": -0.10666666666666669,
+      "f1_macro_delta_from_clean": -0.12634529657435523,
+      "uar_delta_from_clean": -0.125,
+      "artifact_paths": []
+    },
+    {
+      "condition": "cafe_snr20",
+      "noise_type": "cafe",
+      "snr_db": 20,
+      "accuracy": 0.6366666666666667,
+      "f1_macro": 0.6359679721380833,
+      "uar": 0.625,
+      "war": 0.6366666666666667,
+      "mcc": 0.5894696431791694,
+      "kappa": 0.5817344589409055,
+      "ece": 0.21950390617052712,
+      "loss": 1.2510671943426133,
+      "accuracy_delta_from_clean": -0.06666666666666665,
+      "f1_macro_delta_from_clean": -0.06444806496366562,
+      "uar_delta_from_clean": -0.07499999999999996,
+      "artifact_paths": []
+    }
+  ]
+}
