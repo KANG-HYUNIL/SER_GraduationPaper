@@ -358,6 +358,8 @@ CNN-Conformer模型尝试弥补纯Transformer模型缺少局部归纳偏置的�
 \noindent
 本阶段的综合实验提供了两个较为明确的认识。第一，若仅从当前实验结果出发，卷积结构在语音情绪识别中仍然具有较强基线意义。第二，Transformer系列模型具有一定潜力，但在中小规模语音情绪数据上容易暴露出过拟合、训练波动和局部细节保持不足等问题。后续若继续围绕CNN-Conformer模型展开分析，较合适的方向是围绕输入压缩、特征融合、容量控制与泛化能力开展较细致的检验，避免继续无约束地扩大结构。
 
+% 여기서부터가 이제 Nosiy g관련 실험, 실험 서술 문단이 너무 부족하다, 추가 필요할수돈
+
 \section{噪声条件实验}
 
 \noindent
@@ -442,47 +444,10 @@ CNN-Conformer模型尝试弥补纯Transformer模型缺少局部归纳偏置的�
 \noindent
 本节实验可以作为代表模型的补充鲁棒性观察。实验结果不支持将当前模型表述为噪声鲁棒模型，但可以说明CNN-Conformer模型在不同噪声强度下的性能退化趋势，并为后续加入噪声增强训练、真实噪声语料或语音增强预处理提供依据。本文主要研究对象仍是卷积神经网络模型与Transformer系列模型在clean语音情绪识别中的比较，本节不继续扩展新的噪声训练模型，以降低研究主线分散带来的解释成本。
 
-\section{跨语料库相关实验}
 
-\noindent
-跨语料库相关实验用于观察模型在语料来源、录制条件与类别分布发生变化时的稳定性。当前研究阶段的主要实验集中在RAVDESS语音情绪数据集内部的用户无关划分条件下，跨语料库实验尚未形成可与主实验同等对照的完整结果。基于实验完整性和解释一致性的考虑，本节将跨语料库实验列为后续研究方向，不将未完成结果纳入本章定量比较。
+\section{跨语料库实验}
 
-\section{类别层面分析}
 
-\noindent
-前述结果表主要反映整体指标变化。为观察CNN-Conformer模型的训练过程与类别层面表现，本节补充训练曲线和混淆矩阵分析。类别层面分析不展开新的模型比较，而围绕代表模型在训练稳定性和类别混淆上的现象进行说明。
-
-\subsection{训练与验证过程分析}
-
-\noindent
-CNN-Conformer模型在多轮实验中均表现出较强的训练集拟合能力。代表实验的训练曲线展现出训练损失持续下降、训练准确率逐步升高的趋势，而验证曲线的改善较早进入平台期。训练曲线现象与前文关于过拟合风险的讨论一致，也说明继续扩大模型规模未必带来较好的验证结果。
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.82\textwidth]{images/chapter4_experiment_artifacts/cnn_conformer_learning_curve.png}
-    \caption{CNN-Conformer模型代表实验的训练与验证曲线}
-    \label{fig:chapter4_conformer_learning_curve}
-\end{figure}
-
-\noindent
-图\ref{fig:chapter4_conformer_learning_curve}表明，CNN-Conformer模型已经能够学习训练样本中的模式，但验证集提升未与训练集提升同步。考虑到RAVDESS数据规模有限，且本文采用用户无关划分，模型在训练用户上的拟合能力不能直接转化为未见用户上的泛化能力。基于训练曲线观察，本文后续选择无卷积前端时间分块输入、混合增强和适度丢弃层设置，未继续采用较大的层数或较宽的前馈网络。
-
-\subsection{混淆情况分析}
-
-\noindent
-混淆矩阵可以补充观察模型在不同情绪类别上的错误分布。相比只观察Accuracy或Macro-F1，混淆矩阵能够展现模型是否集中混淆某几类情绪，或是否在多个类别之间产生分散错误。
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.78\textwidth]{images/chapter4_experiment_artifacts/cnn_conformer_confusion_matrix.png}
-    \caption{CNN-Conformer模型代表实验的混淆矩阵}
-    \label{fig:chapter4_conformer_confusion}
-\end{figure}
-
-\noindent
-图\ref{fig:chapter4_conformer_confusion}展现了代表模型在不同情绪类别上的识别差异。代表模型在部分情绪类别上能够形成较清晰的区分，但各类别的识别稳定性存在差异。语音情绪识别中，不同情绪之间可能共享相近的音高变化、能量分布或语速特征，模型容易在声学表现接近的类别之间发生混淆。混淆矩阵结果说明，CNN-Conformer模型虽然在综合指标上优于卷积神经网络基线模型和纯Transformer模型，但仍存在类别层面的不均衡错误。类别层面的不均衡错误也支持本文在结果讨论中同时使用Accuracy、Macro-F1和UAR，避免只依赖单一准确率指标。
-
-% \subsection{面向特定用户的准确率及细致评估}
 
 \section{本章小结}
 
