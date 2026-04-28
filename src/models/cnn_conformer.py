@@ -268,7 +268,7 @@ class CNNConformerSER(nn.Module):
     def __init__(self, cfg: DictConfig):
         super().__init__()
 
-        num_classes = 8
+        num_classes = int(cfg.model.get("num_classes", 8))
         stem_channels = list(cfg.model.get("stem_channels", [32, 64]))
         embed_dim = int(cfg.model.get("embed_dim", 192))
         num_heads = int(cfg.model.get("num_heads", 4))

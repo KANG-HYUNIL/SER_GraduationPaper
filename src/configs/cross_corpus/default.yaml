@@ -1,0 +1,15 @@
+enabled: false
+protocol: "ravdess_to_cremad_6class"
+class_names: ["neutral", "happy", "sad", "angry", "fearful", "disgust"]
+source:
+  name: "ravdess"
+  dataset_path: "${hydra:runtime.cwd}/src/$RVNS6MQ"
+target:
+  name: "cremad"
+  dataset_path: "${hydra:runtime.cwd}/src/CREMA-D"
+train:
+  source_folds: 5
+  folds_to_run: 1
+  fold_selection: "first"
+  target_batch_size: 16
+  save_fold_artifacts: true

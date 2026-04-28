@@ -1,4 +1,5 @@
 name: "cnn_conformer"
+num_classes: 8
 backbone_variant: "standard"
 stem_channels: [32, 64]
 stem_strides: [[2, 2], [2, 2]]

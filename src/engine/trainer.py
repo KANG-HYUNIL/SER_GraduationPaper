@@ -54,6 +54,10 @@ EMOTION_NAMES = [
 ]
 
 
+def resolve_num_classes(cfg) -> int:
+    return int(cfg.model.get("num_classes", len(EMOTION_NAMES)))
+
+
 class GradientReversalFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x: torch.Tensor, lambd: float) -> torch.Tensor:
@@ -151,7 +155,7 @@ def build_dataloaders(cfg, dataset, train_idx, val_idx):
         shuffle = True
         if sampler_name == "weighted":
             chunk_labels = [dataset.labels[utterance_idx] for utterance_idx, _, _ in train_subset.chunk_index]
-            class_weights = build_class_weights(chunk_labels, num_classes=len(EMOTION_NAMES), mode=sampler_weight_mode)
+            class_weights = build_class_weights(chunk_labels, num_classes=resolve_num_classes(cfg), mode=sampler_weight_mode)
             if class_weights is not None:
                 sample_weights = [float(class_weights[label]) for label in chunk_labels]
                 sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
@@ -186,7 +190,7 @@ def build_dataloaders(cfg, dataset, train_idx, val_idx):
     shuffle = True
     if sampler_name == "weighted":
         train_labels = [dataset.labels[int(idx)] for idx in train_idx]
-        class_weights = build_class_weights(train_labels, num_classes=len(EMOTION_NAMES), mode=sampler_weight_mode)
+        class_weights = build_class_weights(train_labels, num_classes=resolve_num_classes(cfg), mode=sampler_weight_mode)
         if class_weights is not None:
             sample_weights = [float(class_weights[label]) for label in train_labels]
             sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
@@ -670,7 +674,7 @@ def run_cross_validation_experiment(cfg, artifact_root: str | os.PathLike | None
         logger.info("Starting fold %s/%s", fold, folds_to_run)
         train_loader, val_loader = build_dataloaders(cfg, dataset, train_idx, val_idx)
         fold_train_labels = [dataset.labels[int(idx)] for idx in train_idx]
-        criterion = build_criterion(cfg, fold_train_labels, num_classes=len(EMOTION_NAMES)).to(device)
+        criterion = build_criterion(cfg, fold_train_labels, num_classes=resolve_num_classes(cfg)).to(device)
 
         model = model_class(cfg).to(device)
         speaker_head = None

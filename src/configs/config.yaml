@@ -3,6 +3,7 @@ defaults:
   - model: cnn_baseline
   - optuna: default
   - noise: default
+  - cross_corpus: default
   - _self_
 
 hydra:
