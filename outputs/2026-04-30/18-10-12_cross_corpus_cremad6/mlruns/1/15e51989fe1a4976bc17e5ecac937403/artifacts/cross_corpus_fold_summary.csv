@@ -1,0 +1,2 @@
+fold,best_epoch,source_val_accuracy,source_val_f1_macro,source_val_uar,target_accuracy,target_f1_macro,target_uar
+1,20,0.5818181818181818,0.568973311126512,0.5833333333333334,0.19376511690405804,0.09242741509797037,0.1893563176958891

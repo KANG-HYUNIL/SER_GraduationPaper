@@ -1,0 +1,67 @@
+{
+  "protocol": "ravdess_to_cremad_6class",
+  "class_names": [
+    "neutral",
+    "happy",
+    "sad",
+    "angry",
+    "fearful",
+    "disgust"
+  ],
+  "fold_metrics": [
+    {
+      "fold": 1,
+      "best_epoch": 20,
+      "source_val_metrics": {
+        "accuracy": 0.5818181818181818,
+        "f1_macro": 0.568973311126512,
+        "f1_weighted": 0.5711113807330545,
+        "uar": 0.5833333333333334,
+        "war": 0.5818181818181818,
+        "mcc": 0.5012914883397884,
+        "kappa": 0.49500998003992025,
+        "ece": 0.22191194038499484,
+        "loss": 1.7238434596495196
+      },
+      "target_metrics": {
+        "accuracy": 0.19376511690405804,
+        "f1_macro": 0.09242741509797037,
+        "f1_weighted": 0.09426981257041957,
+        "uar": 0.1893563176958891,
+        "war": 0.19376511690405804,
+        "mcc": 0.04651090003639825,
+        "kappa": 0.0286948327182881,
+        "ece": 0.5610941417417165,
+        "loss": 3.8568612420728723
+      },
+      "source_artifacts": [
+        "artifacts\\fold_1\\source_val_confusion_matrix.png",
+        "artifacts\\fold_1\\source_val_calibration_curve.png",
+        "artifacts\\fold_1\\source_val_roc_pr_curves.png"
+      ],
+      "target_artifacts": [
+        "artifacts\\fold_1\\target_confusion_matrix.png",
+        "artifacts\\fold_1\\target_calibration_curve.png",
+        "artifacts\\fold_1\\target_roc_pr_curves.png"
+      ]
+    }
+  ],
+  "summary_metrics": {
+    "source_val_accuracy_mean": 0.5818181818181818,
+    "source_val_f1_macro_mean": 0.568973311126512,
+    "source_val_uar_mean": 0.5833333333333334,
+    "target_accuracy_mean": 0.19376511690405804,
+    "target_f1_macro_mean": 0.09242741509797037,
+    "target_uar_mean": 0.1893563176958891
+  },
+  "best_fold": {
+    "fold": 1,
+    "best_epoch": 20,
+    "source_val_accuracy": 0.5818181818181818,
+    "source_val_f1_macro": 0.568973311126512,
+    "source_val_uar": 0.5833333333333334,
+    "target_accuracy": 0.19376511690405804,
+    "target_f1_macro": 0.09242741509797037,
+    "target_uar": 0.1893563176958891
+  }
+}

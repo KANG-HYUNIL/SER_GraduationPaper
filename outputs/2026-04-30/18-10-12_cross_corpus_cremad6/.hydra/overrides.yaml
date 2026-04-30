@@ -1,0 +1,5 @@
+- model=cnn_conformer
+- cross_corpus.enabled=true
+- cross_corpus.protocol=ravdess_to_cremad_6class
+- experiment.name=cross_corpus_cremad6
+- experiment.tag=source_only_6class
