@@ -19,17 +19,16 @@
 
 % 中英文摘要章节
 \begin{abstract}
-% 中文摘要正文从这里开始
-本文……。
+语音情绪识别技术旨在从语音信号中识别用户表达的情绪状态，在智能交互、心理健康辅助和服务系统反馈等场景中具有应用价值。由于语音情绪线索分布在能量、频谱、韵律和时间上下文等多个层面，且用户差异、噪声干扰和数据规模限制会影响模型训练，如何在有限数据条件下构建稳定的输入表示和分类模型，是本文关注的问题。
 
-\textcolor{blue}{摘要正文选用模板中的样式所定义的“正文”，每段落首行缩进 2 个字符；或者手动设置成每段落首行缩进 2 个汉字，字体：宋体，字号：小四，行距：固定值 22 磅，间距：段前、段后均为 0 行。阅后删除此段。}
+本文围绕对数梅尔频谱输入下的语音情绪识别方法开展研究。首先，对语音情绪识别数据集、信号预处理、时频变换、特征归一化和长度处理方法进行整理，确定以重采样、幅值归一化、对数梅尔频谱提取和分块组织为基础的信号处理流程。随后，本文从卷积神经网络、注意力机制和Transformer结构出发，构建卷积神经网络基线模型、纯Transformer模型和CNN-Conformer模型，并在RAVDESS语音情绪数据集上进行用户无关条件下的对比实验。针对CNN-Conformer模型，本文进一步比较前端标记化方式、模型容量、层间输出策略、池化方式和混合增强等因素对结果的影响。
 
-\textcolor{blue}{摘要是一篇具有独立性和完整性的短文，应概括而扼要地反映出本论文的主要内容。包括研究目的、研究方法、研究结果和结论等，特别要突出研究结果和结论。中文摘要力求语言精炼准确，本科生毕业设计（论文）摘要建议 300-500 字。摘要中不可出现参考文献、图、表、化学结构式、非公知公用的符号和术语。英文摘要与中文摘要的内容应一致。阅后删除此段。}
+实验结果显示，卷积神经网络基线模型取得0.62196的Macro-F1，纯Transformer模型取得0.51163的Macro-F1，采用无卷积前端时间分块输入、4层Conformer编码器、注意力池化和频谱级混合增强的CNN-Conformer模型取得0.70563的Macro-F1、0.70000的Accuracy和0.70938的UAR。补充的噪声条件实验与跨语料库实验表明，clean条件下的较高指标不能直接等同于受扰输入或异源语料条件下的稳定表现。本文工作说明，在当前数据规模下，局部时频建模、时间上下文建模与适度正则化之间的组合方式，对语音情绪识别模型的泛化表现具有较大影响。
 
 \end{abstract}
 
 % 一般情况下，超出该行宽度的最后一个单词会被排版引擎尝试（在适合的地方）插入连字符（hyphen）
-% 换行。然而，当单词本身比较生僻的情况下，LaTeX 可能会保留完整单词，从而导致该行宽度
+% 换行。如果单词本身比较生僻，LaTeX 可能会保留完整单词，从而导致该行宽度
 % 绕过限制。以“aaaaaabbb” 为例，你可以在以下两个方法中的一种来指定插入连字符的位置：
 % 1. 在此处使用 \hyphenation{aaaaaa-bbb}。
 % 2. 在文章中使用 aaaaaa\-bbb。
@@ -37,8 +36,9 @@
 
 % 英文摘要章节
 \begin{abstractEn}
-% 英文摘要正文从这里开始
-In order to study……
+Speech emotion recognition aims to infer the emotional state expressed in speech signals and has practical value in human-computer interaction, mental health support, and service feedback systems. Since emotional cues in speech are distributed across energy, spectral structure, prosody, and temporal context, model training is affected by user differences, noise interference, and limited data scale. This thesis focuses on how to construct stable input representations and classification models under limited-data conditions.
 
-\textcolor{blue}{Abstract 正文设置成每段落首行缩进 2 字符，字体：Times New Roman，字号：小四，行距：固定值 22 磅，间距：段前、段后均为 0 行。阅后删除此段。}
+This thesis studies speech emotion recognition methods based on log-Mel spectrogram inputs. First, datasets, signal preprocessing, time-frequency transformation, feature normalization, and sequence length handling methods are reviewed, and a processing pipeline based on resampling, amplitude normalization, log-Mel spectrogram extraction, and chunk organization is adopted. Then, convolutional neural networks, attention mechanisms, and Transformer structures are discussed as the model basis. A convolutional neural network baseline, a pure Transformer model, and a CNN-Conformer model are implemented and compared on the RAVDESS speech emotion dataset under a user-independent setting. For the CNN-Conformer model, this thesis further examines the effects of frontend tokenization, model capacity, layer output strategy, pooling method, and mixup regularization.
+
+The experimental results show that the convolutional neural network baseline obtains a Macro-F1 of 0.62196, while the pure Transformer model obtains a Macro-F1 of 0.51163. The CNN-Conformer model with no-stem temporal patch input, four Conformer encoder layers, attention pooling, and spectrogram-level mixup achieves a Macro-F1 of 0.70563, an Accuracy of 0.70000, and a UAR of 0.70938. Additional noise-condition and cross-corpus experiments indicate that higher performance under clean in-corpus conditions does not directly imply stable behavior under corrupted inputs or external corpora. The study suggests that the coordination among local time-frequency modeling, temporal context modeling, and moderate regularization has a clear influence on the generalization behavior of speech emotion recognition models under the current data scale.
 \end{abstractEn}
