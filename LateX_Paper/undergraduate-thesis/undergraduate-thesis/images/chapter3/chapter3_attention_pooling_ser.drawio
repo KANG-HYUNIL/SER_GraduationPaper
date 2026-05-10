@@ -1,0 +1,31 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="attention_pooling_ser">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="a" value="发话内部标记序列&#xa;时间片段或隐藏状态" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="65" y="175" width="220" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="权重打分&#xa;估计情绪相关程度" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="345" y="175" width="220" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="c" value="权重归一化&#xa;得到片段权重" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="625" y="175" width="205" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="加权聚合&#xa;形成发话级表示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="890" y="175" width="220" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" source="a" target="b" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" source="b" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" source="c" target="d" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,88 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="attention_qkv">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="x" value="输入序列表示 X&#xa;T × d_model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="55" y="205" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="wq" value="线性投影 W_Q" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="275" y="85" width="155" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="wk" value="线性投影 W_K" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="275" y="215" width="155" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="wv" value="线性投影 W_V" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="275" y="345" width="155" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="q" value="Q = XW_Q&#xa;查询矩阵" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="485" y="85" width="160" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="k" value="K = XW_K&#xa;键矩阵" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="485" y="215" width="160" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="v" value="V = XW_V&#xa;值矩阵" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="485" y="345" width="160" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="score" value="相似度矩阵&#xa;QK^T" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="705" y="145" width="150" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="scale" value="尺度修正&#xa;/ sqrt(d_k)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="905" y="145" width="150" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="softmax" value="Softmax&#xa;注意力权重 A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="905" y="260" width="150" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="weighted" value="加权聚合&#xa;A × V" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="705" y="325" width="150" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="out" value="输出表示 Z&#xa;Attention(Q,K,V)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="905" y="390" width="170" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="formula" value="Z = softmax(QK^T / sqrt(d_k)) V" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B7C3CC;strokeWidth=1.5;fontSize=16;fontColor=#1F2B37;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="500" width="460" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" source="x" target="wq" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" source="x" target="wk" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" source="x" target="wv" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" edge="1" source="wq" target="q" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" edge="1" source="wk" target="k" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" edge="1" source="wv" target="v" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" edge="1" source="q" target="score" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" edge="1" source="k" target="score" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" edge="1" source="score" target="scale" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" edge="1" source="scale" target="softmax" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" edge="1" source="softmax" target="weighted" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" edge="1" source="v" target="weighted" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" edge="1" source="weighted" target="out" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

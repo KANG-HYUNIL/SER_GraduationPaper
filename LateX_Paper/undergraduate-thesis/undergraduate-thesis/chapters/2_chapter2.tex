@@ -323,6 +323,13 @@ M_p^{(\mathrm{dB})}(m) = 10 \log_{10}\left(E_p(m)+\varepsilon\right)
 
 例如，愤怒或喜悦常伴随能量聚集与快速语调变化，而悲伤则可能表现为相对平缓的频谱演变。对数梅尔谱图能够以较为清晰的二维形式呈现这些差异，适合卷积神经网络或注意力机制学习局部模式与关键区域\cite{peng2021efficient, zhang2023cnn, wang2024swin}。尽管近年来也出现未经处理直接使用原始波形的端到端方法，但对数梅尔谱图仍是目前较为稳定、较为常用的基线特征之一\cite{pappagari2023music, peng2021efficient}。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{images/chapter2/chapter2_logmel_time_frequency.drawio.pdf}
+    \caption{对数梅尔频谱的时间-频带结构与情绪线索表达}
+    \label{fig:chapter2_logmel_time_frequency}
+\end{figure}
+
 对数梅尔谱图也存在一定的局限。梅尔刻度的信息压缩会损失部分线性频率轴的细节，滤波器数量、快速傅里叶变换长度、帧移、窗长等参数的选择也会影响最终特征的分辨率与分布\cite{peng2021efficient, chen2023dwformer}。实际应用中需根据具体数据集与模型结构设置参数。
 
 
@@ -434,6 +441,13 @@ z_s[t] = \frac{x_s[t]-\mu_s}{\sigma_s+\varepsilon}
 
 输入长度处理方式的选择，与语音情绪识别实验设计存在一定关联。填充实现较为简单，但在长度差异较大时效率较低；截断有助于降低计算量，但存在信息损失风险；分段在信息保留与计算效率之间提供一种折中方式，同时需要额外设计分段级结果的聚合机制。输入长度处理属于实现层面的问题，也涉及情绪线索保留、模型效率与结果稳定性之间的综合权衡\cite{ma2023review,zhang2020transfer,lin2023chunk}。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/chapter2/chapter2_length_handling.drawio.pdf}
+    \caption{变长语音特征的长度处理与输入组织方式}
+    \label{fig:chapter2_length_handling}
+\end{figure}
+
 从语音情绪识别的视角来看，输入长度处理方式在数据量较小或发话长度差异较大的数据集中具有一定影响。过度的 填充 可能引入一定比例的无效信息，对模型学习效率产生一定影响；过度的 截断 则可能丢失情绪表达的关键分段。相比之下，分段 可将长序列拆分为多个分析单元，实现更细粒度的处理，在近年来的序列建模研究中受到一定关注\cite{chen2023dwformer,lin2023chunk,peng2021efficient}。
 
 
@@ -444,6 +458,13 @@ z_s[t] = \frac{x_s[t]-\mu_s}{\sigma_s+\varepsilon}
 \section{面临难点}
 
 在语音情绪识别中，信号处理技术的必要性主要源于原始语音信号难以以规整、清晰的形式提供情绪信息\cite{lu2022domain,lin2023chunk}。语音情绪识别中的信号处理，可视为在噪声干扰环境下表征有效特征的重要环节\cite{gao2024adversarial,zhang2020transfer,lin2023chunk}。现有研究亦指出，语音情绪识别在数据集构成、特征提取、噪声环境、泛化能力等方面仍面临一定挑战\cite{su2023unsupervised,zhang2020transfer,leem2024selective,lin2023chunk,peng2021efficient}。上述挑战主要体现在语音信号的非平稳性、发话长度可变性、外部环境干扰、情绪线索的多层性、用户与数据集的分布差异以及数据规模限制等方面。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{images/chapter2/chapter2_ser_challenges_map.drawio.pdf}
+    \caption{语音情绪识别中信号处理面临的主要难点}
+    \label{fig:chapter2_ser_challenges_map}
+\end{figure}
 
 \subsection{语音信号的非平稳性与时间非均匀性}
 
@@ -484,6 +505,13 @@ z_s[t] = \frac{x_s[t]-\mu_s}{\sigma_s+\varepsilon}
 \section{本文采用的信号处理流程}
 
 结合前文对数据集、信号处理技术和任务难点的分析，本文实验采用以对数梅尔频谱为中心的信号处理流程。该流程不直接使用原始波形作为分类器输入，也不引入大规模自监督语音模型提取高维表示。实验先将语音整理为具有明确时频含义的二维表示，再根据不同模型的输入接口完成尺寸整理或分块组织。这样的安排有助于在计算成本、特征可解释性和模型比较一致性之间取得相对平衡\cite{ma2023review,lin2023chunk,peng2021efficient}。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.97\textwidth]{images/chapter2/chapter2_signal_processing_pipeline.drawio.pdf}
+    \caption{本文采用的信号处理流程}
+    \label{fig:chapter2_signal_processing_pipeline}
+\end{figure}
 
 \textbf{(1) 输入格式统一与幅值归一化。}
 

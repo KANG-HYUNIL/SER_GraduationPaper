@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="signal_processing_pipeline">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="a" value="原始语音" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="40" y="150" width="140" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="格式统一&#xa;重采样 / 单声道" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="225" y="150" width="170" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="c" value="幅值归一化&#xa;统一振幅范围" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="440" y="150" width="170" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="短时分析&#xa;分帧 / 加窗" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="655" y="150" width="170" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="e" value="短时傅里叶变换&#xa;功率谱表示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="870" y="150" width="190" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="f" value="梅尔滤波器组&#xa;频带能量汇总" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="870" y="330" width="190" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="g" value="对数梅尔频谱&#xa;时频输入表示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="655" y="330" width="170" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="h" value="特征标准化&#xa;降低尺度差异" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="440" y="330" width="170" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="i" value="长度组织&#xa;固定尺寸 / 分段输入" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="225" y="330" width="170" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="j" value="模型输入构造&#xa;统一声学输入基础" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="40" y="330" width="170" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" source="a" target="b" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" source="b" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" source="c" target="d" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" edge="1" source="d" target="e" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" edge="1" source="e" target="f" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" edge="1" source="f" target="g" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" edge="1" source="g" target="h" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" edge="1" source="h" target="i" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" edge="1" source="i" target="j" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,31 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="transformer_ser_boundary">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="a" value="Transformer结构优势&#xa;并行计算与全局关系建模" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="80" y="95" width="280" height="74" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="语音情绪识别输入特点&#xa;短时能量变化与局部频带纹理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="80" y="285" width="280" height="74" as="geometry"/>
+        </mxCell>
+        <mxCell id="c" value="纯注意力结构适用边界&#xa;局部归纳偏置相对不足" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="455" y="190" width="285" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="结构调整方向&#xa;全局关系与局部建模结合" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="835" y="190" width="285" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" source="a" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" source="b" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" source="c" target="d" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

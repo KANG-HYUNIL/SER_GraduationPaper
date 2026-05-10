@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="length_handling">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="a" value="变长语音样本&#xa;发话长度不一致" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="80" y="110" width="180" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="对数梅尔频谱序列&#xa;保留时间轴结构" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="340" y="110" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="c" value="长度组织策略&#xa;适配批次训练" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="640" y="110" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="p" value="填充&#xa;短序列补齐至目标长度" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="180" y="280" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="t" value="截断&#xa;长序列保留目标长度" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="480" y="280" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="s" value="分段&#xa;划分为局部时间块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="780" y="280" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="g" value="分段结果聚合&#xa;形成发话级表示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="780" y="420" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="m" value="模型输入构造&#xa;固定尺寸或分段输入" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="480" y="560" width="230" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="训练与评价&#xa;统一输入组织" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="800" y="560" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" source="a" target="b" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" source="b" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" source="c" target="p" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" edge="1" source="c" target="t" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" edge="1" source="c" target="s" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" edge="1" source="p" target="m" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" edge="1" source="t" target="m" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" edge="1" source="s" target="g" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" edge="1" source="g" target="m" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" edge="1" source="m" target="d" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

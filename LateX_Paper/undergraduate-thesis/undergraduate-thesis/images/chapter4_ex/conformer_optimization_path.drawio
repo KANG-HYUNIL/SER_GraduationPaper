@@ -1,0 +1,18 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="conformer_optimization_path">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="a" value="早期结构&#xa;两级卷积前端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="40" y="175" width="165" height="65" as="geometry"/></mxCell>
+        <mxCell id="b" value="相对位置Conformer&#xa;F1 0.63168" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="255" y="175" width="190" height="65" as="geometry"/></mxCell>
+        <mxCell id="c" value="主干重设计&#xa;无卷积前端时间分块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="495" y="175" width="190" height="65" as="geometry"/></mxCell>
+        <mxCell id="d" value="训练稳定性调节&#xa;混合增强与归一化筛选" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="735" y="175" width="210" height="65" as="geometry"/></mxCell>
+        <mxCell id="e" value="代表结果&#xa;Macro-F1 0.70563" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="995" y="175" width="150" height="65" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" source="a" target="b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" source="b" target="c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" source="c" target="d" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" source="d" target="e" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -192,6 +192,13 @@ e_{ij} = \frac{q_i k_j^\top}{\sqrt{d_k}}
 \end{equation}
 其中 $QK^\top$ 表示查询矩阵与键矩阵之间的点积结果，$\sqrt{d_k}$ 为缩放因子。该形式将注意力分数计算、归一化与加权聚合统一表示为一个矩阵运算过程\cite{vaswani2017attention, chen2023dwformer, wang2024swin}。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.97\textwidth]{images/chapter3/chapter3_attention_qkv.drawio.pdf}
+    \caption{缩放点积注意力中的查询、键、值计算流程}
+    \label{fig:chapter3_attention_qkv}
+\end{figure}
+
 缩放点积注意力的特点在于分数计算基于矩阵乘法。这种计算方式相对有利于并行计算，在实际实现中可能在计算效率和内存使用方面具有一定优势\cite{vaswani2017attention, chen2023dwformer, wang2024swin}。在语音情绪识别中，缩放点积注意力可用于反映特定时间帧或局部区域与其他位置之间的情绪相关性，从而相对突出地强调发话中的关键区间\cite{he2023multiple, chen2023dwformer, wang2024swin}。
 
 加性注意力通过非线性变换计算分数，不使用查询与键的点积。其一般形式可表示为：
@@ -252,6 +259,13 @@ a(q_i,k_j), & |i-j|\le w \\
 在语音情绪识别中，注意力机制可用于更有选择性地反映发话内部的情绪线索。有研究指出，语音中的情绪信息通常不均匀分布，相对集中于特定时间区间的语调变化、特定频带的能量增强、能量的明显增减或局部声学模式\cite{mirsamadi2017automatic,liu2023discriminative,zou2022speech,he2023multiple}。基于情绪信息分布的不均匀性，注意力机制可对与情绪判断相关性较高的区间或特征赋予较大权重，不以相同权重处理全部输入。该结构可视为反映情绪线索非均匀分布的一种建模手段。
 
 注意力机制的第一个作用是突出发话内部的关键区间。在同一发话中，对情绪判断影响较大的区间可能只占整体的一部分。注意力机制可通过赋予特定时间帧、局部区域或隐藏状态较大的权重，使模型相对重视这些关键区间\cite{mirsamadi2017automatic,zou2022speech,chen2023dwformer,wang2024swin}。在顺序或卷积特征提取过程中，一些情绪相关区间可能被弱化，注意力机制有助于重新突出这些区间，在发话较长或情绪线索较为集中的条件下具有一定作用。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.86\textwidth]{images/chapter3/chapter3_attention_pooling_ser.drawio.pdf}
+    \caption{注意力池化形成发话级表示的基本过程}
+    \label{fig:chapter3_attention_pooling_ser}
+\end{figure}
 
 注意力机制的第二个作用是连接不同时间范围或不同层次的表示信息。在语音情绪识别中，语调、节奏、能量、频率结构等多种声学信息相互作用，共同影响情绪判断。注意力机制可通过反映序列内部的长距离关系，或使一种表示选择性地参考另一种表示，从而整合单一特征或单一时刻难以覆盖的上下文信息\cite{he2023multiple, chen2023dwformer, wang2024swin, hou2022multi_v2}。注意力机制可用于突出局部区间，也可用于灵活反映发话内部的关系结构。
 
@@ -370,6 +384,13 @@ H^{(l)} = \mathrm{LayerNorm}\!\left(\tilde{H}^{(l)} + \mathrm{FFN}\!\left(\tilde
 \end{equation}
 其中 $\mathrm{MHA}(\cdot)$ 表示该编码器层的多头自注意力子层，$\mathrm{FFN}(\cdot)$ 表示位置级前馈网络。在编码器层内部，首先通过自注意力反映同一输入序列内部的相关性，随后各位置的表示独立经过非线性变换，形成最终输出\cite{vaswani2017attention}。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.97\textwidth]{images/chapter3/chapter3_transformer_encoder.drawio.pdf}
+    \caption{Transformer编码器层的基本信息流动}
+    \label{fig:chapter3_transformer_encoder}
+\end{figure}
+
 解码器层的内部结构与之类似，但多了一个注意力子层。在解码器中，首先通过掩码多头自注意力反映目标序列内部的自相关性，然后通过一个注意力子层反映解码器表示与编码器最终输出之间的对应关系，之后应用位置级前馈网络。该过程可整理为：
 \begin{equation}
 \bar{S}^{(l)} = \mathrm{LayerNorm}\!\left(S^{(l-1)} + \mathrm{MaskedMHA}\!\left(S^{(l-1)}\right)\right)
@@ -427,6 +448,13 @@ Transformer的第二个特点在于它能够直接建模输入内部的全局关
 Transformer的优势表现与具体条件有关。随着输入长度增加，注意力计算范围扩大，计算量和内存占用可能相应增加\cite{vaswani2017attention}。在语音情绪识别中，帧级序列可能较长；若采用高分辨率频谱表示或多特征融合，输入标记数量会进一步增多。在此情况下，应用原始Transformer结构不一定总是高效的选择，实际研究中已提出基于窗口的注意力、移位窗口、分层补丁表示等结构调整方法\cite{chen2023dwformer,wang2024swin}。
 
 Transformer的结构表达能力较强，Transformer的稳定性受数据规模和任务条件影响。语音情绪识别数据通常规模不大，情绪类别之间的界限也可能不够清晰。在此类条件下，结构复杂的模型可能同时学习到情绪相关模式以及数据集本身的偏差。近年来，研究者提出调整输入范围、使用分层表示或结合多任务学习等方式，在跨语料库条件下提高泛化能力，不单纯扩大Transformer结构本身\cite{chen2023dwformer,wang2024swin,ahn2025multitask}。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/chapter3/chapter3_transformer_ser_boundary.drawio.pdf}
+    \caption{Transformer在语音情绪识别中的适用边界}
+    \label{fig:chapter3_transformer_ser_boundary}
+\end{figure}
 
 
 

@@ -1,0 +1,16 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="conformer_vs_transformer">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t" value="Transformer编码器&#xa;自注意力 + 前馈网络" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="100" y="105" width="330" height="90" as="geometry"/></mxCell>
+        <mxCell id="tl" value="侧重长程关系&#xa;局部连续约束较弱" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="100" y="250" width="330" height="70" as="geometry"/></mxCell>
+        <mxCell id="c" value="Conformer编码块&#xa;自注意力 + 卷积模块 + 前馈网络" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="660" y="105" width="360" height="90" as="geometry"/></mxCell>
+        <mxCell id="cl" value="长程上下文与局部动态&#xa;在同一编码块内结合" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="660" y="250" width="360" height="70" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" source="t" target="c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" source="t" target="tl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" source="c" target="cl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

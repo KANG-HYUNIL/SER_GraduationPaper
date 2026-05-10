@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ser_challenges_map">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="c" value="语音情绪识别技术&#xa;信号处理面临难点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=18;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="445" y="285" width="280" height="86" as="geometry"/>
+        </mxCell>
+        <mxCell id="a" value="语音信号非平稳性&#xa;情绪线索时间分布不均" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="90" y="90" width="250" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="发话长度可变性&#xa;输入维度需要组织" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="90" y="295" width="250" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f" value="外部环境干扰&#xa;噪声与多输入影响特征稳定性" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="90" y="500" width="250" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="情绪线索多层性&#xa;韵律  频谱  发声质量" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="825" y="90" width="260" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e" value="用户与数据集分布差异&#xa;用户  语言  语料来源" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="825" y="295" width="260" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="g" value="数据规模限制&#xa;类别分布可能不平衡" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=15;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="825" y="500" width="260" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" source="a" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" source="b" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" source="f" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" edge="1" source="d" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" edge="1" source="e" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" edge="1" source="g" target="c" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

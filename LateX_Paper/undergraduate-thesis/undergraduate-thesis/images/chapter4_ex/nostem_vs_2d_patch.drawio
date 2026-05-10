@@ -1,0 +1,18 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="nostem_vs_2d_patch">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="pt" value="纯Transformer输入&#xa;二维时频分块" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="80" y="100" width="260" height="70" as="geometry"/></mxCell>
+        <mxCell id="pt2" value="局部时频补丁&#xa;展平为序列标记" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="80" y="240" width="260" height="70" as="geometry"/></mxCell>
+        <mxCell id="ns" value="无卷积前端时间分块&#xa;覆盖完整梅尔频带" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="720" y="100" width="310" height="70" as="geometry"/></mxCell>
+        <mxCell id="ns2" value="短时间片段标记&#xa;保留整体频带结构" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="720" y="240" width="310" height="70" as="geometry"/></mxCell>
+        <mxCell id="mid" value="对比维度&#xa;频带完整性  时间片段组织  编码路径" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="420" y="170" width="240" height="80" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" source="pt" target="pt2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" source="ns" target="ns2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" source="pt2" target="mid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" source="mid" target="ns2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

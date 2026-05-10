@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="transformer_encoder">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="a" value="输入标记表示&#xa;帧序列或补丁序列" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="30" y="170" width="160" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="加入位置编码&#xa;补充时间位置信息" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="235" y="170" width="170" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="box" value="Transformer编码器层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#61788A;strokeWidth=2;dashed=1;dashPattern=8 4;fontSize=14;fontColor=#1F2B37;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="450" y="80" width="500" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="c" value="多头自注意力&#xa;建模序列内部关系" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="490" y="130" width="180" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="残差连接与层归一化&#xa;稳定层间传递" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="720" y="130" width="190" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="e" value="位置级前馈网络&#xa;重组各位置表示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="490" y="235" width="180" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="f" value="残差连接与层归一化&#xa;形成编码器层输出" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="720" y="235" width="190" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="g" value="上下文表示&#xa;用于池化或分类头" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=14;fontColor=#1F2B37;" vertex="1" parent="1">
+          <mxGeometry x="990" y="170" width="160" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" source="a" target="b" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" source="b" target="box" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" source="c" target="d" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" edge="1" source="d" target="e" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" edge="1" source="e" target="f" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" edge="1" source="box" target="g" style="rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

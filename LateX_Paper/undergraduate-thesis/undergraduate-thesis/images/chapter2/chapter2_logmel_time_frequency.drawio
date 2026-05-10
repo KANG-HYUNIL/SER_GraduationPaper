@@ -1,0 +1,16 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="logmel_time_frequency">
+    <mxGraphModel dx="1169" dy="827" grid="1" gridSize="10" page="1" pageWidth="1169" pageHeight="827">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="spect" value="对数梅尔频谱&#xa;时间帧 × 梅尔频带" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF3F7;strokeColor=#61788A;strokeWidth=2;fontSize=18;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="360" y="100" width="360" height="210" as="geometry"/></mxCell>
+        <mxCell id="t" value="时间轴&#xa;能量起伏  停顿  语调变化" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8F5;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="360" y="360" width="360" height="65" as="geometry"/></mxCell>
+        <mxCell id="f" value="梅尔频带轴&#xa;频带能量  频谱包络  能量重心" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F4E8;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="40" y="170" width="250" height="65" as="geometry"/></mxCell>
+        <mxCell id="cue" value="情绪相关局部线索&#xa;短时变化与频带分布相互关联" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#61788A;strokeWidth=2;fontSize=16;fontColor=#1F2B37;" vertex="1" parent="1"><mxGeometry x="790" y="170" width="300" height="75" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" source="spect" target="t" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" source="f" target="spect" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" source="spect" target="cue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;strokeColor=#4C6274;strokeWidth=2.2;" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
