@@ -12,25 +12,28 @@
 \subsection{数据集与任务设置}
 
 \noindent
-本章实验继续采用RAVDESS语音情绪数据集。RAVDESS语音情绪数据集包含多个情绪类别，并覆盖不同用户的语音样本，能够为用户无关条件下的语音情绪识别实验提供较为统一的测试环境。考虑到前文已经对数据集来源、类别构成以及语料特点进行了说明，本节仅保留与实验实现直接相关的设置内容。
+本章实验继续采用RAVDESS语音情绪数据集。RAVDESS语音情绪数据集包含neutral、calm、happy、sad、angry、fearful、disgust和surprised共8个情绪类别，并覆盖不同用户的语音样本，能够为用户无关条件下的语音情绪识别实验提供较为统一的测试环境。考虑到前文已经对数据集来源、类别构成以及语料特点进行了说明，本节仅保留与实验实现直接相关的设置内容。
 
 \noindent
-在任务设定方面，本文将各模型置于相同的数据划分原则下比较，以尽量降低由数据切分方式带来的额外差异。实验过程中采用用户级划分思路，使训练集与验证集、测试集之间保持用户层面的分离，从而考察模型在未见用户语音上的泛化表现。用户级划分设定与本文关注的实际应用情境较为一致，因为真实场景下的系统通常需要面对未参与训练的用户输入。结合实验记录，当前实验所使用的语音子集共包含1440条语音样本、24名用户，每名用户包含60条语音。8个情绪类别中，类别01对应96条样本，其余7个类别各包含192条样本。
+在任务设定方面，本文将各模型置于相同的数据划分原则下比较，以尽量降低由数据切分方式带来的额外差异。实验过程中采用用户级划分思路，使训练集与验证集、测试集之间保持用户层面的分离，从而考察模型在未见用户语音上的泛化表现。用户级划分设定与本文关注的实际应用情境较为一致，因为真实场景下的系统通常需要面对未参与训练的用户输入。结合实验记录，当前实验所使用的语音子集共包含1440条语音样本、24名用户，每名用户包含60条语音。在8个情绪类别中，neutral类别包含96条样本，其余7个情绪类别各包含192条样本。
 
 \begin{table}[htbp]
     \centering
     \caption{数据集构成与用户无关划分方式}
     \label{tab:chapter4_dataset_split}
-    \begin{tabular}{cccc}
+    \small
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.05}
+    \begin{tabularx}{\textwidth}{p{0.16\textwidth}p{0.22\textwidth}p{0.18\textwidth}X}
         \toprule
         项目 & 说明 & 数值/类别数 & 备注 \\
         \midrule
         数据集 & RAVDESS Speech & 1440条语音 & 仅使用语音部分 \\
         用户数量 & 用户01--24 & 24名用户 & 每名用户60条样本 \\
-        情绪类别 & 8类 & 01--08 & 01类96条，其余各192条 \\
+        情绪类别 & 8类 & neutral、calm、happy、sad、angry、fearful、disgust、surprised & neutral为96条，其余7类各192条 \\
         划分方式 & 用户无关划分 & 5折交叉验证 & Optuna阶段通常运行1折筛选 \\
         \bottomrule
-    \end{tabular}
+    \end{tabularx}
 \end{table}
 
 \subsection{输入表示与预处理流程}
@@ -140,22 +143,22 @@
 \noindent
 结合实验结果可以看到，纯Transformer模型的局限不宜简单归结为参数规模不足。表\ref{tab:chapter4_overall_results}中，纯Transformer模型参数量约为4.21M，高于卷积神经网络基线模型的1.41M，也高于CNN-Conformer模型的3.55M。纯Transformer模型的Accuracy为0.52000，Macro-F1为0.51163，UAR为0.51250，低于卷积神经网络基线模型和CNN-Conformer模型。实验数值说明，在当前数据规模、输入表示和训练协议下，参数量增加没有自然转化为更稳定的验证指标。模型结构是否提供与声学情绪线索相匹配的归纳偏置，可能比单纯扩大表示容量更能影响结果。
 
-\begin{figure}[htbp]
+\begin{center}
     \centering
-    \includegraphics[width=0.95\textwidth]{images/chapter4_ex/pure_transformer_learning_curve.png}
-    \caption{纯Transformer模型的训练曲线}
+    \includegraphics[width=0.82\textwidth]{images/chapter4_ex/pure_transformer_learning_curve.png}
+    \captionof{figure}{纯Transformer模型的训练曲线}
     \label{fig:chapter4_pure_transformer_learning_curve}
-\end{figure}
+\end{center}
 
 \noindent
 图\ref{fig:chapter4_pure_transformer_learning_curve}进一步给出了纯Transformer代表配置在第1个fold上的训练过程。训练损失随epoch推进持续下降，训练Accuracy逐步上升到较高水平。验证损失在中后期出现较大波动，验证Accuracy整体低于训练Accuracy，并且没有与训练Accuracy保持同步上升。结合表\ref{tab:chapter4_overall_results}中的验证指标，这一现象说明纯Transformer模型已经具备较强的训练集拟合能力，但在当前用户划分验证条件下，训练过程中的表示容量没有稳定转化为验证集收益。这一观察与前文关于中小规模语音情绪数据中局部约束和聚合方式影响泛化结果的分析具有对应关系。
 
-\begin{figure}[htbp]
+\begin{center}
     \centering
-    \includegraphics[width=0.62\textwidth]{images/chapter4_ex/pure_transformer_calibration_curve.png}
-    \caption{纯Transformer模型的校准曲线}
+    \includegraphics[width=0.48\textwidth]{images/chapter4_ex/pure_transformer_calibration_curve.png}
+    \captionof{figure}{纯Transformer模型的校准曲线}
     \label{fig:chapter4_pure_transformer_calibration}
-\end{figure}
+\end{center}
 
 \noindent
 图\ref{fig:chapter4_pure_transformer_calibration}从输出置信度角度补充了模型稳定性观察。纯Transformer代表配置的ECE为0.29362，可靠性曲线在多个置信度区间内偏离理想校准线，较高置信度区间的实际正确比例也没有与预测置信度保持一致。校准结果说明模型输出分数与验证集真实正确率之间存在一定失配。对于语音情绪识别任务而言，类别间声学差异较细，若模型在局部线索和句级聚合层面形成的表示不够稳定，输出置信度也可能受到影响。这一结果与训练曲线和混淆矩阵共同构成纯Transformer代表配置的实验侧证据。
