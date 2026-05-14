@@ -84,6 +84,13 @@ Group K-Fold (k=5) splits by actor ID. Each fold: fresh model init, Adam optimiz
 - New models must be registered with `@register_model` and have a corresponding config YAML
 - External library additions must be reflected in `requirements.txt`
 
+## Thesis Citation Rule
+
+- Treat each physical line in the chapter `.tex` files as one paragraph for citation cleanup.
+- Within the same paragraph, the same citation key must appear only once. If a citation key has already appeared earlier in that paragraph, remove later repetitions of that same key.
+- When a later `\cite{...}` command contains both new and repeated keys, keep only the new keys. If all keys in that later citation command are repeated, remove the whole citation command.
+- Do not remove a citation key only because it appears in a different paragraph; this rule is scoped to one paragraph only.
+
 
 ## LateX 파일 작성 규칙(박사 피드백)
 # **博士反馈规则汇总（最新整合版）**

@@ -1,5 +1,5 @@
 %%
-% The BIThesis Template for Bachelor Graduation Thesis
+% The BIpaper Template for Bachelor Graduation paper
 %
 % 北京理工大学毕业设计（论文）中英文摘要 —— 使用 XeLaTeX 编译
 %
@@ -19,11 +19,11 @@
 
 % 中英文摘要章节
 \begin{abstract}
-语音情绪识别技术旨在从语音信号中识别用户表达的情绪状态，在智能交互、心理健康辅助和服务系统反馈等场景中具有应用价值。由于语音情绪线索分布在能量、频谱、韵律和时间上下文等多个层面，且用户差异、噪声干扰和数据规模限制会影响模型训练，如何在有限数据条件下构建稳定的输入表示和分类模型，是本文关注的问题。
+语音情绪识别技术旨在从语音信号中识别用户表达的情绪状态，在人机交互、心理健康辅导和用户画像归纳等场景中具有重要的应用价值。由于语音情绪特征分布在能量、频谱、韵律和时间上下文等多个层面，且用户差异、噪声干扰和数据规模限制会影响模型训练，因此本文关注的问题是如何在有限数据条件下构建稳定的输入表示和分类模型。
 
 本文围绕对数梅尔频谱输入下的语音情绪识别方法开展研究。首先，对语音情绪识别数据集、信号预处理、时频变换、特征归一化和长度处理方法进行整理，确定以重采样、幅值归一化、对数梅尔频谱提取和分块组织为基础的信号处理流程。随后，本文从卷积神经网络、注意力机制和Transformer结构出发，构建卷积神经网络基线模型、纯Transformer模型和CNN-Conformer模型，并在RAVDESS语音情绪数据集上进行用户无关条件下的对比实验。针对CNN-Conformer模型，本文进一步比较前端标记化方式、模型容量、层间输出策略、池化方式和混合增强等因素对结果的影响。
 
-实验结果显示，卷积神经网络基线模型取得0.62196的Macro-F1，纯Transformer模型取得0.51163的Macro-F1，采用无卷积前端时间分块输入、4层Conformer编码器、注意力池化和频谱级混合增强的CNN-Conformer模型取得0.70563的Macro-F1、0.70000的Accuracy和0.70938的UAR。补充的噪声条件实验与跨语料库实验表明，clean条件下的较高指标不能直接等同于受扰输入或异源语料条件下的稳定表现。本文工作说明，在当前数据规模下，局部时频建模、时间上下文建模与适度正则化之间的组合方式，对语音情绪识别模型的泛化表现具有较大影响。
+实验结果显示，卷积神经网络基线模型取得0.62196的Macro-F1，纯Transformer模型取得0.51163的Macro-F1，采用无卷积前端时间分块输入、4层Conformer编码器、注意力池化和频谱级混合增强的CNN-Conformer模型取得0.70563的Macro-F1、0.70000的Accuracy和0.70938的UAR。补充的噪声条件实验与跨语料库实验表明，clean条件下的较高指标不能直接等同于受扰输入或异源语料条件下的稳定表现。本文工作说明，在当前数据规模下，局部时频建模、时间上下文建模与适度正则化之间的组合方式，对语音情绪识别模型的泛化表现具有较大改进。
 
 \end{abstract}
 
@@ -36,9 +36,9 @@
 
 % 英文摘要章节
 \begin{abstractEn}
-Speech emotion recognition aims to infer the emotional state expressed in speech signals and has practical value in human-computer interaction, mental health support, and service feedback systems. Since emotional cues in speech are distributed across energy, spectral structure, prosody, and temporal context, model training is affected by user differences, noise interference, and limited data scale. This thesis focuses on how to construct stable input representations and classification models under limited-data conditions.
+Speech emotion recognition aims to infer the emotional state expressed in speech and has practical value in human-computer interaction, mental health support and service feedback systems. Since emotional features in speech are distributed across energy, spectral structure, prosody and temporal context, speech emotion recognition is affected by user differences, noise interference, and limited data scale. This paper focuses on how to construct universal input representations and general models.
 
-This thesis studies speech emotion recognition methods based on log-Mel spectrogram inputs. First, datasets, signal preprocessing, time-frequency transformation, feature normalization, and sequence length handling methods are reviewed, and a processing pipeline based on resampling, amplitude normalization, log-Mel spectrogram extraction, and chunk organization is adopted. Then, convolutional neural networks, attention mechanisms, and Transformer structures are discussed as the model basis. A convolutional neural network baseline, a pure Transformer model, and a CNN-Conformer model are implemented and compared on the RAVDESS speech emotion dataset under a user-independent setting. For the CNN-Conformer model, this thesis further examines the effects of frontend tokenization, model capacity, layer output strategy, pooling method, and mixup regularization.
+This paper concentrates on speech emotion recognition methods based on log-Mel spectrogram. Firstly, this paper reviews datasets, signal preprocessing, time-frequency transformation, feature normalization, and sequence length handling methods. Consequently, this study adopts a processing pipeline based on resampling, amplitude normalization, log-Mel spectrogram extraction, and chunk organization. Moreover, convolutional neural networks, attention mechanisms, and Transformer structures are discussed. At last, convolutional neural network baseline, a pure Transformer model, and a CNN-Conformer model are implemented on the RAVDESS speech emotion dataset under a user-independent setting. Their performances are then compared to evaluate the effectiveness of each architecture. For the CNN-Conformer model, this paper conducts experiments in aspects of frontend tokenization, model capacity, layer output strategy, pooling method, and mixup regularization.
 
-The experimental results show that the convolutional neural network baseline obtains a Macro-F1 of 0.62196, while the pure Transformer model obtains a Macro-F1 of 0.51163. The CNN-Conformer model with no-stem temporal patch input, four Conformer encoder layers, attention pooling, and spectrogram-level mixup achieves a Macro-F1 of 0.70563, an Accuracy of 0.70000, and a UAR of 0.70938. Additional noise-condition and cross-corpus experiments indicate that higher performance under clean in-corpus conditions does not directly imply stable behavior under corrupted inputs or external corpora. The study suggests that the coordination among local time-frequency modeling, temporal context modeling, and moderate regularization has a clear influence on the generalization behavior of speech emotion recognition models under the current data scale.
+The experimental results show that the convolutional neural network baseline obtains a Macro-F1 of 0.62196, while the pure Transformer model obtains a Macro-F1 of 0.51163. The CNN-Conformer model with no-stem temporal patch input, it contains Conformer encoder layers, attention pooling, spectrogram-level mixup and it achieves a Macro-F1 of 0.70563, an Accuracy of 0.70000, and a UAR of 0.70938. Additional experiments indicate that higher performance under clean in-corpus conditions does not directly imply stable behavior under corrupted inputs or external corpora. The paper highlights the coordination among local time-frequency modeling, temporal context modeling, and moderate regularization. This combination has a clear influence on the generalization behavior of speech emotion recognition models under the current data scale.
 \end{abstractEn}

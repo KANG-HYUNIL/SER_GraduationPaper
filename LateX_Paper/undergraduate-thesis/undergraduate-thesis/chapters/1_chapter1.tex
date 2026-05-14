@@ -8,15 +8,11 @@
 
 \section{研究背景}
 
-随着近年来人工智能技术的快速发展，人机交互系统从显式执行用户指令，转向对用户状态与意图进行隐式感知\cite{ma2023review,raamkumar2023empathetic}。用户情绪状态的感知是这种人机交互范式转型中的关键环节之一\cite{ma2023review,raamkumar2023empathetic}。系统解析用户“说了什么”这一显式信息，同时识别用户“在何种情绪状态下说话”的隐式线索。在人类决策过程中，情绪会映射个体的行为方式，也会影响人机交互实际表现。具备情绪理解能力的人机交互系统，能够基于用户语音中的隐式情绪线索，动态调整交互策略，从而提升交互的自然度与用户体验\cite{raamkumar2023empathetic}。情绪识别技术已应用于教育、心理咨询、医疗辅助、客户服务及数字内容交互等领域，并有潜力提升系统交互性能\cite{ma2023review}。快速识别用户情绪有望成为下一代人机交互系统提升人机协作效率的关键能力之一\cite{ma2023review,raamkumar2023empathetic}。
+情绪可通过多种媒介进行表示，其中语音因同时承载文字语义与非文字语义，成为人机交互中情绪感知的重要媒介\cite{shou2026comprehensive,hou2022multi}。语音采集成本较低，无需复杂外部设备即可获得。更重要的是，语音中的语调、语速、重音、节奏、能量及音色等非文字语义要素，为识别用户情绪状态提供了信息依据。即便是相同的句子，语速、音高、发音力度及呼吸方式的变化，也会形成不同的情绪表现。语音情绪识别由此需要处理文字语义之外的声学线索，并把这些线索与后续交互决策联系起来。
 
-情绪可通过多种媒介进行表示，其中语音因同时承载文字语义与非文字语义，成为人机交互中情绪感知的重要媒介\cite{shou2026comprehensive,hou2022multi}。语音采集成本较低，无需复杂外部设备即可获得。更重要的是，语音中的语调、语速、重音、节奏、能量及音色等非文字语义要素，为识别用户情绪状态提供了信息依据\cite{hou2022multi}。即便是相同的句子，语速、音高、发音力度及呼吸方式的变化，也会形成不同的情绪表现。语音情绪识别由此需要处理文字语义之外的声学线索，并把这些线索与后续交互决策联系起来\cite{shou2026comprehensive,hou2022multi}。
-
-基于语音的情绪识别研究有着较长的历史。语音情绪识别研究的重心正从特征工程向深度表示学习转变。 首先，早期研究主要采用人为设计的声学特征，如梅尔频率倒谱系数(Mel-Frequency Cepstral Coefficients, MFCC)、音高、能量及韵律等。隐马尔可夫模型(Hidden Markov Model, HMM)、高斯混合模型(Gaussian Mixture Model, GMM)及支持向量机(Support Vector Machine, SVM)等传统机器学习分类器被用于情绪分类\cite{ma2023review}。上述人为设计的特征与机器学习分类器方法的主要优点在于模型解释性较强且实现直观清晰，但在充分表征情绪这种界限模糊且具有强时间序列依赖性的信息时，仍暴露出一定的局限性。 为此，为解决上述人为设计的特征的传统机器学习方法的局限性，卷积神经网络模型(Convolutional Neural Network, CNN)、循环神经网络模型(Recurrent Neural Network, RNN)、长短期记忆网络模型(Long Short-Term Memory, LSTM)及双向长短期记忆网络模型(Bidirectional LSTM, BiLSTM)等深度学习架构被引入语音情绪识别研究\cite{zhang2023cnn, liu2023dualrobustness, lin2023chunk, peng2021efficient}。研究重心逐渐转向模型自动学习语音时频特征的方向。 在此基础上，近年来，研究者们的关注点逐渐从堆叠更深的网络架构转向将注意力机制与骨干架构结合，从而使模型能够更具选择性地聚焦于语音中对情绪表达的关键时间段与局部特征。这一转变标志着语音情绪识别正从传统的以特征工程为中心的阶段，向以模型结构为中心的精细表示学习与关键特征选择阶段发展。
+随着近年来人工智能技术的快速发展，人机交互系统从显式执行用户指令，转向对用户状态与意图进行隐式感知\cite{ma2023review,raamkumar2023empathetic}。用户情绪状态的感知是这种人机交互范式转型中的关键环节之一。系统解析用户“说了什么”这一显式信息，同时识别用户“在何种情绪状态下说话”的隐式线索。在人类决策过程中，情绪会映射个体的行为方式，也会影响人机交互实际表现。具备情绪理解能力的人机交互系统，能够基于用户语音中的隐式情绪线索，动态调整交互策略，从而提升交互的自然度与用户体验。情绪识别技术已应用于教育、心理咨询、医疗辅助、客户服务及数字内容交互等领域，并有潜力提升系统交互性能。快速识别用户情绪有望成为下一代人机交互系统提升人机协作效率的关键能力之一。
 
 当前语音情绪识别仍面临一系列挑战。情绪本身具有模糊性与主观性，人类情绪并不总是以边界分明的类别存在；同一种情绪在跨用户身上，也可能表现出差异较大的语音特征。例如，愤怒与兴奋、快乐与惊讶等相邻情绪类别，往往共享相似声学特性，分类边界随之变得模糊。语音情绪识别的性能还受数据集分布、样本质量、用户构成、录音环境及语言背景影响。当数据集分布差异较大时，在一个数据集上训练的模型可能在其他数据集或跨用户条件下出现性能下降。噪声环境、多输入、信道差异及设备特征差异也会干扰情绪线索提取。带有情绪标注的语音数据规模远小于普通语音数据，收集成本又较高；在这种条件下，复杂模型未必带来更高收益。本研究据此把重点放在数据受限及多变环境下的情绪表示学习问题上。
-
-基于上述背景，当前语音情绪研究逐渐转向两个相互关联的问题：如何组织更有效的声学表示，如何在受限数据规模及实际应用场景约束下设计稳定模型。情绪信息在语音片段中的分布往往不均匀，常集中于特定时间段或声学模式中。注意力机制能够对关键情绪区间赋予更高权重，因而成为语音情绪识别中的重要结构方法之一。本文聚焦于基于语音信号的情绪识别问题，考察声学特征与模型架构之间的关系，并探索受限数据条件下较为稳定的注意力机制情绪识别系统。后续章节将围绕数据集选取、信号处理流程、模型架构设计及实验分析展开。
 
 \section{研究意义} 
 
@@ -30,7 +26,7 @@
 
 最后，本研究将基于上述评估框架，进一步考察模型在实际应用场景下的泛化能力。为此，本研究将引入噪声环境、多输入等环境干扰，以及跨用户、跨语料库等数据分布变化，从而验证模型在非理想条件下的稳定性与可靠性。上述探索旨在评估模型从实验环境向实际应用场景迁移的可行性，为语音情绪识别技术的工程化落地提供实证依据。
 
-随着大模型与注意力机制在文本等时序信息处理中的发展，Transformer在情绪识别任务中展现出一定潜力。语音情绪识别中，情绪信息在整个语音片段中的分布往往不均匀，常集中于特定时间段或声学模式。对关键信息赋予更高权重的注意力机制，已成为语音情绪识别领域的重要研究方向之一\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。Transformer凭借自注意力机制处理长期依赖关系并整合全局上下文，可在一定程度上补充传统卷积神经网络模型与循环神经网络模型的不足\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。利用大规模无标注数据的自监督预训练同样是应对标签稀缺问题的重要方向\cite{thanh2024robust, sampath2025efficient}。本研究没有采用大规模预训练路线，而是从模型架构维度考察注意力机制与Transformer对关键情绪信息捕获的作用。
+随着大模型与注意力机制在文本等时序信息处理中的发展，Transformer在情绪识别任务中展现出一定潜力。语音情绪识别中，情绪信息在整个语音片段中的分布往往不均匀，常集中于特定时间段或声学模式。对关键信息赋予更高权重的注意力机制，已成为语音情绪识别领域的重要研究方向之一\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。Transformer凭借自注意力机制处理长期依赖关系并整合全局上下文，可在一定程度上补充传统卷积神经网络模型与循环神经网络模型的不足\cite{liu2023dualrobustness}。利用大规模无标注数据的自监督预训练同样是应对标签稀缺问题的重要方向\cite{thanh2024robust,sampath2025efficient}。本研究没有采用大规模预训练路线，而是从模型架构维度考察注意力机制与Transformer对关键情绪信息捕获的作用。
 
 
 
@@ -38,90 +34,124 @@
 
 \subsection{语音情绪识别研究的发展历程}
 
-本文将语音情绪识别的发展演进大致划分为以下四个阶段：传统的基于特征工程阶段、基于机器学习阶段、基于深度学习阶段，以及利用注意力机制、Transformer与预训练模型的新兴阶段。在早期研究中，主流方法主要依赖于人为设计的声学特征，并以此为依据进行情绪分类。该阶段的研究重点在于探究如何从语音信号中提取特征以更好地反映情绪差异，其中梅尔频率倒谱系数、音高、能量、共振峰及韵律等特征被广泛研究\cite{ma2023review}。上述人为设计的特征与分类器方法具有较强的可解释性，且能在数据规模较小的条件下进行实验。受限于固定特征集合，该类方法难以充分刻画情绪的复合性及其时序动态变化\cite{liu2023dualrobustness, lin2023chunk}。
+本文将语音情绪识别的发展演进大致划分为以下四个阶段：传统的基于特征工程阶段、基于机器学习阶段、基于深度学习阶段，以及利用注意力机制、Transformer与预训练模型的新兴阶段。在早期研究中，主流方法主要依赖于人为设计的声学特征，并以此为依据进行情绪分类。该阶段的研究重点在于探究如何从语音信号中提取特征以更好地反映情绪差异，其中梅尔频率倒谱系数、音高、能量、共振峰及韵律等特征被广泛研究\cite{ma2023review}。上述人为设计的特征与分类器方法具有较强的可解释性，且能在数据规模较小的条件下进行实验。受限于固定特征集合，该类方法难以充分刻画情绪的复合性及其时序动态变化\cite{liu2023dualrobustness,lin2023chunk}。
 
-基于机器学习的方法在特征工程之外，进一步关注分类算法的性能。支持向量机(SVM)、隐马尔可夫模型(HMM)、高斯混合模型(GMM)、K近邻算法(K-Nearest Neighbors, KNN)及随机森林(Random Forest, RF)等多种机器学习分类器陆续被引入，研究者们围绕人为设计特征与各类分类器组合开展情绪分类性能比较研究\cite{ma2023review}。特征选择、数据归一化及降维等辅助技术也得到关注，语音情绪识别逐渐被系统化为典型的模式分类问题\cite{ma2023review}。该路线仍较大程度上受限于研究人员的先验判断，难以充分捕捉情绪表达中固有的非线性特征与长期依赖关系\cite{ma2023review, liu2023dualrobustness, lin2023chunk}。
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/feedback_diagrams/chapter1/ser_evolution/ser_evolution_timeline.drawio.pdf}
+    \caption{语音情绪识别方法从人工特征、机器学习、卷积建模、循环建模到Transformer范式的演进关系}
+    \label{fig:ser_evolution_timeline}
+\end{figure}
 
-深度学习技术的引入成为语音情绪识别研究的关键转折点。卷积神经网络模型被广泛用于从语谱图或对数梅尔谱等时频表示中自动学习局部模式\cite{liu2023dualrobustness,peng2021efficient}。循环神经网络模型、长短期记忆网络模型等则被用于对语音信号内部的时间连续性及上下文依赖关系进行建模\cite{lin2023chunk,mirsamadi2017automatic}。在此基础上，结合卷积神经网络模型与循环神经网络模型的混合架构被提出，进一步促进了同时学习局部特征与时序信息的研究趋势\cite{liu2023dualrobustness, zhang2023cnn, peng2021efficient}。最终，语音情绪识别研究逐渐从人为设计的特征转向表示学习的范式。
+基于机器学习的方法在特征工程之外，进一步关注分类算法的性能。支持向量机(Support Vector Machine, SVM)、隐马尔可夫模型(Hidden Markov Model, HMM)、高斯混合模型(Gaussian Mixture Model, GMM)、K近邻算法(K-Nearest Neighbors, KNN)及随机森林(Random Forest, RF)等多种机器学习分类器陆续被引入，研究者们围绕人为设计特征与各类分类器组合开展情绪分类性能比较研究\cite{ma2023review}。特征选择、数据归一化及降维等辅助技术也得到关注，语音情绪识别逐渐被系统化为典型的模式分类问题。该路线仍较大程度上受限于研究人员的先验判断，难以充分捕捉情绪表达中固有的非线性特征与长期依赖关系\cite{liu2023dualrobustness,lin2023chunk}。
 
-随着大模型与注意力机制在文本等时序信息处理中的发展，Transformer在情绪识别任务中展现出一定潜力。语音情绪识别中，情绪信息在整个语音片段中的分布往往不均匀，常集中于特定时间段或声学模式。对关键信息赋予更高权重的注意力机制成为语音情绪识别领域的重要研究方向之一\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。Transformer凭借自注意力机制处理长期依赖关系并整合全局上下文，可在一定程度上补充传统卷积神经网络模型与循环神经网络模型的不足\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。利用大规模无标注数据的自监督预训练也成为应对标签稀缺问题的重要方向\cite{thanh2024robust, sampath2025efficient}。本研究没有采用大规模预训练路线，而是从模型架构维度考察注意力机制与Transformer对关键情绪信息捕获的作用。
+深度学习技术的引入成为语音情绪识别研究的关键转折点。卷积神经网络模型被广泛用于从语谱图或对数梅尔谱等时频表示中自动学习局部模式\cite{liu2023dualrobustness,peng2021efficient}。循环神经网络模型、长短期记忆网络模型等则被用于对语音信号内部的时间连续性及上下文依赖关系进行建模\cite{lin2023chunk,mirsamadi2017automatic}。在此基础上，结合卷积神经网络模型与循环神经网络模型的混合架构被提出，进一步促进了同时学习局部特征与时序信息的研究趋势\cite{zhang2023cnn}。最终，语音情绪识别研究逐渐从人为设计的特征转向表示学习的范式。
+
+随着大模型与注意力机制在文本等时序信息处理中的发展，Transformer在情绪识别任务中展现出一定潜力。语音情绪识别中，情绪信息在整个语音片段中的分布往往不均匀，常集中于特定时间段或声学模式。对关键信息赋予更高权重的注意力机制成为语音情绪识别领域的重要研究方向之一\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。Transformer凭借自注意力机制处理长期依赖关系并整合全局上下文，可在一定程度上补充传统卷积神经网络模型与循环神经网络模型的不足\cite{liu2023dualrobustness}。利用大规模无标注数据的自监督预训练也成为应对标签稀缺问题的重要方向\cite{thanh2024robust,sampath2025efficient}。本研究没有采用大规模预训练路线，而是从模型架构维度考察注意力机制与Transformer对关键情绪信息捕获的作用。
 
 \subsection{语音情绪识别数据集的研究现状}
 
-数据集一直是语音情绪识别研究的出发点，同时也是评估模型性能的基准要素。目前语音情绪识别研究中常用的数据集包括RAVDESS、IEMOCAP、EMO-DB、SAVEE、TESS、CREMA-D、MSP-Podcast、MSP-IMPROV及CASIA等\cite{ma2023review,zhang2020transfer}。这些数据集在语种、用户规模、情绪类别划分、录音环境、发音模式及标注范式等维度上均存在一定差异\cite{ma2023review,zhang2020transfer}。此类差异体现在样本数量上，也与模型所能习得的情绪特征及泛化能力密切相关。
+数据集一直是语音情绪识别研究的出发点，同时也是评估模型性能的基准要素。目前语音情绪识别研究中常用的数据集包括RAVDESS、IEMOCAP、EMO-DB、SAVEE、TESS、CREMA-D、MSP-Podcast、MSP-IMPROV及CASIA等\cite{ma2023review,zhang2020transfer}。这些数据集在语种、用户规模、情绪类别划分、录音环境、发音模式及标注范式等维度上均存在一定差异。此类差异体现在样本数量上，也与模型所能习得的情绪特征及泛化能力密切相关。
 
-当前主流的语音情绪识别数据集主要可分为表演型数据集与自发型或自然型数据集\cite{zhang2020transfer}。诸如RAVDESS、EMO-DB、CASIA等表演型数据集，多收录在受控环境下由演员演绎的情绪语音；这类数据集的主要优势在于情绪标注相对明确，实验具有较高的可重复性。IEMOCAP、MSP-IMPROV等数据集融入对话、即兴或自然发音等元素，能够更真实地反映实际交互场景中的情绪表达\cite{ma2023review,zhang2020transfer}。自然型数据集同时面临情绪边界模糊、标注一致性不足及预处理难度较大等挑战\cite{ma2023review,zhang2020transfer}。数据集的选择不宜只看规模或被引频次，还需要结合研究目标判断：是关注界限清晰的基准测试验证，还是更重视实际应用场景下的泛化能力。
+当前主流的语音情绪识别数据集主要可分为表演型数据集与自发型或自然型数据集\cite{zhang2020transfer}。诸如RAVDESS、EMO-DB、CASIA等表演型数据集，多收录在受控环境下由演员演绎的情绪语音；这类数据集的主要优势在于情绪标注相对明确，实验具有较高的可重复性。IEMOCAP、MSP-IMPROV等数据集融入对话、即兴或自然发音等元素，能够更真实地反映实际交互场景中的情绪表达\cite{ma2023review}。自然型数据集同时面临情绪边界模糊、标注一致性不足及预处理难度较大等挑战。数据集的选择不宜只看规模或被引频次，还需要结合研究目标判断：是关注界限清晰的基准测试验证，还是更重视实际应用场景下的泛化能力。
 
 对于情绪标注方式而言，数据集可划分为离散标签（如愤怒、快乐）与连续维度（如效价、唤醒度）两类。前者主要适用于离散类别分类任务，后者能更细腻地刻画情绪。离散标签数据集往往难以充分反映情绪的复合性与渐变性，连续维度标注在实验设计与评价体系构建方面也面临一定的技术困难\cite{ma2023review,zhang2020transfer}。
 
 \subsection{声学特征与信号处理方法的研究现状}
 
-在语音情绪识别中，输入信号质量及信号处理具有重要作用。早期研究主要基于先验知识手工提取具有情绪区分度的声学特征，例如梅尔频率倒谱系数、音高、能量、过零率等。这些特征既可单独使用，也可组成综合特征集。基于OpenSMILE工具提取的eGeMAPS、ComParE等特征集，长期作为情绪识别领域的重要基准之一，为后续研究提供了稳定的基线\cite{zhang2020transfer, ma2023review}。
+在语音情绪识别中，输入信号质量及信号处理具有重要作用。早期研究主要基于先验知识手工提取具有情绪区分度的声学特征，例如梅尔频率倒谱系数、音高、能量、过零率等。这些特征既可单独使用，也可组成综合特征集。基于OpenSMILE工具提取的eGeMAPS、ComParE等特征集，长期作为情绪识别领域的重要基准之一，为后续研究提供了稳定的基线\cite{zhang2020transfer,ma2023review}。
 
-随着深度学习的发展，输入表示从定长特征向量转向以语谱图、对数梅尔谱图等时频表示为主。这些时频表示能有效保留语音内在的时序动态与频谱特征，与卷积神经网络模型及Transformer等深度学习架构具有良好的协同性\cite{liu2023dualrobustness,peng2021efficient,chen2023dwformer}。近期研究比较同一音频的多种表示，并探讨表示融合技术，表明输入特征已成为影响模型感知情绪的关键设计维度之一\cite{liu2023dualrobustness,peng2021efficient,chen2023dwformer}。
+随着深度学习的发展，输入表示从定长特征向量转向以语谱图、对数梅尔谱图等时频表示为主。这些时频表示能有效保留语音内在的时序动态与频谱特征，与卷积神经网络模型及Transformer等深度学习架构具有良好的协同性\cite{liu2023dualrobustness,peng2021efficient,chen2023dwformer}。近期研究比较同一音频的多种表示，并探讨表示融合技术，表明输入特征已成为影响模型感知情绪的关键设计维度之一。
 
-信号处理方法也朝着精细化方向发展。在信号处理方面，针对变长序列的填充(padding)、滑动窗口分割、序列分割等技术受到研究者们的关注。此外，噪声消除、数据增强等方法也逐渐成为研究热点\cite{leem2024selective,lin2023chunk}。近年来，诸多研究指出仅凭实验室环境难以验证模型的泛化能力，需要考察包含噪声或多输入等干扰情景下的识别性能\cite{leem2024selective,su2023unsupervised,lu2022domain,gao2024adversarial}。声学特征提取与信号处理技术是语音情绪识别的主要基础。这些信号处理技术在输入特征与模型的深度融合中起到重要作用，成为连接数据预处理与模型构建的主要环节之一，为系统识别能力提供了支撑\cite{zhang2020transfer, ma2023review}。
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.64\textwidth]{images/feedback_diagrams/chapter1/acoustic_features/acoustic_feature_taxonomy.drawio.pdf}
+    \caption{语音情绪识别中常见声学特征的变换关系与信息侧重点比较}
+    \label{fig:acoustic_feature_taxonomy}
+\end{figure}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{常见声学信号与特征表示的处理方式比较}
+    \label{tab:chapter1_acoustic_feature_examples}
+    \scriptsize
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.82}
+    \begin{tabularx}{\textwidth}{p{0.15\textwidth}p{0.24\textwidth}p{0.22\textwidth}X}
+        \toprule
+        表示对象 & 处理方式 & 反映信息 & 特点与适用性 \\
+        \midrule
+        原始波形 & 按采样率记录时域振幅 & 发音强弱、停顿 & 信息完整，频率结构不直观 \\
+        能量轮廓 & 按短时帧计算功率统计 & 强度、重音 & 解释性较强，频带信息不足 \\
+        基频与音高 & 估计声带振动频率 & 语调、韵律 & 对韵律变化敏感，易受噪声影响 \\
+        对数梅尔谱图 & 短时傅里叶变换、梅尔滤波与对数压缩 & 时频能量、听觉频带 & 保留局部时频纹理，适合深度学习模型输入 \\
+        梅尔频率倒谱系数 & 梅尔能量取对数后进行离散余弦变换 & 谱包络、音色 & 表示紧凑，二维纹理信息较弱 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+信号处理方法也朝着精细化方向发展。在信号处理方面，针对变长序列的填充(padding)、滑动窗口分割、序列分割等技术受到研究者们的关注。此外，噪声消除、数据增强等方法也逐渐成为研究热点\cite{leem2024selective,lin2023chunk}。近年来，诸多研究指出仅凭实验室环境难以验证模型的泛化能力，需要考察包含噪声或多输入等干扰情景下的识别性能\cite{su2023unsupervised,lu2022domain,gao2024adversarial}。声学特征提取与信号处理技术是语音情绪识别的主要基础。这些信号处理技术在输入特征与模型的深度融合中起到重要作用，成为连接数据预处理与模型构建的主要环节之一，为系统识别能力提供了支撑\cite{zhang2020transfer,ma2023review}。
 
 \subsection{基于深度学习的语音情绪识别模型研究现状}
 
-基于深度学习的语音情绪识别技术，最初是为了解决传统人为设计特征方法的局限性而提出，现已成为人机交互领域的重要研究方向之一。早期的深度学习研究主要围绕卷积神经网络模型与循环神经网络模型展开。卷积神经网络模型能够从时频特征中有效提取局部模式，而循环神经网络模型、长短期记忆网络模型等则适用于对语音信号中的时间连续性与序列上下文进行建模\cite{liu2023dualrobustness, zhang2023cnn, lin2023chunk}。在此基础上，结合卷积神经网络模型与循环神经网络模型优势的混合架构被广泛探索，以同时学习局部特征与时序信息\cite{liu2023dualrobustness, zhang2023cnn, peng2021efficient}。
+基于深度学习的语音情绪识别技术，最初是为了解决传统人为设计特征方法的局限性而提出，现已成为人机交互领域的重要研究方向之一。早期的深度学习研究主要围绕卷积神经网络模型与循环神经网络模型展开。卷积神经网络模型能够从时频特征中有效提取局部模式，而循环神经网络模型、长短期记忆网络模型等则适用于对语音信号中的时间连续性与序列上下文进行建模\cite{liu2023dualrobustness,zhang2023cnn,lin2023chunk}。在此基础上，结合卷积神经网络模型与循环神经网络模型优势的混合架构被广泛探索，以同时学习局部特征与时序信息\cite{peng2021efficient}。
 
-相较于传统机器学习分类器，这些深度学习架构具有较强的非线性映射能力，也能够自动学习无需人为设计的深层特征。卷积神经网络模型可以有效提取特定频段上的能量集中区域与语谱图中的局部结构差异；长短期记忆网络模型则能够对整段语音中的音高变化及能量变化轨迹进行建模\cite{liu2023dualrobustness, lin2023chunk, peng2021efficient}。随着近期各类一维、二维卷积神经网络模型变体以及其与循环神经网络模型的融合机制被相继提出，语音情绪识别被视为一项复杂的序列学习任务\cite{liu2023dualrobustness, hou2022multi, peng2021efficient, zhang2023cnn}。
+相较于传统机器学习分类器，这些深度学习架构具有较强的非线性映射能力，也能够自动学习无需人为设计的深层特征。卷积神经网络模型可以有效提取特定频段上的能量集中区域与语谱图中的局部结构差异；长短期记忆网络模型则能够对整段语音中的音高变化及能量变化轨迹进行建模\cite{liu2023dualrobustness,lin2023chunk,peng2021efficient}。随着近期各类一维、二维卷积神经网络模型变体以及其与循环神经网络模型的融合机制被相继提出，语音情绪识别被视为一项复杂的序列学习任务\cite{hou2022multi,zhang2023cnn}。
 
-深度学习架构也存在一定局限性。卷积神经网络模型受限于局部感受野，难以建模长程时序的全局依赖关系\cite{liu2023dualrobustness, peng2021efficient, chen2023dwformer, lin2023chunk, mirsamadi2017automatic}。循环神经网络模型的顺序计算机制往往导致并行效率较低，且在处理超长序列时可能面临较高的计算开销\cite{lin2023chunk,mirsamadi2017automatic}。带有情绪标注的训练数据通常规模较小，单纯增加模型参数容易导致过拟合问题。过拟合使得模型仅能记忆特定训练集的特征，难以学习到情绪的通用特征，从而影响模型的泛化能力\cite{mao2022enhancing, lin2023chunk, leem2024selective}。当前研究不再局限于增加网络深度，而是在保证性能的前提下，探索引入注意力机制等优化架构来强化全局特征捕捉。这些探索旨在控制模型复杂度的同时提升识别性能\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。
+深度学习架构也存在一定局限性。卷积神经网络模型受限于局部感受野，难以建模长程时序的全局依赖关系\cite{liu2023dualrobustness,peng2021efficient,chen2023dwformer,lin2023chunk,mirsamadi2017automatic}。循环神经网络模型的顺序计算机制往往导致并行效率较低，且在处理超长序列时可能面临较高的计算开销。带有情绪标注的训练数据通常规模较小，单纯增加模型参数容易导致过拟合问题。过拟合使得模型仅能记忆特定训练集的特征，难以学习到情绪的通用特征，从而影响模型的泛化能力\cite{mao2022enhancing,leem2024selective}。当前研究不再局限于增加网络深度，而是在保证性能的前提下，探索引入注意力机制等优化架构来强化全局特征捕捉。这些探索旨在控制模型复杂度的同时提升识别性能\cite{wang2024swin}。
 
 \subsection{注意力机制与Transformer研究现状}
 
-语音情绪识别中，情绪信息并非均匀分布于整个语音片段，这成为注意力机制被引入语音情绪识别的重要背景之一。现有的卷积神经网络模型与循环神经网络模型在处理输入时通常对输入特征赋予相近的权重，实际情绪线索却往往更集中地体现于特定时间段、特定词汇或特定频段\cite{liu2023dualrobustness, mao2022enhancing, peng2021efficient}。为充分反映情绪信息在语音片段中的非均匀分布特性，近年来研究者们广泛探索注意力机制，使模型对关键情绪信息赋予更高权重\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。加性注意力(Additive Attention)、多头注意力机制(Multi-Head Attention)、局部注意力机制(Local Attention)、交叉注意力机制(Cross-Attention)及通道注意力机制(Channel Attention)等多种衍生结构相继被提出\cite{mirsamadi2017automatic,hao2024channel,chen2023dwformer,he2023multiple}。
+语音情绪识别中，情绪信息并非均匀分布于整个语音片段，这成为注意力机制被引入语音情绪识别的重要背景之一。现有的卷积神经网络模型与循环神经网络模型在处理输入时通常对输入特征赋予相近的权重，实际情绪线索却往往更集中地体现于特定时间段、特定词汇或特定频段\cite{liu2023dualrobustness,mao2022enhancing,peng2021efficient}。为充分反映情绪信息在语音片段中的非均匀分布特性，近年来研究者们广泛探索注意力机制，使模型对关键情绪信息赋予更高权重\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。加性注意力(Additive Attention)、多头注意力机制(Multi-Head Attention)、局部注意力机制(Local Attention)、交叉注意力机制(Cross-Attention)及通道注意力机制(Channel Attention)等多种衍生结构相继被提出\cite{hao2024channel,he2023multiple}。
 
-Transformer以自注意力机制为主要结构，能够直接对序列内部的全局关系进行建模，在语音情绪识别研究中逐步成为常见方法之一\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。与传统循环神经网络模型的串行处理机制相比，Transformer支持并行计算，也能直接建模长距离依赖关系，在解析复杂语音结构时展现出一定优势\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。研究者们相继提出多种基于Transformer的情绪识别模型，包括纯Transformer架构、卷积神经网络模型与Transformer的混合架构、将窗口Transformer(Swin Transformer)应用于语谱图分析的模型，以及结合移位窗口或动态窗口的改进架构\cite{chen2023dwformer,wang2024swin}。Transformer在全局上下文建模与长时依赖处理方面具有一定优势，结合注意力机制可更精准地捕捉关键情绪特征\cite{chen2023dwformer,wang2024swin}。
+Transformer以自注意力机制为主要结构，能够直接对序列内部的全局关系进行建模，在语音情绪识别研究中逐步成为常见方法之一\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。与传统循环神经网络模型的串行处理机制相比，Transformer支持并行计算，也能直接建模长距离依赖关系，在解析复杂语音结构时展现出一定优势。研究者们相继提出多种基于Transformer的情绪识别模型，包括纯Transformer架构、卷积神经网络模型与Transformer的混合架构、将窗口Transformer(Swin Transformer)应用于语谱图分析的模型，以及结合移位窗口或动态窗口的改进架构。Transformer在全局上下文建模与长时依赖处理方面具有一定优势，结合注意力机制可更精准地捕捉关键情绪特征。
 
 基于注意力机制与Transformer的方法并不适用于每一种场景。此类结构通常伴随较大的参数规模与计算开销，并对训练数据量提出较高要求。在数据受限条件下，模型容易因过度参数化而难以获得相应的泛化能力\cite{leem2024selective,prabhu2024end,ahn2025multitask}。当前研究不再局限于扩大Transformer规模，转而深入探索在卷积神经网络模型中嵌入轻量级注意力模块，或引入较为简洁的辅助注意力架构\cite{hao2024channel,chen2023dwformer,wang2024swin}。上述研究趋势表明，注意力机制与Transformer是重要技术手段，其使用仍需根据实际数据规模与计算资源进行权衡。
 
 \subsection{低资源、噪声环境及跨语料库泛化研究现状}
 
-在当前的语音情绪识别研究中，相比于单一数据集上的准确率，模型在实际应用场景中的鲁棒性与泛化能力正逐渐成为更重要的衡量标准之一。这一发展趋势主要源于以下两项客观因素：其一，带有情绪标注的音频数据收集成本相对较高，相关数据集规模通常较小，使得许多研究仍面临低资源条件的限制\cite{peng2021efficient, leem2024selective, sampath2025efficient}。其二，在实际应用场景中，环境噪声、多输入干扰、信道差异、跨用户的发音习惯以及预训练数据集与目标任务之间的数据分布差异等因素相互交织，容易导致同一模型在不同测试环境下出现稳定性下降\cite{leem2024selective, su2023unsupervised, lu2022domain, gao2024adversarial}。
+在当前的语音情绪识别研究中，相比于单一数据集上的准确率，模型在实际应用场景中的鲁棒性与泛化能力正逐渐成为更重要的衡量标准之一。这一发展趋势主要源于以下两项客观因素：其一，带有情绪标注的音频数据收集成本相对较高，相关数据集规模通常较小，使得许多研究仍面临低资源条件的限制\cite{peng2021efficient,leem2024selective,sampath2025efficient}。其二，在实际应用场景中，环境噪声、多输入干扰、信道差异、跨用户的发音习惯以及预训练数据集与目标任务之间的数据分布差异等因素相互交织，容易导致同一模型在不同测试环境下出现稳定性下降\cite{su2023unsupervised,lu2022domain,gao2024adversarial}。
 
-在针对噪声环境的相关研究中，噪声添加、多输入模拟、端到端语音增强以及数据增强等技术逐渐成为研究重点\cite{leem2024selective,zhou2020using,tzeng2025noiserobust,lin2023chunk}。相关研究指出，仅凭实验室环境难以有效评估模型的实际应用性能，多种噪声条件下的鲁棒性评估由此变得重要\cite{leem2024selective,su2023unsupervised,gao2024adversarial}。针对跨用户及跨语料库问题，研究者们正积极探索降低模型对特定源领域或用户样本较强依赖的去相关方法\cite{su2023unsupervised,lu2022domain,ahn2025multitask,gao2024adversarial}。领域自适应、迁移学习、域泛化策略、多条件混合训练及特征归一化等方法，已成为应对该问题的重要技术途径\cite{zhang2020transfer,su2023unsupervised,lu2022domain,ahn2025multitask}。
+在针对噪声环境的相关研究中，噪声添加、多输入模拟、端到端语音增强以及数据增强等技术逐渐成为研究重点\cite{leem2024selective,zhou2020using,tzeng2025noiserobust,lin2023chunk}。相关研究指出，仅凭实验室环境难以有效评估模型的实际应用性能，多种噪声条件下的鲁棒性评估由此变得重要\cite{su2023unsupervised,gao2024adversarial}。针对跨用户及跨语料库问题，研究者们正积极探索降低模型对特定源领域或用户样本较强依赖的去相关方法\cite{lu2022domain,ahn2025multitask}。领域自适应、迁移学习、域泛化策略、多条件混合训练及特征归一化等方法，已成为应对该问题的重要技术途径\cite{zhang2020transfer}。
 
-利用自监督预训练语音模型的低资源情绪识别研究也呈较快增长趋势\cite{pepino2021wav2vec,morais2022sslfeatures,fang2023downstreamssl,thanh2024robust,sampath2025efficient}。以Wav2Vec2、HuBERT、WavLM及DistilHuBERT等为代表的自监督预训练模型，能够从无标注数据中学习通用声学特征\cite{baevski2020wav2vec2,hsu2021hubert,chen2022wavlm}。这些模型可为标注数据不足的情绪分析提供深层特征，相关研究已在IEMOCAP等数据集上验证了冻结特征、全量微调、说话人归一化及下游迁移等策略的有效性\cite{pepino2021wav2vec,morais2022sslfeatures,gat2022speakernorm,fang2023downstreamssl}。此类大规模模型的运行成本仍较高，微调稳定性也有待提高；围绕参数高效微调的研究正尝试缓解部署与迁移成本\cite{feng2023peftser,lashkarashvili2024peftdomain,sampath2025efficient}。预训练领域与目标情绪数据集之间的数据分布差异仍存在一定挑战\cite{thanh2024robust, sampath2025efficient, gao2024adversarial}。低资源条件、噪声环境及跨语料库问题相互交织，后续研究需要同时检视输入特征、模型结构、学习策略与评估框架。
+利用自监督预训练语音模型的低资源情绪识别研究也呈较快增长趋势\cite{pepino2021wav2vec,morais2022sslfeatures,fang2023downstreamssl,thanh2024robust,sampath2025efficient}。以Wav2Vec2、HuBERT、WavLM及DistilHuBERT等为代表的自监督预训练模型，能够从无标注数据中学习通用声学特征\cite{baevski2020wav2vec2,hsu2021hubert,chen2022wavlm}。这些模型可为标注数据不足的情绪分析提供深层特征，相关研究已在IEMOCAP等数据集上验证了冻结特征、全量微调、说话人归一化及下游迁移等策略的有效性\cite{gat2022speakernorm}。此类大规模模型的运行成本仍较高，微调稳定性也有待提高；围绕参数高效微调的研究正尝试缓解部署与迁移成本\cite{feng2023peftser,lashkarashvili2024peftdomain}。预训练领域与目标情绪数据集之间的数据分布差异仍存在一定挑战\cite{gao2024adversarial}。低资源条件、噪声环境及跨语料库问题相互交织，后续研究需要同时检视输入特征、模型结构、学习策略与评估框架。
 
 
 \section{现有研究的总结与不足}
 
 % 앞에 종합문구 간단하게 3~4 row 혹은 8행까지, 필요함.
 
-尽管语音情绪识别技术在模型架构与特征表示等方面取得了进展，现有研究在评估方法、模型设计及多模态融合等层面仍存在若干有待研究的方向。第一，当前评估体系多依赖单一数据集上的准确率指标，对模型在实际应用中的泛化能力、置信度校准及跨场景鲁棒性的考量仍显不足\cite{liu2023dualrobustness,mao2022enhancing}。第二，以 Transformer 为代表的复杂模型虽在性能上表现出一定优势，但其对数据规模与计算资源的要求较高，在数据受限条件下易出现过拟合问题，模型效率与表达能力的平衡仍待探索\cite{liu2023dualrobustness,chen2023dwformer}。第三，声学特征与语言特征的融合虽被认为是提升情绪识别性能的重要方向，但现有方法在特征对齐、模态交互及低资源场景下的适应性等方面仍面临诸多挑战\cite{shou2026comprehensive,chandola2024serc}。上述问题的存在，制约了语音情绪识别技术从实验环境向实际应用场景的转化，也为本研究的改进方向提供了切入点。
+尽管语音情绪识别技术在模型架构与特征表示等方面取得了进展，现有研究在评估方法、模型设计及多模态融合等层面仍存在若干有待研究的方向。
 
 \subsection{评估方法论现状与局限}
 
-近年来，语音情绪识别研究在模型架构与特征表示等方面取得了一定进展，评估体系构建与泛化能力考量仍存在一定局限\cite{liu2023dualrobustness,mao2022enhancing,su2023unsupervised}。当前多数研究主要依赖于单一数据集上的准确率作为主要评价指标。不同研究在数据预处理、特征提取及实验设置等环节存在差异，这些差异导致不同模型之间的性能结果难以有效比较\cite{liu2023dualrobustness, mao2022enhancing, ma2023review, lin2023chunk}。特定数据集上取得的优异表现往往难以充分反映模型在实际应用场景中的泛化能力。这种评估体系的不完善已成为制约语音情绪识别领域进一步发展的关键因素\cite{liu2023dualrobustness, su2023unsupervised, ma2023review}。
+近年来，语音情绪识别研究在模型架构与特征表示等方面取得了一定进展，评估体系构建与泛化能力考量仍存在一定局限\cite{liu2023dualrobustness,mao2022enhancing,su2023unsupervised}。当前多数研究主要依赖于单一数据集上的准确率作为主要评价指标。不同研究在数据预处理、特征提取及实验设置等环节存在差异，这些差异导致不同模型之间的性能结果难以有效比较\cite{ma2023review,lin2023chunk}。特定数据集上取得的优异表现往往难以充分反映模型在实际应用场景中的泛化能力。这种评估体系的不完善已成为制约语音情绪识别领域进一步发展的关键因素。
 
-在泛化能力的评估方面，现有研究往往面临跨用户、跨语料库及跨场景下的能力下降问题。相关研究指出，在特定数据集上表现良好的模型，在面对跨用户、不同语言背景或噪声环境时，识别准确率往往出现一定程度的下降。这种性能下降现象与由跨用户差异引起的领域偏移密切相关\cite{leem2024selective,su2023unsupervised,prabhu2024end,lu2022domain}。除了准确率与泛化能力，模型的置信度校准也是评估体系的重要维度。置信度校准旨在使模型的预测置信度与实际准确性相匹配，避免模型出现过于自信或信心不足的情况。部分模型往往倾向于表现出较高自信度，但其置信度与预测准确性之间的一致性仍有待提高\cite{liu2023dualrobustness,mao2022enhancing,prabhu2024end}。已有研究尝试将置信度校准方法引入语音情绪识别技术，这些方法在实际应用中的效果仍可能存在局限，在跨用户、跨语料库等复杂场景下也可能对模型性能产生影响\cite{liu2023dualrobustness, prabhu2024end, lin2023chunk}。
+在泛化能力的评估方面，现有研究往往面临跨用户、跨语料库及跨场景下的能力下降问题。相关研究指出，在特定数据集上表现良好的模型，在面对跨用户、不同语言背景或噪声环境时，识别准确率往往出现一定程度的下降。这种性能下降现象与由跨用户差异引起的领域偏移密切相关\cite{leem2024selective,su2023unsupervised,prabhu2024end,lu2022domain}。除了准确率与泛化能力，模型的置信度校准也是评估体系的重要维度。置信度校准旨在使模型的预测置信度与实际准确性相匹配，避免模型出现过于自信或信心不足的情况。部分模型往往倾向于表现出较高自信度，但其置信度与预测准确性之间的一致性仍有待提高\cite{liu2023dualrobustness,mao2022enhancing}。已有研究尝试将置信度校准方法引入语音情绪识别技术，这些方法在实际应用中的效果仍可能存在局限，在跨用户、跨语料库等复杂场景下也可能对模型性能产生影响\cite{lin2023chunk}。
 
-针对评估体系不完善、泛化能力不足及置信度校准等问题，未来的研究可从方法论层面进行系统性探索与设计。首先，已有研究指出，多样化评估指标体系对提升评估可靠性具有一定作用\cite{mao2022enhancing, liu2023dualrobustness, ma2023review}。该体系可在准确率之外纳入对模型置信度、稳定性及跨场景泛化能力的综合考量。其次，相关研究也强调推动评估协议标准化的重要性，明确数据预处理、特征提取及实验设置的规范，有助于提高不同研究之间结果的可比性\cite{mao2022enhancing}。此外，相关研究进一步强调在多种噪声条件、跨用户及跨语料库等复杂场景下进行模型性能评估的重要性，通过构建更具挑战性的测试基准，更真实地反映模型在实际应用中的鲁棒性与可靠性\cite{liu2023dualrobustness, ma2023review}。构建系统化的评估框架，有助于为语音情绪识别技术的工程化落地提供更为可靠的实证依据。
+针对评估体系不完善、泛化能力不足及置信度校准等问题，未来的研究可从方法论层面进行系统性探索与设计。首先，已有研究指出，多样化评估指标体系对提升评估可靠性具有一定作用\cite{mao2022enhancing,liu2023dualrobustness,ma2023review}。该体系可在准确率之外纳入对模型置信度、稳定性及跨场景泛化能力的综合考量。其次，相关研究也强调推动评估协议标准化的重要性，明确数据预处理、特征提取及实验设置的规范，有助于提高不同研究之间结果的可比性。此外，相关研究进一步强调在多种噪声条件、跨用户及跨语料库等复杂场景下进行模型性能评估的重要性，通过构建更具挑战性的测试基准，更真实地反映模型在实际应用中的鲁棒性与可靠性。构建系统化的评估框架，有助于为语音情绪识别技术的工程化落地提供更为可靠的实证依据。
 
 
 \subsection{模型复杂度与数据规模}
 
-近年来，语音情绪识别研究在模型架构方面取得了一定进展，其中以Transformer为代表的预训练模型在语音情绪识别技术中表现出一定性能提升\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。以Transformer为代表的预训练模型参数量通常较大，训练与推理过程对计算资源与数据规模提出了较高要求\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。相关研究指出，在语音情绪识别技术中，标注数据的获取成本较高，使得现有数据集规模相对较小，一定程度上制约了复杂模型的泛化能力\cite{prabhu2024end,peng2021efficient,sampath2025efficient}。在数据受限条件下，模型参数过度增加往往导致过拟合问题，使得模型倾向于记忆特定训练集的特征，而难以学习到具有泛化能力的情绪表征\cite{mao2022enhancing, lin2023chunk, liu2023dualrobustness, chen2023dwformer, wang2024swin, prabhu2024end, peng2021efficient, sampath2025efficient}。
+近年来，语音情绪识别研究在模型架构方面取得了一定进展，其中以Transformer为代表的预训练模型在语音情绪识别技术中表现出一定性能提升\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。以Transformer为代表的预训练模型参数量通常较大，训练与推理过程对计算资源与数据规模提出了较高要求。相关研究指出，在语音情绪识别技术中，标注数据的获取成本较高，使得现有数据集规模相对较小，一定程度上制约了复杂模型的泛化能力\cite{prabhu2024end,peng2021efficient,sampath2025efficient}。在数据受限条件下，模型参数过度增加往往导致过拟合问题，使得模型倾向于记忆特定训练集的特征，而难以学习到具有泛化能力的情绪表征\cite{mao2022enhancing,lin2023chunk}。
 
-在模型设计层面，当前研究对计算效率与资源消耗的考量仍有待进一步探索\cite{leem2024selective,ahn2025multitask}。标准的自注意力机制具有随输入序列长度呈二次增长的计算复杂度，而语音信号往往持续时间较长且存在一定程度的时序冗余，这种计算特性使得Transformer在语音情绪识别技术中的部署面临一定挑战\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。为缓解这一问题，近年来出现了多种高效注意力机制变体，例如窗口注意力机制、动态窗口注意力机制及通道注意力机制等，这些机制旨在降低计算开销的同时保持模型性能\cite{peng2021efficient,hao2024channel,chen2023dwformer,wang2024swin,he2023multiple}。相关研究指出，这些高效注意力机制在语音情绪识别领域的系统性评估仍较为有限，这些方法在实际部署中的表现仍有待进一步验证\cite{liu2023dualrobustness,peng2021efficient}。
+在模型设计层面，当前研究对计算效率与资源消耗的考量仍有待进一步探索\cite{leem2024selective,ahn2025multitask}。标准的自注意力机制具有随输入序列长度呈二次增长的计算复杂度，而语音信号往往持续时间较长且存在一定程度的时序冗余，这种计算特性使得Transformer在语音情绪识别技术中的部署面临一定挑战\cite{liu2023dualrobustness,chen2023dwformer,wang2024swin}。为缓解这一问题，近年来出现了多种高效注意力机制变体，例如窗口注意力机制、动态窗口注意力机制及通道注意力机制等，这些机制旨在降低计算开销的同时保持模型性能\cite{peng2021efficient,hao2024channel,he2023multiple}。相关研究指出，这些高效注意力机制在语音情绪识别领域的系统性评估仍较为有限，这些方法在实际部署中的表现仍有待进一步验证。
 
-针对预训练模型在计算资源受限条件下的部署问题，相关研究已通过模型压缩技术探索效率与性能的平衡\cite{leem2024selective,su2023unsupervised,prabhu2024end}。编码器层剪枝、知识蒸馏及量化等方法，可使压缩后的模型在保持一定识别准确率的同时，有效降低参数量与推理时延\cite{leem2024selective,su2023unsupervised}。压缩过程往往伴随一定程度的信息损失，如何在模型表达能力与计算效率之间实现有效平衡，仍是当前研究面临的主要挑战\cite{leem2024selective, su2023unsupervised, prabhu2024end, ahn2025multitask}。
+针对预训练模型在计算资源受限条件下的部署问题，相关研究已通过模型压缩技术探索效率与性能的平衡\cite{leem2024selective,su2023unsupervised,prabhu2024end}。编码器层剪枝、知识蒸馏及量化等方法，可使压缩后的模型在保持一定识别准确率的同时，有效降低参数量与推理时延。压缩过程往往伴随一定程度的信息损失，如何在模型表达能力与计算效率之间实现有效平衡，仍是当前研究面临的主要挑战\cite{ahn2025multitask}。
 
 
 \subsection{声学特征与语言特征的融合}
 
-传统的语音情绪识别研究主要关注声学特征，例如梅尔频率倒谱系数、音高、能量等。这些特征能够捕捉语音中的韵律、音质等非文字语义信息，在一定程度上反映用户的情绪状态。语音信号中除声学信息外，还包含文字语义信息这一重要维度，但现有研究对此关注相对较少。语言内容承载的语义信息，可为情绪表达提供重要线索，例如特定的情绪词汇、句式及表达方式\cite{shou2026comprehensive,raamkumar2023empathetic}。相关研究指出，声学特征与语言特征具有互补性，这两种特征的有效融合有望提升情绪识别的准确性与鲁棒性\cite{lee2020crossattention,hu2021twostageattentionfusion,santoso2022sawc,shou2026comprehensive}。
+传统的语音情绪识别研究主要关注声学特征，例如梅尔频率倒谱系数、音高、能量等。这些特征能够捕捉语音中的韵律、音质等非文字语义信息，在一定程度上反映用户的情绪状态。语音信号中除声学信息外，还包含文字语义信息这一重要维度，但现有研究对此关注相对较少。语言内容承载的语义信息，可为情绪表达提供重要线索，例如特定的情绪词汇、句式及表达方式\cite{shou2026comprehensive,raamkumar2023empathetic}。相关研究指出，声学特征与语言特征具有互补性，这两种特征的有效融合有望提升情绪识别的准确性与鲁棒性\cite{lee2020crossattention,hu2021twostageattentionfusion,santoso2022sawc}。
 
 声学特征主要反映语音表达方式（即“怎么说”），如语调、语速、音高等。语言特征则主要反映表达内容（即“说什么”），如词汇、句法、语义等。人类在表达情绪时，通常会同时通过声学特征与语言特征传递信息。例如，同样一句话“真是太好了”，用不同的语调可表达真诚的高兴，也可能传递讽刺意味。仅依靠声学或语言特征往往难以全面捕捉复杂情绪。近年来，研究者们逐步探索声学特征与语言特征的融合方法，以期综合利用这两种特征的优势，有望提升情绪识别的性能\cite{lee2020crossattention,kim2023focusattention,sun2023auxiliarytasks,shou2026comprehensive}
 
-声学特征提取通常采用人为设计的特征（如梅尔频率倒谱系数、韵律特征）或基于深度学习的自动特征学习方法（如语谱图、预训练声学模型Wav2Vec 2.0等）\cite{baevski2020wav2vec2,pepino2021wav2vec,morais2022sslfeatures,chen2023dwformer}。语言特征提取则多基于词嵌入（word embeddings）或预训练语言模型（如BERT、RoBERTa）得到文本的高维语义表示\cite{lee2020crossattention,sun2023auxiliarytasks,shou2026comprehensive}。在语音情绪识别技术中，通常需要对语音进行语音识别（ASR）获得文本转录，这一过程可能带来语音识别错误的风险，从而影响融合效果\cite{li2023asrintegration,lee2020crossattention,sun2023auxiliarytasks}。
+声学特征提取通常采用人为设计的特征（如梅尔频率倒谱系数、韵律特征）或基于深度学习的自动特征学习方法（如语谱图、预训练声学模型Wav2Vec 2.0等）\cite{baevski2020wav2vec2,pepino2021wav2vec,morais2022sslfeatures,chen2023dwformer}。语言特征提取则多基于词嵌入（word embeddings）或预训练语言模型（如BERT、RoBERTa）得到文本的高维语义表示\cite{lee2020crossattention,sun2023auxiliarytasks,shou2026comprehensive}。在语音情绪识别技术中，通常需要对语音进行语音识别（ASR）获得文本转录，这一过程可能带来语音识别错误的风险，从而影响融合效果\cite{li2023asrintegration}。
 
-声学特征与语言特征融合方法主要分为三类：早期融合（特征级融合）、中期融合（隐藏层融合）和晚期融合（决策级融合）。早期融合将声学特征与语言特征拼接后输入分类器；中期融合在多模态模型的中间层交互；晚期融合则分别训练两个单模态模型后融合输出\cite{hu2021twostageattentionfusion,santoso2022sawc,shou2026comprehensive}。随着注意力机制的发展，基于跨模态注意力（cross-modal attention）的融合方法逐渐成为主流，能够动态加权交互不同模态的信息，更有效地捕捉模态间的关联\cite{lee2020crossattention,kim2023focusattention,sun2023auxiliarytasks,zaidi2023dualattention}。此外，一些研究提出基于Transformer架构的多模态模型，在IEMOCAP等数据集上表现出一定潜力\cite{lee2020crossattention,kim2023focusattention,sun2023auxiliarytasks}。
+声学特征与语言特征融合方法主要分为三类：早期融合（特征级融合）、中期融合（隐藏层融合）和晚期融合（决策级融合）。早期融合将声学特征与语言特征拼接后输入分类器；中期融合在多模态模型的中间层交互；晚期融合则分别训练两个单模态模型后融合输出\cite{hu2021twostageattentionfusion,santoso2022sawc,shou2026comprehensive}。随着注意力机制的发展，基于跨模态注意力（cross-modal attention）的融合方法逐渐成为主流，能够动态加权交互不同模态的信息，更有效地捕捉模态间的关联\cite{lee2020crossattention,kim2023focusattention,sun2023auxiliarytasks,zaidi2023dualattention}。此外，一些研究提出基于Transformer架构的多模态模型，在IEMOCAP等数据集上表现出一定潜力。
 
-尽管声学特征与语言特征融合方法表现出一定潜力，但仍面临一定挑战。首先，语音识别（ASR）的错误可能影响语言特征的质量，特别是在噪声环境或非正式口语场景中，ASR性能下降可能使融合效果受到一定影响\cite{li2023asrintegration,sun2023auxiliarytasks}。其次，声学特征与语言特征之间的对齐问题仍需解决：词与文本的时序粒度差异，使得如何有效融合仍有待探索\cite{lee2020crossattention,kim2023focusattention,shou2026comprehensive}。此外，现有融合模型往往依赖大量标注数据，在低资源场景下泛化能力可能受到一定限制\cite{sun2023auxiliarytasks,shou2026comprehensive,raamkumar2023empathetic}。最后，一些融合方法在特定数据集上表现良好，但这些方法在不同语言、文化和情境下的鲁棒性仍有待验证\cite{zaidi2023dualattention,luna2022auraltransformers}。
+尽管声学特征与语言特征融合方法表现出一定潜力，但仍面临一定挑战。首先，语音识别（ASR）的错误可能影响语言特征的质量，特别是在噪声环境或非正式口语场景中，ASR性能下降可能使融合效果受到一定影响\cite{li2023asrintegration,sun2023auxiliarytasks}。其次，声学特征与语言特征之间的对齐问题仍需解决：词与文本的时序粒度差异，使得如何有效融合仍有待探索\cite{lee2020crossattention,kim2023focusattention,shou2026comprehensive}。此外，现有融合模型往往依赖大量标注数据，在低资源场景下泛化能力可能受到一定限制\cite{raamkumar2023empathetic}。最后，一些融合方法在特定数据集上表现良好，但这些方法在不同语言、文化和情境下的鲁棒性仍有待验证\cite{zaidi2023dualattention,luna2022auraltransformers}。
 
 针对声学特征与语言特征融合方法面临的挑战，未来研究可从以下几个方向进行探索：一是探索具有更强鲁棒性的语音识别技术，以降低语音识别错误对融合效果的影响；二是发展无监督或自监督的多模态预训练方法，以减少对标注数据的依赖；三是研究更精细的跨模态对齐机制，以期实现声学特征与语言特征的深度融合；四是在更多实际应用场景和不同语言环境中进一步考察模型的泛化能力。上述四个方向的探索，有望推动声学特征与语言特征融合在语音情绪识别中的发展\cite{sun2023auxiliarytasks,zaidi2023dualattention,shou2026comprehensive,raamkumar2023empathetic}。
 
@@ -147,10 +177,10 @@ Transformer以自注意力机制为主要结构，能够直接对序列内部的
 
 上述研究过程包括从数据提取到模型构建的主要阶段，各模块及执行顺序如图~\ref{fig:overall_workflow}所示。
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
     \centering
-    \includegraphics[page=1,width=0.9\textwidth]{images/1_1_BaseLine.drawio.pdf}
-    \caption{总体研究流程图：涵盖数据预处理、卷积神经网络模型与Transformer并行对比及结果分析}
+    \makebox[\textwidth][c]{\includegraphics[page=1,width=1.22\textwidth]{images/1_1_BaseLine.drawio.pdf}}
+    \caption{研究流程图：涵盖数据预处理、卷积神经网络模型与Transformer并行对比及结果分析}
     \label{fig:overall_workflow}
 \end{figure}
 

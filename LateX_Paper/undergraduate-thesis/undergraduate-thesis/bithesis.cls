@@ -2109,21 +2109,7 @@
     \cleardoublepage
     \linespread{1.53}\selectfont
 
-    \__bithesis_if_bachelor_thesis:T {
-      \begin{center}
-        \vspace*{-17bp}
-        \heiti\zihao{-2}\textbf{
-          \int_case:nn {\g__bithesis_thesis_type_int}
-          {
-            {1} {\l__bithesis_value_title_tl}
-            {2} {\l__bithesis_value_trans_title_tl}
-            {3} {\l__bithesis_value_title_tl}
-          }
-        }
-      \end{center}
-
-      \vspace*{2mm}
-    }
+    % 本科模板默认在摘要页顶部输出论文题目；当前论文按提交格式要求隐藏该标题。
 
     \ctexset{
       chapter/numbering = false,
@@ -2165,18 +2151,7 @@
   {
     \linespread{1.53}\selectfont
 
-    \__bithesis_if_bachelor_thesis:T {
-      \begin{spacing}{0.95}
-        \centering
-        \vspace*{-2bp}
-
-        \l__bithesis_title_font_cs:n {
-          \zihao{3}\textbf
-          \l__bithesis_value_title_en_tl\\
-        }
-      \end{spacing}
-      \vspace*{10mm}
-    }
+    % 本科模板默认在英文摘要页顶部输出英文题目；当前论文按提交格式要求隐藏该标题。
 
     \ctexset{
       chapter/numbering = false,
