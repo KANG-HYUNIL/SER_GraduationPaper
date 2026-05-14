@@ -16,10 +16,12 @@
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.60\textwidth]{images/feedback_diagrams/chapter3/mlp/mlp.drawio.pdf}
-    \caption{多层感知机中固定长度声学特征向量、全连接层、偏置项和激活函数的基本关系}
+    \includegraphics[width=0.45\textwidth]{images/feedback_diagrams/chapter3/mlp/mlp.drawio (1).pdf}
+    \caption{全连接神经网络模型的基本层级连接结构}
     \label{fig:mlp_neural_network}
 \end{figure}
+
+图\ref{fig:mlp_neural_network}给出了全连接神经网络模型的基本结构。图中的圆形节点表示神经元，箭头表示相邻层之间的全连接映射。输入层接收固定长度特征向量，隐藏层形成中间表示，输出层用于生成类别预测。
 
 \begin{equation}
 \mathbf{h}^{(l)} = \phi \left( \mathbf{W}^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)} \right)
@@ -166,14 +168,14 @@ e_{ij} = a(q_i, k_j)
 z_i = \sum_{j=1}^{T}\alpha_{ij} v_j
 \label{eq:attn_general_output}
 \end{equation}
-其中 $a(\cdot,\cdot)$ 为相关性计算函数，$q_i$ 为第 $i$ 个查询，$k_j$ 为第 $j$ 个键，$v_j$ 为第 $j$ 个值。$e_{ij}$ 为归一化之前的注意力分数，$\alpha_{ij}$ 为通过 softmax 归一化得到的注意力权重，$z_i$ 为最终的注意力输出。注意力分数可视为决定各元素在输出中比重的中间变量。后续小节介绍的缩放点积注意力和加性注意力，区别在于如何定义 $a(\cdot,\cdot)$ 函数\cite{chen2023dwformer,wang2024swin,he2023multiple}。
+其中 $a(\cdot,\cdot)$ 为相关性计算函数，$q_i$、$k_j$、$v_j$ 分别表示查询、键和值，$e_{ij}$、$\alpha_{ij}$ 和 $z_i$ 分别表示注意力分数、归一化权重和注意力输出。不同注意力形式的主要差异在于相关性函数 $a(\cdot,\cdot)$ 的定义方式\cite{chen2023dwformer,wang2024swin,he2023multiple}。
 
 在注意力计算中，查询、键、值是常用的基本元素。设输入表示为矩阵 $X$，注意力机制通常从 $X$ 或不同输入表示构造查询矩阵 $Q$、键矩阵 $K$、值矩阵 $V$，并计算它们之间的相关性。基础的线性变换形式可表示为：
 \begin{equation}
 Q = X_Q W_Q,\qquad K = X_K W_K,\qquad V = X_V W_V
 \label{eq:qkv_linear_general}
 \end{equation}
-其中 $X_Q$、$X_K$、$X_V$ 分别为用于生成查询、键、值的输入表示，$W_Q$、$W_K$、$W_V$ 为可学习的权重矩阵。当三个输入表示相同时，这一结构用于计算单一输入内部的元素关系。当三个输入表示不同时，则用于计算不同表示之间的元素关系。从这一角度看，查询表示当前关注的对象, 键表示被比较的参考信息, 值表示最终被聚合的内容\cite{chen2023dwformer,wang2024swin,he2023multiple}。
+其中 $X_Q$、$X_K$、$X_V$ 分别为用于生成查询、键、值的输入表示，$W_Q$、$W_K$、$W_V$ 为可学习的权重矩阵。当三者来自同一输入时，注意力用于计算单一输入内部的元素关系。三者来源不同时，则用于计算不同表示之间的交互关系\cite{chen2023dwformer,wang2024swin,he2023multiple}。
 
 根据查询、键、值的来源，注意力可分为自注意力和交叉注意力。自注意力是指查询、键、值均来自同一输入表示的结构。其一般形式可写为：
 \begin{equation}
@@ -184,7 +186,7 @@ Q = XW_Q,\qquad K = XW_K,\qquad V = XW_V
 \mathrm{SelfAttention}(X) = \mathrm{Attention}(Q,K,V)
 \label{eq:self_attention}
 \end{equation}
-其中 $X$ 为一个输入序列或时频特征表示。自注意力用于计算同一输入内部各位置之间的相关性，可反映输入序列的全局关系。在语音情绪识别中，自注意力可建模特定时间帧与其他帧之间的情绪关联，从而选择性地强调对情绪判断较重要的区间\cite{mirsamadi2017automatic,zou2022speech,chen2023dwformer}。
+其中 $X$ 为一个输入序列或时频特征表示。自注意力用于计算同一输入内部各位置之间的相关性，可反映特定时间帧与其他帧之间的情绪关联\cite{mirsamadi2017automatic,zou2022speech,chen2023dwformer}。
 
 交叉注意力则是指查询与键-值对来自不同输入表示的结构。其一般形式可写为：
 \begin{equation}
@@ -196,7 +198,7 @@ Q = XW_Q,\qquad K = YW_K,\qquad V = YW_V
 \mathrm{CrossAttention}(X,Y) = \mathrm{Attention}(Q,K,V)
 \label{eq:cross_attention}
 \end{equation}
-其中 $X$ 和 $Y$ 为不同的输入表示。交叉注意力用于建模一个表示与另一个表示之间的交互，可反映不同特征空间或不同声学表示之间的相关性。在语音情绪识别中，当同时使用梅尔频率倒谱系数、对数梅尔谱图或 wav2vec 系列表示时，交叉注意力可用于学习多种异质表示之间的关联\cite{zou2022speech,he2023multiple}。
+其中 $X$ 和 $Y$ 为不同的输入表示。交叉注意力用于建模不同特征空间或不同声学表示之间的交互关系\cite{zou2022speech,he2023multiple}。
 
 
 
@@ -216,7 +218,7 @@ e_{ij} = \frac{q_i k_j^\top}{\sqrt{d_k}}
 \mathrm{Attention}(Q,K,V) = \mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
 \label{eq:scaled_dot_attention_matrix}
 \end{equation}
-其中 $QK^\top$ 表示查询矩阵与键矩阵之间的点积结果，$\sqrt{d_k}$ 为缩放因子。该形式将注意力分数计算、归一化与加权聚合统一表示为一个矩阵运算过程\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。
+其中 $QK^\top$ 表示查询矩阵与键矩阵之间的点积结果，$\sqrt{d_k}$ 为缩放因子。该形式将分数计算、归一化与加权聚合统一为矩阵运算\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。
 
 \begin{figure}[htbp]
     \centering
@@ -225,18 +227,18 @@ e_{ij} = \frac{q_i k_j^\top}{\sqrt{d_k}}
     \label{fig:chapter3_attention_qkv}
 \end{figure}
 
-缩放点积注意力的特点在于分数计算基于矩阵乘法。这种计算方式相对有利于并行计算，在实际实现中可能在计算效率和内存使用方面具有一定优势\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。在语音情绪识别中，缩放点积注意力可用于反映特定时间帧或局部区域与其他位置之间的情绪相关性，从而相对突出地强调发话中的关键区间\cite{he2023multiple}。
+缩放点积注意力基于矩阵乘法，较适合并行计算。在语音情绪识别中，该结构可用于反映特定时间帧或局部区域与其他位置之间的情绪相关性\cite{vaswani2017attention,he2023multiple}。
 
 加性注意力通过非线性变换计算分数，不使用查询与键的点积。其一般形式可表示为：
 \begin{equation}
 e_{ij} = v_a^\top \tanh(W_q q_i + W_k k_j + b_a)
 \label{eq:additive_attention_score}
 \end{equation}
-其中 $W_q$ 和 $W_k$ 分别为查询与键的权重矩阵，$b_a$ 为偏置向量，$v_a$ 为用于计算最终分数的可学习向量。该公式可理解为：先对查询与键分别进行线性变换，再通过非线性函数 $\tanh(\cdot)$ 得到分数\cite{mirsamadi2017automatic}。
+其中 $W_q$ 和 $W_k$ 分别为查询与键的权重矩阵，$b_a$ 为偏置向量，$v_a$ 为用于计算最终分数的可学习向量。该方法先对查询与键进行线性变换，再通过非线性函数得到分数\cite{mirsamadi2017automatic}。
 
-加性注意力在分数计算后的归一化与加权聚合过程，与式 \eqref{eq:attn_general_alpha} 和式 \eqref{eq:attn_general_output} 所示的一般注意力形式一致。与缩放点积注意力相比，加性注意力的主要差异体现在注意力分数构造阶段：该方法使用显式线性变换与非线性函数计算分数\cite{mirsamadi2017automatic}。
+加性注意力在归一化与加权聚合阶段仍遵循式 \eqref{eq:attn_general_alpha} 和式 \eqref{eq:attn_general_output}，主要差异集中在分数构造方式上\cite{mirsamadi2017automatic}。
 
-在语音情绪识别中，加性注意力可进一步应用于循环神经网络模型的输出或局部隐藏状态集合，从而突出与情绪判断相关性较高的时刻。例如，在 IEMOCAP 等数据集上，加性注意力与局部注意力结合使用的案例表明，可通过设计注意力分数函数相对更有针对性地强调发话中的特定区间\cite{mirsamadi2017automatic}。
+在语音情绪识别中，加性注意力可应用于循环神经网络模型的输出或局部隐藏状态集合，用于强调与情绪判断相关性较高的时刻\cite{mirsamadi2017automatic}。
 
 
 % 3.2.3
@@ -342,16 +344,7 @@ H^{(l)} = \mathrm{EncoderLayer}^{(l)}\!\left(H^{(l-1)}\right), \qquad l=1,2,\dot
 \end{equation}
 其中 $H^{(0)}$ 为编码器的初始输入表示，$H^{(l)}$ 为第 $l$ 个编码器层的输出，$L_e$ 为编码器层数。通过这种重复结构，输入序列中各个位置的表示逐渐融入更广的上下文信息\cite{vaswani2017attention}。
 
-解码器接收目标序列或对应的中间表示作为输入，同时参考编码器的输出表示，逐步生成下一阶段输出。解码器的信息流动可一般地表示为：
-\begin{equation}
-S^{(0)} = Y
-\label{eq:transformer_decoder_input}
-\end{equation}
-\begin{equation}
-S^{(l)} = \mathrm{DecoderLayer}^{(l)}\!\left(S^{(l-1)},\, H^{(L_e)}\right), \qquad l=1,2,\dots,L_d
-\label{eq:transformer_decoder_stack}
-\end{equation}
-其中 $Y$ 为解码器侧的输入表示，$S^{(l)}$ 为第 $l$ 个解码器层的输出，$L_d$ 为解码器层数。解码器在反映目标序列内部信息的同时，通过参考编码器的最终输出 $H^{(L_e)}$，形成输入序列与输出序列之间的对应关系\cite{vaswani2017attention}。
+解码器接收目标序列或对应的中间表示作为输入，同时参考编码器的输出表示，逐步生成下一阶段输出。语音情绪识别通常是发话级分类任务，后续实验更关注编码器输出如何形成分类表示。解码器部分在本文中仅作为原始Transformer结构背景说明\cite{vaswani2017attention}。
 
 Transformer结构的一个特点是，它不像循环神经网络模型那样按时间步顺序更新状态。循环神经网络模型依赖上一时刻的隐藏状态计算当前时刻的表示，整个序列处理本质上是顺序的。Transformer可以在同一层内同时计算序列中多个位置之间的相关性，有利于并行计算\cite{vaswani2017attention}。
 
@@ -424,20 +417,7 @@ H^{(l)} = \mathrm{LayerNorm}\!\left(\tilde{H}^{(l)} + \mathrm{FFN}\!\left(\tilde
     \label{fig:chapter3_transformer_encoder}
 \end{figure}
 
-解码器层的内部结构与之类似，但多了一个注意力子层。在解码器中，首先通过掩码多头自注意力反映目标序列内部的自相关性，然后通过一个注意力子层反映解码器表示与编码器最终输出之间的对应关系，之后应用位置级前馈网络。该过程可整理为：
-\begin{equation}
-\bar{S}^{(l)} = \mathrm{LayerNorm}\!\left(S^{(l-1)} + \mathrm{MaskedMHA}\!\left(S^{(l-1)}\right)\right)
-\label{eq:decoder_masked_mha_block}
-\end{equation}
-\begin{equation}
-\tilde{S}^{(l)} = \mathrm{LayerNorm}\!\left(\bar{S}^{(l)} + \mathrm{MHA}\!\left(\bar{S}^{(l)},\, H^{(L_e)}\right)\right)
-\label{eq:decoder_cross_mha_block}
-\end{equation}
-\begin{equation}
-S^{(l)} = \mathrm{LayerNorm}\!\left(\tilde{S}^{(l)} + \mathrm{FFN}\!\left(\tilde{S}^{(l)}\right)\right)
-\label{eq:decoder_ffn_block}
-\end{equation}
-其中 $\mathrm{MaskedMHA}(\cdot)$ 表示限制未来时刻信息直接参与的掩码自注意力子层，$\mathrm{MHA}\!\left(\bar{S}^{(l)},\, H^{(L_e)}\right)$ 表示解码器表示参考编码器最终输出的注意力子层。在解码器层内部，目标序列内部的自相关性与输入序列的对应关系被依次反映，随后通过前馈网络更新各位置表示\cite{vaswani2017attention}。
+解码器层的内部结构与编码器层相近，但额外包含掩码多头自注意力和编码器-解码器注意力。前者限制未来时刻信息直接参与，后者使解码器表示参考编码器输出。本文实验未采用生成式解码路径，后文重点放在编码器层、位置编码、残差连接、层归一化和位置级前馈网络等与分类模型关系更直接的结构上\cite{vaswani2017attention}。
 
 位置级前馈网络的作用是将注意力形成的上下文信息在各位置表示层面进行再变换。这种网络对已通过注意力融入上下文信息的每个位置向量施加相同的非线性变换。该网络不直接计算序列中不同位置之间的关系。其一般形式为：
 \begin{equation}
@@ -482,9 +462,9 @@ Transformer的优势表现与具体条件有关。随着输入长度增加，注
 
 Transformer的结构表达能力较强，Transformer的稳定性受数据规模和任务条件影响。语音情绪识别数据通常规模不大，情绪类别之间的界限也可能不够清晰。在此类条件下，结构复杂的模型可能同时学习到情绪相关模式以及数据集本身的偏差。近年来，研究者提出调整输入范围、使用分层表示或结合多任务学习等方式，在跨语料库条件下提高泛化能力，不单纯扩大Transformer结构本身\cite{chen2023dwformer,wang2024swin,ahn2025multitask}。
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
     \centering
-    \includegraphics[width=0.78\textwidth]{images/chapter3/chapter3_transformer_ser_boundary.drawio.pdf}
+    \includegraphics[width=0.72\textwidth]{images/chapter3/chapter3_transformer_ser_boundary.drawio.pdf}
     \caption{Transformer在语音情绪识别中的适用边界}
     \label{fig:chapter3_transformer_ser_boundary}
 \end{figure}

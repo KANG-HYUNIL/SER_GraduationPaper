@@ -447,7 +447,7 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
 
 噪声类型设置为white、pink、babble和synthetic-mixed四类，分别对应宽带随机干扰、低频偏置干扰、语音样背景干扰和混合瞬态干扰。此处采用合成噪声，主要用于形成可重复的受控评价条件，因此本文不对真实环境噪声建模作展开讨论。四类噪声与SNR等级构成双轴设计，便于观察不同频谱形态和不同强度下的退化差异\cite{leem2024selective,thanh2024robust,tzeng2025noiserobust}。
 
-\begin{table}[!htbp]
+\begin{table}[!t]
     \centering
     \caption{噪声条件实验设置}
     \label{tab:chapter4_noise_setting}
@@ -469,7 +469,7 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
 
 表\ref{tab:chapter4_noise_setting}给出了统一设置。四类噪声作用于同一份评价样本，样本顺序、分块位置、聚合方式和评价指标保持一致，使不同条件之间的主要差异集中在输入波形受扰方式和受扰强度上。
 
-\begin{table}[!htbp]
+\begin{table}[!tbp]
     \centering
     \caption{不同噪声条件下CNN-Conformer模型的实验结果}
     \label{tab:chapter4_noise_results}
@@ -507,16 +507,16 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
 
 \subsection{结果与现象分析}
 
-\begin{figure}[!htbp]
+\begin{figure}[!t]
     \centering
     \begin{minipage}{0.46\textwidth}
         \centering
-        \includegraphics[width=0.92\linewidth]{images/chapter4_experiment_artifacts/noise_snr_accuracy_curve.png}
+        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_snr_accuracy_curve.png}
         \par\footnotesize (a) 不同噪声强度下的Accuracy变化
     \end{minipage}\hfill
     \begin{minipage}{0.46\textwidth}
         \centering
-        \includegraphics[width=0.92\linewidth]{images/chapter4_experiment_artifacts/noise_pink_m5_confusion_matrix.png}
+        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_pink_m5_confusion_matrix.png}
         \par\footnotesize (b) pink噪声-5dB条件下的混淆矩阵
     \end{minipage}
     \caption{噪声条件下CNN-Conformer模型的结果可视化}
