@@ -145,6 +145,8 @@ f_k = \frac{k F_s}{N}
     \label{fig:ft_time_to_frequency}
 \end{figure}
 
+图\ref{fig:ft_time_to_frequency}以一段语音波形为例，展示傅里叶变换如何把时间轴上的振幅变化转换为频率轴上的幅度分布。该图对应前文离散傅里叶变换公式中的时域输入与频域分量，有助于理解后续短时分析为何需要保留时间位置。
+
 \textbf{(3) 窗函数：频谱泄漏抑制与频率分辨率权衡}
 
 在处理语音数据的时候，傅里叶变换可以将语音信号从时间幅度函数变换为时间频率的函数，但是傅里叶变换会在帧的起始与结束位置产生不连续性。这种不连续性是由于实际信号被截断为有限长度所致。这种边界不连续会导致频谱泄漏，使得频谱展宽并引起相邻频率成分的相互干扰。为减轻这一影响，需要对每一帧乘以窗函数，这一过程称为加窗。
@@ -199,6 +201,8 @@ X(m,k) = \sum_{n=-\infty}^{\infty} x[n] \cdot w[n-mH] \cdot e^{-j 2\pi kn/N}
     \label{fig:ft_vs_stft}
 \end{figure}
 
+图\ref{fig:ft_vs_stft}对比了整段傅里叶变换与短时傅里叶变换的差异。前者得到全局频谱。后者通过滑动窗口形成按时间排列的局部频谱，更适合描述语音情绪线索随时间变化的情况。
+
 
 \textbf{(5) 频谱图：时频表示的三种形式}
 
@@ -232,6 +236,8 @@ S_{\log}(m,k) = \log\left(S_{\mathrm{pow}}(m,k)+\varepsilon\right)
     \caption{幅度谱图、功率谱图与对数谱图在同一时频结构上的显示差异}
     \label{fig:spectrogram_forms}
 \end{figure}
+
+图\ref{fig:spectrogram_forms}在同一时频结构上展示幅度谱图、功率谱图和对数谱图的显示差异。三类表示的时间轴与频率轴保持一致，区别主要体现在每个时频位置强度值的计算方式与动态范围压缩程度。
 
 
 \subsection{感知特征提取}
@@ -277,12 +283,16 @@ M_p(m) = \log\left(E_p(m)+\varepsilon\right)
     \label{fig:mel_vs_logmel}
 \end{figure}
 
+图\ref{fig:mel_vs_logmel}展示从短时功率谱到梅尔谱图，再到对数梅尔谱图的生成关系。梅尔滤波器组用于把线性频率轴上的能量汇聚到听觉频带。对数压缩则用于减小能量动态范围。
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.75\textwidth]{images/chapter2/chapter2_logmel_time_frequency.drawio.pdf}
     \caption{对数梅尔频谱的时间-频带结构与情绪线索表达}
     \label{fig:chapter2_logmel_time_frequency}
 \end{figure}
+
+图\ref{fig:chapter2_logmel_time_frequency}进一步把对数梅尔频谱解释为由时间帧和梅尔频带构成的二维表示。时间轴主要保留能量起伏、停顿和语调变化，频带轴主要保留频带能量、频谱包络和能量重心。这些信息共同构成后续模型学习的声学输入基础。
 
 对数梅尔谱图也存在一定的局限。梅尔刻度的信息压缩会损失部分线性频率轴的细节，滤波器数量、快速傅里叶变换长度、帧移、窗长等参数的选择也会影响最终特征的分辨率与分布\cite{peng2021efficient,chen2023dwformer}。实际应用中需根据具体数据集与模型结构设置参数。
 
@@ -427,6 +437,8 @@ z = \frac{x-\mu}{\sigma + \varepsilon}
     \caption{本文采用的信号处理流程}
     \label{fig:chapter2_signal_processing_pipeline}
 \end{figure}
+
+图\ref{fig:chapter2_signal_processing_pipeline}汇总了本文从原始语音到模型输入的信号处理流程。该流程依次包含格式统一、幅值归一化、短时分析、功率谱表示、梅尔滤波、对数梅尔频谱、特征标准化和长度组织，后续四个小段按照该顺序展开说明。
 
 \textbf{(1) 输入格式统一与幅值归一化。}
 

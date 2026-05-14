@@ -38,6 +38,8 @@
     \label{fig:cnn_local_feature_extraction}
 \end{figure}
 
+图\ref{fig:cnn_local_feature_extraction}将二维对数梅尔谱图视为输入矩阵，展示卷积核在局部区域内提取模式、形成特征图并经过池化压缩的过程。该过程对应语音情绪识别中对局部频带纹理、短时能量变化和相邻时间帧关系的建模。
+
 卷积神经网络模型的主要运算是卷积。对于二维输入特征图 $\mathbf{X}$ 与卷积核 $\mathbf{K}$，输出特征图中一个位置的计算方式为：
 \begin{equation}
 y_{i,j}^{(k)} = \sum_{m=0}^{M-1}\sum_{n=0}^{N-1} w_{m,n}^{(k)} \, x_{i+m,j+n} + b^{(k)} 
@@ -71,6 +73,8 @@ p_{i,j}^{(k)} = \max_{(m,n)\in \Omega_{i,j}} y_{m,n}^{(k)}
     \label{fig:rnn_sequence_context}
 \end{figure}
 
+图\ref{fig:rnn_sequence_context}把语音帧序列表示为按时间递推的输入，隐藏状态在相邻时刻之间传递。同时在序列末端形成用于分类的上下文表示。该结构说明循环神经网络模型为何适合描述发话过程中的顺序变化。
+
 基本循环神经网络模型的隐藏状态更新可表示为：
 \begin{equation}
 \mathbf{h}_t = \phi(\mathbf{W}_{xh}\mathbf{x}_t + \mathbf{W}_{hh}\mathbf{h}_{t-1} + \mathbf{b}_h)
@@ -99,6 +103,8 @@ p_{i,j}^{(k)} = \max_{(m,n)\in \Omega_{i,j}} y_{m,n}^{(k)}
     \caption{注意力机制通过查询、键和值计算相关性权重并突出关键语音片段}
     \label{fig:attention_qkv_weighting}
 \end{figure}
+
+图\ref{fig:attention_qkv_weighting}以输入表示到查询、键和值的投影为主线，展示相关性得分、归一化权重和加权求和之间的关系。对语音情绪识别任务该图对应模型从发话中筛选相对高相关片段的过程。
 
 \subsection{注意力机制的基本概念与关键要素}
 
@@ -167,6 +173,8 @@ e_{ij} = \frac{q_i k_j^\top}{\sqrt{d_k}}
     \caption{缩放点积注意力中的查询、键、值计算流程}
     \label{fig:chapter3_attention_qkv}
 \end{figure}
+
+图\ref{fig:chapter3_attention_qkv}对应式\ref{eq:scaled_dot_attention_matrix}中的矩阵计算流程。输入序列先经线性投影生成查询矩阵、键矩阵和值矩阵。以后由查询与键计算注意力权重。最后用该权重对值矩阵进行加权聚合。
 
 缩放点积注意力基于矩阵乘法，较适合并行计算。在语音情绪识别中，该结构可用于反映特定时间帧或局部区域与其他位置之间的情绪相关性\cite{vaswani2017attention,he2023multiple}。
 
@@ -266,6 +274,8 @@ a(q_i,k_j), & |i-j|\le w \\
     \label{fig:transformer_full_architecture}
 \end{figure}
 
+图\ref{fig:transformer_full_architecture}在原始Transformer编码器-解码器结构基础上标出了语音情绪识别中的编码器分类路径。本文后续实验不使用生成式解码器。图中右侧路径用于说明编码器输出如何进一步进入池化或分类头。
+
 
 
 \subsection{Transformer的整体架构}
@@ -345,6 +355,8 @@ H^{(l)} = \mathrm{LayerNorm}\!\left(\tilde{H}^{(l)} + \mathrm{FFN}\!\left(\tilde
     \label{fig:chapter3_transformer_encoder}
 \end{figure}
 
+图\ref{fig:chapter3_transformer_encoder}对应上述编码器层公式，展示输入标记表示加入位置编码后，依次经过多头自注意力、残差连接、层归一化和位置级前馈网络的过程。该流程说明编码器层如何在同一序列内部整合上下文。同时保持层间表示稳定。
+
 解码器层的内部结构与编码器层相近，但额外包含掩码多头自注意力和编码器-解码器注意力。前者限制未来时刻信息直接参与，后者使解码器表示参考编码器输出。本文实验未采用生成式解码路径，后文重点放在编码器层、位置编码、残差连接、层归一化和位置级前馈网络等与分类模型关系更直接的结构上\cite{vaswani2017attention}。
 
 位置级前馈网络的作用是将注意力形成的上下文信息在各位置表示层面进行再变换。这种网络对已通过注意力融入上下文信息的每个位置向量施加相同的非线性变换。该网络不直接计算序列中不同位置之间的关系。其一般形式为：
@@ -384,6 +396,8 @@ Transformer的稳定性受数据规模和任务条件影响。随着输入长度
     \caption{Transformer在语音情绪识别中的适用边界}
     \label{fig:chapter3_transformer_ser_boundary}
 \end{figure}
+
+图\ref{fig:chapter3_transformer_ser_boundary}概括了Transformer结构在语音情绪识别中的作用边界。自注意力机制有利于并行计算和全局关系建模。但纯注意力结构对短时能量变化与局部频带纹理的归纳偏置相对不足。小数据条件下也可能出现训练稳定性问题。
 
 
 

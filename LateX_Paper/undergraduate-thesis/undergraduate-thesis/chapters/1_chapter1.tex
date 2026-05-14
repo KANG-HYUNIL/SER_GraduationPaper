@@ -43,6 +43,8 @@
     \label{fig:ser_evolution_timeline}
 \end{figure}
 
+图\ref{fig:ser_evolution_timeline}将上述发展过程概括为四个阶段。图中从人为设计声学特征与传统分类器开始，逐步过渡到卷积神经网络模型、循环神经网络模型、注意力机制、Transformer和自监督预训练路线，用于说明后文模型比较的技术背景。
+
 基于机器学习的方法在特征工程之外，进一步关注分类算法的性能。支持向量机(Support Vector Machine, SVM)、隐马尔可夫模型(Hidden Markov Model, HMM)、高斯混合模型(Gaussian Mixture Model, GMM)、K近邻算法(K-Nearest Neighbors, KNN)及随机森林(Random Forest, RF)等多种机器学习分类器陆续被引入，研究者们围绕人为设计特征与各类分类器组合开展情绪分类性能比较研究\cite{ma2023review}。特征选择、数据归一化及降维等辅助技术也得到关注，语音情绪识别逐渐被系统化为典型的模式分类问题。该路线仍较大程度上受限于研究人员的先验判断，难以充分捕捉情绪表达中固有的非线性特征与长期依赖关系\cite{liu2023dualrobustness,lin2023chunk}。
 
 深度学习技术的引入成为语音情绪识别研究的关键转折点。卷积神经网络模型被广泛用于从语谱图或对数梅尔谱等时频表示中自动学习局部模式\cite{liu2023dualrobustness,peng2021efficient}。循环神经网络模型、长短期记忆网络模型等则被用于对语音信号内部的时间连续性及上下文依赖关系进行建模\cite{lin2023chunk,mirsamadi2017automatic}。在此基础上，结合卷积神经网络模型与循环神经网络模型的混合架构被提出，进一步促进了同时学习局部特征与时序信息的研究趋势\cite{zhang2023cnn}。最终，语音情绪识别研究逐渐从人为设计的特征转向表示学习的范式。
@@ -70,6 +72,8 @@
     \label{fig:acoustic_feature_taxonomy}
 \end{figure}
 
+图\ref{fig:acoustic_feature_taxonomy}从原始波形、时频谱特征、韵律基频特征和时域能量特征四类对象展示常见声学表示的变换关系。该图强调不同表示关注的信息侧重点存在差异，后续表\ref{tab:chapter1_acoustic_feature_examples}进一步从处理方式、反映信息和适用性三个方面进行比较。
+
 \begin{table}[!htbp]
     \centering
     \caption{常见声学信号与特征表示的处理方式比较}
@@ -89,6 +93,8 @@
         \bottomrule
     \end{tabularx}
 \end{table}
+
+表\ref{tab:chapter1_acoustic_feature_examples}说明，同一段语音可以被组织为波形、能量轮廓、基频轨迹、对数梅尔谱图或梅尔频率倒谱系数等不同表示。本文后续实验采用对数梅尔频谱作为主要输入表示。这是为了在时序变化、频带结构和深度学习模型适配性之间取得相对平衡。
 
 信号处理方法也朝着精细化方向发展。在信号处理方面，针对变长序列的填充(padding)、滑动窗口分割、序列分割等技术受到研究者们的关注。此外，噪声消除、数据增强等方法也逐渐成为研究热点\cite{leem2024selective,lin2023chunk}。近年来，诸多研究指出仅凭实验室环境难以验证模型的泛化能力，需要考察包含噪声或多输入等干扰情景下的识别性能\cite{su2023unsupervised,lu2022domain,gao2024adversarial}。声学特征提取与信号处理技术是语音情绪识别的主要基础。这些信号处理技术在输入特征与模型的深度融合中起到重要作用，成为连接数据预处理与模型构建的主要环节之一，为系统识别能力提供了支撑\cite{zhang2020transfer,ma2023review}。
 
