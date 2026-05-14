@@ -12,7 +12,11 @@
 
 \subsection{全连接神经网络模型}
 
-全连接神经网络（Fully Connected Neural Network），也称为多层感知机（Multi-Layer Perceptron, MLP），可视为一种基本的人工神经网络模型。在该结构中，每一层的每个神经元与下一层的所有神经元相互连接，输入向量经过线性变换与非线性激活函数后，逐步转换为较高层次的抽象表示。在语音情绪识别早期研究中，研究者们通常将人为设计的特征（如梅尔频率倒谱系数、基频、能量、过零率、共振峰等）组织为发话级的固定长度向量，并将其输入全连接神经网络模型，用于情绪分类\cite{ma2023review}。全连接神经网络模型中某一层的输出可表示为：
+全连接神经网络（Fully Connected Neural Network，也称多层感知机MLP）是基本的人工神经网络模型，每一层的每个神经元与下一层的所有神经元相互连接。在语音情绪识别早期研究中，通常将人为设计特征（梅尔频率倒谱系数、基频、能量等）组织为固定长度向量并输入该模型完成分类\cite{ma2023review}。单层的输出表示为：
+\begin{equation}
+\mathbf{h}^{(l)} = \phi \left( \mathbf{W}^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)} \right)
+\end{equation}
+其中$\mathbf{W}^{(l)}$为权重矩阵，$\mathbf{b}^{(l)}$为偏置，$\phi(\cdot)$为非线性激活函数。输出层采用softmax将logit转换为类别概率，训练时采用交叉熵损失。全连接神经网络模型难以保留语音信号中的时间结构与局部空间结构，适合处理发话级汇总特征，在直接学习时频结构方面相对受限\cite{peng2021efficient,zhang2023cnn}。
 
 \begin{figure}[!htbp]
     \centering
@@ -23,37 +27,13 @@
 
 图\ref{fig:mlp_neural_network}给出了全连接神经网络模型的基本结构。图中的圆形节点表示神经元，箭头表示相邻层之间的全连接映射。输入层接收固定长度特征向量，隐藏层形成中间表示，输出层用于生成类别预测。
 
-\begin{equation}
-\mathbf{h}^{(l)} = \phi \left( \mathbf{W}^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)} \right)
-\end{equation}
-其中$\mathbf{h}^{(l-1)}$ 为上一层的输入向量，$\mathbf{W}^{(l)}$ 为第 $l$ 层的权重矩阵，$\mathbf{b}^{(l)}$ 为偏置向量，$\phi(\cdot)$ 为非线性激活函数，$\mathbf{h}^{(l)}$ 为当前层的输出向量。
-
-当输入为原始特征向量 $\mathbf{x}$，最终输出为情绪类别的概率向量 $\hat{\mathbf{y}}$ 时，输出层通常采用 softmax 函数：
-\begin{equation}
-\hat{y}_i = \frac{\exp(z_i)}{\sum_{j=1}^{C} \exp(z_j)}
-\end{equation}
-其中，$z_i$ 为第 $i$ 个类别的 logit，$C$ 为情绪类别总数，$\hat{y}_i$ 为第 $i$ 个类别的预测概率。
-
-模型训练过程中，常采用交叉熵损失函数：
-\begin{equation}
-\mathcal{L}_{\text{CE}} = -\sum_{i=1}^{C} y_i \log \hat{y}_i
-\end{equation}
-其中 $y_i$ 为真实标签的 one-hot 编码值。
-
-全连接神经网络模型具有结构简单、实现相对简单的特点，在输入特征维度较低时能够提供较为稳定的基线性能。通过各层的线性变换与激活函数，模型可形成非线性分类边界，从而能够处理比线性分类器更为复杂的情绪分布。
-
-全连接神经网络模型难以保留语音信号中的时间结构与空间结构。例如，log-Mel 谱图或梅尔频率倒谱系数图中包含时间轴与频率轴上的局部模式，若将其展平为一维向量输入全连接网络，结构上的相邻关系可能被破坏。同时，参数数量随输入维度增长，可能增加过拟合风险。全连接神经网络较为适合处理发话级汇总特征，而在学习时频结构方面相对受限。
-
-从语音情绪识别的角度来看，全连接神经网络模型仍可作为基线模型，尤其在数据规模不大且以人为设计特征为主的实验中具有解释相对简单、实现较为方便的优点。若要直接地学习情绪表示中的时间变化与局部模式，可结合后续介绍的卷积神经网络模型与循环神经网络模型 \cite{peng2021efficient,zhang2023cnn,liu2023dualrobustness}。
-
-
 \subsection{卷积神经网络模型}
 
 卷积神经网络模型是一种专门用于学习输入数据局部模式的神经网络结构。在图像处理领域，卷积神经网络模型被广泛应用。在语音情绪识别中，卷积神经网络模型同样适用于分析语音的时频表示\cite{peng2021efficient}。在语音情绪识别中，log-Mel谱图、梅尔频率倒谱系数图、谱图等二维输入表示较为常用。卷积神经网络模型可提取log-Mel谱图、梅尔频率倒谱系数图、谱图等二维输入表示中的局部时频模式。例如，卷积神经网络模型可自动学习特定频带的能量集中、短时内的强度变化以及局部频谱纹理差异\cite{zhang2023cnn}。
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.78\textwidth]{images/feedback_diagrams/chapter3/cnn/cnn.drawio.pdf}
+    \includegraphics[width=0.68\textwidth]{images/feedback_diagrams/chapter3/cnn/cnn.drawio.pdf}
     \caption{卷积神经网络在对数梅尔谱图上通过卷积核、特征图和池化提取局部时频模式}
     \label{fig:cnn_local_feature_extraction}
 \end{figure}
@@ -86,65 +66,36 @@ p_{i,j}^{(k)} = \max_{(m,n)\in \Omega_{i,j}} y_{m,n}^{(k)}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.78\textwidth]{images/feedback_diagrams/chapter3/rnn/rnn.drawio.pdf}
+    \includegraphics[width=0.68\textwidth]{images/feedback_diagrams/chapter3/rnn/rnn.drawio.pdf}
     \caption{循环神经网络沿时间帧递推隐藏状态并形成发话级上下文表示}
     \label{fig:rnn_sequence_context}
 \end{figure}
 
 基本循环神经网络模型的隐藏状态更新可表示为：
 \begin{equation}
-\mathbf{h}_t = \phi(\mathbf{W}_{xh}\mathbf{x}_t + \mathbf{W}_{hh}\mathbf{h}_{t-1} + \mathbf{b}_h) 
+\mathbf{h}_t = \phi(\mathbf{W}_{xh}\mathbf{x}_t + \mathbf{W}_{hh}\mathbf{h}_{t-1} + \mathbf{b}_h)
 \end{equation}
-其中 $\mathbf{x}_t$ 为 $t$ 时刻的输入向量，$\mathbf{h}_{t-1}$ 为上一时刻的隐藏状态，$\mathbf{W}_{xh}$ 为输入-隐藏权重矩阵，$\mathbf{W}_{hh}$ 为隐藏-隐藏权重矩阵，$\mathbf{b}_h$ 为偏置向量，$\phi(\cdot)$ 为激活函数，$\mathbf{h}_t$ 为当前时刻的隐藏状态。
-
-输出通常定义为：
-\begin{equation}
-\mathbf{y}_t = \psi(\mathbf{W}_{hy}\mathbf{h}_t + \mathbf{b}_y) 
-\end{equation}
-
-其中 $\mathbf{W}_{hy}$ 为隐藏-输出权重矩阵，$\mathbf{b}_y$ 为输出偏置，$\psi(\cdot)$ 为输出函数。
-
-循环神经网络模型能够处理时间序列结构。在处理长序列时，该模型可能出现梯度消失或梯度爆炸问题。为缓解梯度消失或梯度爆炸问题，长短期记忆网络模型和门控循环单元模型被提出\cite{lin2023chunk}。长短期记忆网络模型通过输入门、遗忘门、输出门映射信息流动。典型公式如下：
+其中 $\mathbf{x}_t$ 为 $t$ 时刻的输入向量，$\mathbf{h}_{t-1}$ 为上一时刻的隐藏状态，$\phi(\cdot)$ 为激活函数。在处理长序列时，循环神经网络模型可能出现梯度消失问题。长短期记忆网络（LSTM）通过遗忘门 $\mathbf{f}_t$、输入门 $\mathbf{i}_t$、输出门 $\mathbf{o}_t$ 与细胞状态 $\mathbf{c}_t$ 的门控机制缓解该问题\cite{lin2023chunk}：
 \begin{align}
-\mathbf{f}_t &= \sigma(\mathbf{W}_f[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f)  \\
-\mathbf{i}_t &= \sigma(\mathbf{W}_i[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i) \\
-\tilde{\mathbf{c}}_t &= \tanh(\mathbf{W}_c[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_c)  \\
-\mathbf{c}_t &= \mathbf{f}_t \odot \mathbf{c}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{c}}_t \\
-\mathbf{o}_t &= \sigma(\mathbf{W}_o[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o) \\
-\mathbf{h}_t &= \mathbf{o}_t \odot \tanh(\mathbf{c}_t) 
+\mathbf{c}_t &= \mathbf{f}_t \odot \mathbf{c}_{t-1} + \mathbf{i}_t \odot \tanh(\mathbf{W}_c[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_c) \\
+\mathbf{h}_t &= \mathbf{o}_t \odot \tanh(\mathbf{c}_t)
 \end{align}
-其中 $\mathbf{f}_t$ 为遗忘门，$\mathbf{i}_t$ 为输入门，$\tilde{\mathbf{c}}_t$ 为候选细胞状态，$\mathbf{c}_t$ 为细胞状态，$\mathbf{o}_t$ 为输出门，$\sigma(\cdot)$ 为 sigmoid 函数，$\odot$ 为逐元素乘法。
-
-门控循环单元模型具有相对更简单的门控结构：
-\begin{align}
-\mathbf{z}_t &= \sigma(\mathbf{W}_z[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_z)  \\
-\mathbf{r}_t &= \sigma(\mathbf{W}_r[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_r) \\
-\tilde{\mathbf{h}}_t &= \tanh(\mathbf{W}_h[\mathbf{r}_t \odot \mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_h) \\
-\mathbf{h}_t &= (1-\mathbf{z}_t) \odot \mathbf{h}_{t-1} + \mathbf{z}_t \odot \tilde{\mathbf{h}}_t 
-\end{align}
-其中 $\mathbf{z}_t$ 为更新门，$\mathbf{r}_t$ 为重置门，$\tilde{\mathbf{h}}_t$ 为候选隐藏状态。
-
-双向循环神经网络模型包括双向长短期记忆网络模型和双向门控循环单元模型。双向循环神经网络模型同时学习正向和反向序列，可使当前时刻的表示反映过去和未来的上下文。双向隐藏表示可通过拼接得到：
-\begin{equation}
-\mathbf{h}_t = [\overrightarrow{\mathbf{h}}_t ; \overleftarrow{\mathbf{h}}_t] \tag{3-16}
-\end{equation}
-其中 $\overrightarrow{\mathbf{h}}_t$ 为正向隐藏状态，$\overleftarrow{\mathbf{h}}_t$ 为反向隐藏状态，$[\cdot ; \cdot]$ 表示向量拼接。
-
-在语音情绪识别中，循环神经网络模型可反映时间连续性与长期上下文。例如，某些情绪可能通过整个发话的速度变化、语调的累积走向、句尾的情绪处理等得到充分的体现。循环神经网络模型、长短期记忆网络模型、门控循环单元模型可处理这类顺序信息。双向长短期记忆网络模型或双向门控循环单元模型能够利用发话前后的上下文, 在语音情绪识别中被一些研究采用\cite{zhang2023cnn,lin2023chunk}.
+其中 $\odot$ 为逐元素乘法，各门均由 sigmoid 函数与线性变换构成。门控循环单元（GRU）将遗忘门与输入门合并为更新门 $\mathbf{z}_t$，并引入重置门 $\mathbf{r}_t$，结构相对简洁\cite{lin2023chunk}。双向长短期记忆网络同时处理正向与反向序列，将两方向隐藏状态拼接后用于发话级表示，能够利用发话前后的上下文，在相关研究中得到应用\cite{zhang2023cnn,lin2023chunk}。
 
 循环神经网络模型存在一定局限。第一，顺序计算结构可能导致并行效率相对较低，在处理较长序列时计算成本可能增加。第二，长短期记忆网络模型和门控循环单元模型缓解了基本循环神经网络模型的长期依赖问题。在极长序列中，循环神经网络模型难以充分覆盖部分关键区间。第三，对于发话中哪些区间对情绪判断更为关键，循环神经网络模型缺乏选择性强调的机制。
-
 
 
 \section{注意力机制}
 
 在语音情绪识别中, 有研究指出情绪信息可能以不均匀的方式分布于整个发话, 相对集中于特定的时间区间、特定的频率范围或特定的声学模式之中\cite{mirsamadi2017automatic,liu2023discriminative,zou2022speech,he2023multiple}. 卷积神经网络模型和循环神经网络模型可用于学习语音表示；在采用统一权重处理输入各部分时，模型可能难以充分区分与情绪判断相关性相对较高的区间\cite{zhang2023cnn,liu2023dualrobustness,peng2021efficient}. 注意力机制作为一种计算输入内部相关性并据此调整信息组合权重的结构方法，被引入语音情绪识别中. 注意力机制通过相关性计算与加权聚合来重新分配信息重要性，既包括基于查询、键、值计算输入元素之间关系的注意力结构，也包括根据查询与键-值来源不同区分的自注意力和交叉注意力；根据注意力分数的计算方式，可使用缩放点积注意力或加性注意力；根据结构的并行化或作用范围，可使用多头注意力或局部注意力等扩展形式\cite{chen2023dwformer,wang2024swin}.
 
+
 本节首先介绍注意力机制的基本概念与关键要素，说明查询、键、值的含义以及自注意力与交叉注意力的区别。随后介绍两种典型的注意力分数计算方法：缩放点积注意力和加性注意力。然后讨论多头注意力和局部注意力等结构扩展方式。最后总结注意力机制在语音情绪识别中的作用，并讨论其在数据规模、计算复杂度和可解释性等方面的局限。
+
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.78\textwidth]{images/feedback_diagrams/chapter3/attention/self_attention.drawio.pdf}
+    \includegraphics[width=0.65\textwidth]{images/feedback_diagrams/chapter3/attention/self_attention.drawio.pdf}
     \caption{注意力机制通过查询、键和值计算相关性权重并突出关键语音片段}
     \label{fig:attention_qkv_weighting}
 \end{figure}
@@ -188,17 +139,7 @@ Q = XW_Q,\qquad K = XW_K,\qquad V = XW_V
 \end{equation}
 其中 $X$ 为一个输入序列或时频特征表示。自注意力用于计算同一输入内部各位置之间的相关性，可反映特定时间帧与其他帧之间的情绪关联\cite{mirsamadi2017automatic,zou2022speech,chen2023dwformer}。
 
-交叉注意力则是指查询与键-值对来自不同输入表示的结构。其一般形式可写为：
-\begin{equation}
-Q = XW_Q,\qquad K = YW_K,\qquad V = YW_V
-\label{eq:cross_qkv}
-\end{equation}
-
-\begin{equation}
-\mathrm{CrossAttention}(X,Y) = \mathrm{Attention}(Q,K,V)
-\label{eq:cross_attention}
-\end{equation}
-其中 $X$ 和 $Y$ 为不同的输入表示。交叉注意力用于建模不同特征空间或不同声学表示之间的交互关系\cite{zou2022speech,he2023multiple}。
+交叉注意力则是指查询与键-值对来自不同输入表示（$Q=XW_Q$，$K=YW_K$，$V=YW_V$，$X$与$Y$为不同输入），用于建模不同特征空间之间的交互关系\cite{zou2022speech,he2023multiple}。
 
 
 
@@ -222,7 +163,7 @@ e_{ij} = \frac{q_i k_j^\top}{\sqrt{d_k}}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{images/chapter3/chapter3_attention_qkv.drawio.pdf}
+    \includegraphics[width=0.68\textwidth]{images/chapter3/chapter3_attention_qkv.drawio.pdf}
     \caption{缩放点积注意力中的查询、键、值计算流程}
     \label{fig:chapter3_attention_qkv}
 \end{figure}
@@ -237,8 +178,6 @@ e_{ij} = v_a^\top \tanh(W_q q_i + W_k k_j + b_a)
 其中 $W_q$ 和 $W_k$ 分别为查询与键的权重矩阵，$b_a$ 为偏置向量，$v_a$ 为用于计算最终分数的可学习向量。该方法先对查询与键进行线性变换，再通过非线性函数得到分数\cite{mirsamadi2017automatic}。
 
 加性注意力在归一化与加权聚合阶段仍遵循式 \eqref{eq:attn_general_alpha} 和式 \eqref{eq:attn_general_output}，主要差异集中在分数构造方式上\cite{mirsamadi2017automatic}。
-
-在语音情绪识别中，加性注意力可应用于循环神经网络模型的输出或局部隐藏状态集合，用于强调与情绪判断相关性较高的时刻\cite{mirsamadi2017automatic}。
 
 
 % 3.2.3
@@ -279,7 +218,7 @@ a(q_i,k_j), & |i-j|\le w \\
 
 局部注意力的优势在于通过限制计算范围来降低整体计算量。全局注意力需要计算所有位置对之间的交互，计算量与序列长度的平方成正比。局部注意力仅考虑窗口内的交互，可相对减少计算负担\cite{chen2023dwformer}。在语音情绪识别中，局部注意力有助于反映发话中的局部信息，如短时语调变化、能量突变区间或特定时刻的声学模式\cite{mirsamadi2017automatic}。
 
-在实际研究中，局部注意力曾被应用于循环神经网络模型的隐藏状态集合，以突出发话中的关键时刻。在基于 Transformer 的模型中，也有动态窗口或移位窗口等变体，用于结构性调整注意力的作用范围\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。窗口过小可能难以反映长距离关系，窗口过大则可能削弱局部注意力的计算效率优势。局部注意力宜结合应用范围、输入长度以及情绪线索的分布特性进行适当设置。
+在实际应用中，局部注意力曾以动态窗口或移位窗口等变体形式，用于结构性调整注意力的作用范围\cite{mirsamadi2017automatic,chen2023dwformer,wang2024swin}。窗口大小需结合输入长度与情绪线索分布特性进行设置。
 
 
 % \subsection{注意力机制在语音情绪识别中的作用与局限}
@@ -346,9 +285,7 @@ H^{(l)} = \mathrm{EncoderLayer}^{(l)}\!\left(H^{(l-1)}\right), \qquad l=1,2,\dot
 
 解码器接收目标序列或对应的中间表示作为输入，同时参考编码器的输出表示，逐步生成下一阶段输出。语音情绪识别通常是发话级分类任务，后续实验更关注编码器输出如何形成分类表示。解码器部分在本文中仅作为原始Transformer结构背景说明\cite{vaswani2017attention}。
 
-Transformer结构的一个特点是，它不像循环神经网络模型那样按时间步顺序更新状态。循环神经网络模型依赖上一时刻的隐藏状态计算当前时刻的表示，整个序列处理本质上是顺序的。Transformer可以在同一层内同时计算序列中多个位置之间的相关性，有利于并行计算\cite{vaswani2017attention}。
-
-在处理长距离依赖关系的方式上，Transformer与传统模型结构存在差异。循环神经网络模型中，相距较远的两个时间点之间的信息需要经过多个时间步的状态传递，序列越长信息传递路径越长。卷积神经网络模型同样通过逐步扩大局部感受野来融入更广的上下文，若要反映较大范围的关系，可能需要增加层数或引入额外结构。Transformer通过注意力运算可以计算远距离位置之间的相关性，从而相对地建模输入内部的全局关系\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。
+Transformer可以在同一层内同时计算序列中多个位置之间的相关性，有利于并行计算，且无需像循环神经网络那样经过多个时间步的状态传递，也无需通过增加卷积层来扩大感受野，可以直接建模输入内部的全局关系\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。
 
 语音情绪识别通常是对整个发话进行分类的任务，原始Transformer的编码器-解码器结构常被简化为以编码器为中心的形式或进行适当变形\cite{chen2023dwformer,wang2024swin,ahn2025multitask}。在此情况下，可在编码器的最终输出上结合池化或分类头，进行发话级别的预测。该过程可概念性地表示为：
 \begin{equation}
@@ -380,16 +317,7 @@ X' = X + PE
 其中 $X'$ 为补充位置信息后的输入表示。通过这种加法结构，原始输入特征与位置信息在同一维度空间中共同传递。后续注意力运算除了比较各位置的特征值，还计算包含位置信息的表示之间的相关性\cite{vaswani2017attention}。
 
 
-与固定型位置编码经常被一起提及的是可学习型位置嵌入。可学习型位置嵌入将位置向量作为模型参数，在训练过程中直接更新。这种方式不使用预先通过固定函数计算每个位置向量的方法。用矩阵形式可表示为：
-\begin{equation}
-P \in \mathbb{R}^{T \times d}
-\label{eq:learnable_pos_matrix}
-\end{equation}
-\begin{equation}
-X' = X + P
-\label{eq:learnable_pos_add}
-\end{equation}
-其中 $P$ 为可学习的位置嵌入矩阵。可学习型方法的优势在于能根据数据和任务特性调整位置表示本身。由于位置向量可能适应训练数据的长度分布，当推广到训练中未出现的长序列时，其行为可能与固定型方法有所不同\cite{vaswani2017attention}。
+除固定型位置编码外，也可将位置向量作为可学习参数在训练中直接更新，但其行为可能受训练数据长度分布影响，对未见长度序列的推广能力与固定型方法有所不同\cite{vaswani2017attention}。
 
 在语音情绪识别中，位置编码的含义与自然语言处理存在差异。自然语言处理中通常反映单词或子词标记的顺序，语音情绪识别中的输入单元往往是对数梅尔谱图的帧序列、梅尔频率倒谱系数序列或基于补丁的频谱表示\cite{chen2023dwformer,wang2024swin,ahn2025multitask}。在此情况下，位置编码用于表示每个帧或每个补丁在发话中的时间位置。即使相同的频率结构出现，该频率结构出现在发话早期、中期还是后期，其情绪含义可能不同。补充位置信息可视为反映时间序列结构的一个因素。
 
@@ -412,7 +340,7 @@ H^{(l)} = \mathrm{LayerNorm}\!\left(\tilde{H}^{(l)} + \mathrm{FFN}\!\left(\tilde
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{images/chapter3/chapter3_transformer_encoder.drawio.pdf}
+    \includegraphics[width=0.68\textwidth]{images/chapter3/chapter3_transformer_encoder.drawio.pdf}
     \caption{Transformer编码器层的基本信息流动}
     \label{fig:chapter3_transformer_encoder}
 \end{figure}
@@ -433,20 +361,12 @@ y = x + \mathcal{F}(x)
 \end{equation}
 其中 $x$ 为子层输入，$\mathcal{F}(x)$ 为经过注意力或前馈网络后的变换结果。残差连接在保留原始输入信息的同时加入变换结果，有助于缓解深层网络中信息过度衰减的问题\cite{vaswani2017attention}。
 
-层归一化对每个位置表示向量内部的各维度计算均值和方差，并据此对表示进行尺度归一化。其一般形式为：
-\begin{equation}
-\mu = \frac{1}{d}\sum_{i=1}^{d} x_i
-\label{eq:layernorm_mean}
-\end{equation}
-\begin{equation}
-\sigma^2 = \frac{1}{d}\sum_{i=1}^{d}(x_i-\mu)^2
-\label{eq:layernorm_var}
-\end{equation}
+层归一化对每个位置表示向量内部的各维度计算均值 $\mu$ 和方差 $\sigma^2$，并通过可学习参数 $\gamma, \beta$ 进行尺度归一化：
 \begin{equation}
 \mathrm{LayerNorm}(x)=\gamma \odot \frac{x-\mu}{\sqrt{\sigma^2+\epsilon}}+\beta
 \label{eq:layernorm_general}
 \end{equation}
-其中 $x \in \mathbb{R}^{d}$ 为某位置的输入向量，$\mu$ 和 $\sigma^2$ 分别为该向量的均值和方差，$\epsilon$ 为防数值不稳定的小常数。$\gamma$ 和 $\beta$ 为可学习的缩放与平移参数，$\odot$ 表示逐元素乘法。层归一化在每个位置的表示向量内部进行归一化，对序列长度和批次大小的变化相对不敏感\cite{vaswani2017attention}。
+其中 $\epsilon$ 为防数值不稳定的小常数。层归一化在每个位置的表示向量内部进行归一化，对序列长度和批次大小的变化相对不敏感\cite{vaswani2017attention}。
 
 
 
@@ -454,13 +374,9 @@ y = x + \mathcal{F}(x)
 
 \subsection{ Transformer的主要特点及其适用边界}
 
-Transformer的第一个特点在于它相对有利于并行计算。循环神经网络模型中，当前时刻的计算依赖于前一时刻的状态，整个处理过程通常是顺序的。Transformer通过自注意力机制可以同时计算多个位置之间的相关性，在输入长度相同时，其计算结构可以相对并行化地组织\cite{vaswani2017attention}。当发话长度增加到一定程度，或采用帧级、补丁级输入时，这一并行计算特性可能在一定程度上简化计算流程\cite{chen2023dwformer,wang2024swin}。
+Transformer通过自注意力机制可以同时计算多个位置之间的相关性，有利于并行计算，并能够直接建模输入内部的全局关系\cite{vaswani2017attention}。在语音情绪识别中，情绪信息可能分布在发话的多个时刻，这种全局建模特性与发话级分类任务具有一定的相关性\cite{chen2023dwformer,wang2024swin}。
 
-Transformer的第二个特点在于它能够直接建模输入内部的全局关系。循环神经网络中，相距较远的位置之间的信息需要经过多个时间步的状态传递。卷积神经网络则需要通过逐步扩大局部感受野来拓宽上下文范围。Transformer通过自注意力机制可以计算远距离位置之间的相关性，从而将分布在整个发话中的情绪线索整合到一个结构中\cite{vaswani2017attention}。在语音情绪识别中，情绪信息可能分布在发话的多个时刻及多个时间尺度上。这种全局建模特性与发话级分类任务具有一定的相关性\cite{chen2023dwformer,wang2024swin}。
-
-Transformer的优势表现与具体条件有关。随着输入长度增加，注意力计算范围扩大，计算量和内存占用可能相应增加\cite{vaswani2017attention}。在语音情绪识别中，帧级序列可能较长；若采用高分辨率频谱表示或多特征融合，输入标记数量会进一步增多。在此情况下，应用原始Transformer结构不一定总是高效的选择，实际研究中已提出基于窗口的注意力、移位窗口、分层补丁表示等结构调整方法\cite{chen2023dwformer,wang2024swin}。
-
-Transformer的结构表达能力较强，Transformer的稳定性受数据规模和任务条件影响。语音情绪识别数据通常规模不大，情绪类别之间的界限也可能不够清晰。在此类条件下，结构复杂的模型可能同时学习到情绪相关模式以及数据集本身的偏差。近年来，研究者提出调整输入范围、使用分层表示或结合多任务学习等方式，在跨语料库条件下提高泛化能力，不单纯扩大Transformer结构本身\cite{chen2023dwformer,wang2024swin,ahn2025multitask}。
+Transformer的稳定性受数据规模和任务条件影响。随着输入长度增加，计算量和内存占用可能相应增加，实际研究中已提出基于窗口的注意力、移位窗口、分层补丁表示等结构调整方法\cite{chen2023dwformer,wang2024swin}。语音情绪识别数据通常规模不大，在此类条件下，结构复杂的模型可能同时学习到情绪相关模式以及数据集本身的偏差，近年来研究者提出调整输入范围或结合多任务学习等方式加以应对\cite{chen2023dwformer,wang2024swin,ahn2025multitask}。
 
 \begin{figure}[!t]
     \centering

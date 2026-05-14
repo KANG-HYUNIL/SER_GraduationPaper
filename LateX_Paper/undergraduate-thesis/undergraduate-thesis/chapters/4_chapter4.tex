@@ -64,15 +64,13 @@
 
 卷积神经网络基线模型作为本文的基础比较对象，卷积神经网络基线模型的主要思路是在二维时频平面上逐层提取局部模式，再通过池化与分类头完成情绪类别判别。卷积神经网络基线模型具有明确的局部感受野与参数共享机制，能够较为直接地学习能量突变、频带形状以及局部时频纹理等模式。在对数梅尔频谱输入条件下，卷积结构通常能够形成较为稳定的训练过程，适合作为后续Transformer系列模型的基线对象\cite{peng2021efficient,zhang2023cnn}。
 
-本文采用的卷积神经网络基线模型保持了相对简洁的主干结构，不额外叠加过深的残差层或复杂注意力模块。基线模型设计用于形成实现稳定、易于复现的卷积神经网络基线模型，从而观察Transformer系列模型在相同输入条件下是否能够取得有意义的指标变化。需要说明的是，卷积神经网络基线模型没有按照单一先行研究逐层复现，模型结构结合语音情绪识别中常见二维卷积结构后形成项目内部基线实现\cite{peng2021efficient,zhang2023cnn}。
-
-从实现流程看，卷积神经网络基线模型通常由若干卷积块、非线性激活层、池化层以及分类头构成。输入的对数梅尔频谱首先进入卷积块以提取局部时频模式，再通过逐层池化压缩特征图尺寸，随后将高层局部特征送入全连接分类器完成情绪类别判别。卷积神经网络技术在语音情绪识别任务中常与注意力或循环结构结合使用，相关研究说明了局部时频特征抽取在该任务中的基础价值\cite{peng2021efficient,zhang2023cnn}。
+从实现流程看，卷积神经网络基线模型由若干卷积块、非线性激活层、池化层以及分类头构成。输入的对数梅尔频谱首先进入卷积块以提取局部时频模式，再通过逐层池化压缩特征图尺寸，随后将高层局部特征送入全连接分类器完成情绪类别判别。卷积神经网络技术在语音情绪识别任务中常与注意力或循环结构结合使用，相关研究说明了局部时频特征抽取在该任务中的基础价值\cite{peng2021efficient,zhang2023cnn}。
 
 本章采用的卷积神经网络基线模型代表配置来自当前较高验证结果对应的设置。代表配置包含4个卷积块，每个卷积块均由$3 \times 3$卷积、BatchNorm、ReLU以及$2 \times 2$最大池化组成。通道数依次为$[32, 64, 256, 512]$，卷积主干之后使用自适应平均池化（AdaptiveAvgPool2d）将特征图压缩为$4 \times 4$，随后经展平操作（Flatten）、丢弃层和线性分类器输出8类情绪结果。
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.78\textwidth]{images/chapter4_hand_models/cnn_baseline.drawio.pdf}
+    \includegraphics[width=0.68\textwidth]{images/chapter4_hand_models/cnn_baseline.drawio.pdf}
     \caption{卷积神经网络基线模型结构}
     \label{fig:chapter4_cnn_baseline_arch}
 \end{figure}
@@ -81,13 +79,9 @@
 
 \subsubsection{纯Transformer模型}
 
-纯Transformer模型不在前端引入卷积特征提取模块，模型将输入时频表示映射为一系列序列化特征后，主要依赖自注意力机制建模全局上下文关系。纯Transformer结构的优势在于能够较为直接地刻画远距离位置之间的相关性，并在统一的注意力框架下完成特征聚合。对于语音情绪识别任务而言，纯全局建模方式有助于观察自注意力结构在中小规模情绪语音数据上的表现边界\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。
+纯Transformer模型不在前端引入卷积特征提取模块，将输入时频表示映射为序列标记后主要依赖自注意力机制建模全局上下文关系。与卷积神经网络基线模型相比，纯Transformer模型减少了显式局部归纳偏置，纳入比较的目的在于验证当模型主要依赖全局关系建模时在当前数据规模下的表现边界。本文实现采用仅编码器结构，不引入解码器分支\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。
 
-与卷积神经网络基线模型相比，纯Transformer模型减少了显式局部归纳偏置，对输入表示和训练稳定性的要求相对较高。将纯Transformer模型纳入本章比较的目的，主要在于验证当模型主要依赖全局关系建模时，是否能够充分利用语音中的情绪线索，以及纯Transformer结构在当前数据规模下是否容易受到过拟合或局部细节捕获不足的影响。本文所称纯Transformer模型没有采用原始机器翻译任务中的完整编码器-解码器结构，模型依据原始Transformer编码器思想改写得到面向语音情绪分类的仅编码器结构\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。
-
-在实现上，纯Transformer模型通常先将输入特征映射为一系列时序标记，再叠加位置编码信息，以保留不同时间位置的相对关系。随后，模型通过多头自注意力模块与前馈网络交替堆叠，对序列内部的相关性建模，并通过池化或分类标记完成整体判别\cite{vaswani2017attention,chen2023dwformer,wang2024swin}。对于缺少卷积前端的结构而言，输入标记的组织方式、位置表示以及编码层深度都会直接影响模型对情绪细节的保持能力。
-
-结合当前代表配置，纯Transformer模型在本项目中的设置为：嵌入维度256，注意力头数4，编码层数5，前馈维度1024，二维分块尺寸为$32 \times 32$，二维分块步长为$8 \times 8$，池化方式为均值池化，丢弃层比例约为0.2707。纯Transformer模型将谱图划分为二维分块，再通过卷积形式的分块嵌入映射为标记序列。分块嵌入承担将二维时频表示转化为Transformer序列输入的作用，位置编码则用于保留不同分块之间的顺序关系。分块嵌入与位置编码路径对应原始Transformer编码器中标记表示、位置编码和自注意力编码的基本思想\cite{vaswani2017attention}。
+代表配置将谱图划分为二维分块（$32 \times 32$，步长$8 \times 8$），通过卷积形式的分块嵌入映射为标记序列，叠加位置编码后经5层编码器（嵌入维度256，注意力头数4，前馈维度1024）处理，均值池化后接线性分类器，丢弃层比例约为0.2707\cite{vaswani2017attention}。
 
 \begin{figure}[!htbp]
     \centering
@@ -100,7 +94,7 @@
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth]{images/chapter4_ex/pure_transformer_limitations.drawio.pdf}
+    \includegraphics[width=0.78\textwidth]{images/chapter4_ex/pure_transformer_limitations.drawio.pdf}
     \caption{纯Transformer结构限制的主要来源}
     \label{fig:chapter4_pure_transformer_limitations}
 \end{figure}
@@ -109,15 +103,9 @@
 
 相关研究可以为上述分析提供外部依据。DWFormer研究指出，语音情绪相关时间区域会分散在发话的不同局部位置，且有效信息的时间尺度会在片段内部和片段之间发生变化，单一Transformer结构可能难以精确定位不同尺度上的情绪相关区域\cite{chen2023dwformer}。Speech Swin-Transformer研究进一步把局部窗口、移位窗口和层级聚合引入语音情绪识别任务，用于刻画帧级、片段级和更高层级的情绪线索\cite{wang2024swin}。上述研究保留了自注意力结构的价值，同时提示语音情绪识别任务通常需要把全局关系建模与局部时间结构、层级声学线索结合起来。基于这一背景，本文对纯Transformer模型的分析既来自单次实验数值，也与相关Transformer语音情绪识别研究中的结构改进方向相互对应。
 
-从声学信号结构看，纯Transformer模型在本任务中的不足首先来自输入标记组织方式。对数梅尔频谱同时包含时间轴和频带轴。时间轴反映发话过程中的能量起伏、语速变化和局部停顿，频带轴反映音色、共振峰分布和能量重心。语音情绪识别技术所依赖的非文字语义线索往往同时分布在这两个维度上。纯Transformer模型将二维谱图切分为若干二维分块后，再展平为一维标记序列。展平操作便于送入编码器，但二维邻接关系会被转换为序列位置关系。相邻频带之间的连续性、相邻时间片段之间的短时动态，以及同一时间片段内不同频带共同形成的声学形态，都需要由后续注意力层重新学习。
+从声学信号结构看，纯Transformer模型在本任务中面临三类主要局限。第一，二维谱图分块后展平为一维序列，相邻频带连续性与短时动态需由注意力层重新学习；代表配置的$32\times 32$分块覆盖较长时间段，短时能量突变和局部频带变化可能被压缩在同一标记内部。第二，自注意力结构缺少卷积式局部连续约束，中小规模数据条件下对偶然统计关联的依赖可能影响局部情绪线索的稳定利用。第三，均值池化为各标记赋予相同权重，情绪相关片段在发话级表示中的比重可能被背景性语音片段稀释，这一设置与CNN-Conformer代表配置采用注意力池化形成对照。
 
-纯Transformer模型的分块方式还会影响短时声学线索的保留。本章代表配置采用$32 \times 32$二维分块和$8 \times 8$分块步长。在当前帧移设置下，单个分块会覆盖相对较长的时间范围。语音情绪线索中的重音、短促能量变化、局部频带突变和语调转折，可能只出现在较短区间内。若这些变化在分块嵌入阶段被合并到同一个标记中，后续自注意力层虽然可以比较不同标记之间的相关性，但较细的局部变化已经被压缩到标记向量内部。分块压缩过程会降低模型直接利用短时声学动态的便利性。
-
-自注意力机制擅长比较序列中不同位置之间的相关性，这一能力对发话级情绪判别具有一定价值。发话中的情绪状态可能跨越多个时间片段，模型需要把较早出现的语调走势与后续的能量变化共同纳入判断。纯Transformer模型可以在同一层内建立远距离标记之间的联系。问题在于，自注意力本身缺少类似卷积核的局部连续约束。对于中小规模语音情绪数据，模型需要从有限样本中同时学习局部声学模式、位置关系和全局聚合方式。训练样本不足时，模型可能先学习到与训练划分相关的偶然关联，局部情绪细节的稳定利用就会受到影响。
-
-纯Transformer模型的另一处限制来自句级聚合方式。当前代表配置使用均值池化将各个标记表示汇聚为发话级表示。均值池化具有实现简洁和参数较少的优点，适合形成清晰的对照结构。语音情绪识别任务中的有效线索往往呈非均匀时间分布。部分发话可能在少数片段中出现较强的情绪提示，其他片段只提供背景性语音内容。均值池化会为各个标记分配相同权重，情绪相关片段在最终表示中的比例可能被无关片段稀释。均值池化设置与后续CNN-Conformer模型采用注意力池化形成对照。
-
-结合实验结果可以看到，纯Transformer模型的局限不宜简单归结为参数规模不足。表\ref{tab:chapter4_overall_results}中，纯Transformer模型参数量约为4.21M，高于卷积神经网络基线模型的1.41M，也高于CNN-Conformer模型的3.55M。纯Transformer模型的Accuracy为0.52000，Macro-F1为0.51163，UAR为0.51250，低于卷积神经网络基线模型和CNN-Conformer模型。实验数值说明，在当前数据规模、输入表示和训练协议下，参数量增加没有自然转化为更稳定的验证指标。模型结构是否提供与声学情绪线索相匹配的归纳偏置，可能比单纯扩大表示容量更能影响结果。
+纯Transformer模型参数量（4.21M）高于卷积神经网络基线模型（1.41M）和CNN-Conformer模型（3.55M），但Accuracy（0.52000）、Macro-F1（0.51163）和UAR（0.51250）均低于两者，说明当前数据规模下参数量增加没有自然转化为更稳定的验证指标，模型是否提供与声学情绪线索相匹配的归纳偏置可能比单纯扩大表示容量更为关键。
 
 \begin{figure}[!htbp]
     \centering
@@ -145,13 +133,7 @@
     \label{fig:chapter4_pure_transformer_calibration_confusion}
 \end{figure}
 
-图\ref{fig:chapter4_pure_transformer_calibration_confusion}（a）从输出置信度角度补充了模型稳定性观察。纯Transformer代表配置的ECE为0.29362，可靠性曲线在多个置信度区间内偏离理想校准线，较高置信度区间的实际正确比例也没有与预测置信度保持一致。校准结果说明模型输出分数与验证集真实正确率之间存在一定失配。对于语音情绪识别任务而言，类别间声学差异较细，若模型在局部线索和句级聚合层面形成的表示不够稳定，输出置信度也可能受到影响。这一结果与训练曲线和混淆矩阵共同构成纯Transformer代表配置的实验侧证据。
-
-从类别判别角度看，纯Transformer模型的混淆情况也可以与结构特点联系起来理解。若模型主要依赖全局注意力关系和均值池化，局部能量突变、短时频带纹理以及少量关键片段的贡献可能不够突出。情绪类别之间本身存在声学相似性，例如若干类别都可能表现为较高能量或较快语速。局部线索被压缩后，模型更容易把这些类别映射到接近的表示区域。全局关系能够提供较长范围上下文，但缺少局部建模路径时，全局关系不一定能弥补短时细节的不足。
-
-图\ref{fig:chapter4_pure_transformer_calibration_confusion}（b）给出了纯Transformer代表配置在验证集上的类别混淆情况。混淆矩阵中，angry、disgust和calm类别保留了相对较高的对角线比例，说明模型能够识别一部分能量或语调边界较清楚的样本。neutral、sad、happy和fearful类别的对角线比例相对较低，且出现更分散的偏移。sad样本被预测为disgust的比例达到0.28，fearful样本被预测为happy的比例达到0.33，disgust样本被预测为angry的比例达到0.23，neutral样本也会向sad和disgust等类别分散。上述混淆关系说明纯Transformer代表配置仍能形成部分发话级判别表示，但对若干声学相近类别的边界组织仍然不够稳定。类别混淆结果与前文结构分析相互对应，说明全局注意力和均值池化可以形成发话级判别表示，但局部时频线索和少量高信息片段的贡献仍可能不够突出。
-
-上述分析不宜理解为否定Transformer结构在语音情绪识别中的价值。更合适的理解是，纯Transformer模型在本章中承担了一个结构边界测试角色。纯Transformer模型用于检验仅依赖全局注意力和二维分块标记时，声学情绪线索能否被充分组织成稳定的发话级表示。实验结果支持后续结构调整方向，即在保留注意力建模长程上下文能力的同时，引入更贴近声学信号局部连续性的建模路径，并使用更符合情绪片段非均匀分布特点的句级聚合方式。
+图\ref{fig:chapter4_pure_transformer_calibration_confusion}（a）显示，纯Transformer代表配置的ECE为0.29362，可靠性曲线在多个置信度区间偏离理想校准线，说明模型输出分数与验证集真实正确率之间存在一定失配。图\ref{fig:chapter4_pure_transformer_calibration_confusion}（b）的混淆矩阵显示，angry、disgust和calm类别保留了相对较高的对角线比例，而neutral、sad、happy和fearful类别偏移更分散（如sad被预测为disgust达0.28，fearful被预测为happy达0.33）。上述结果与训练曲线共同说明，纯Transformer模型已具备一定拟合能力，但在局部时频线索利用和类别边界稳定性方面仍有不足，这也支持后续引入局部建模路径与注意力池化的结构调整方向。
 
 \subsubsection{CNN-Conformer模型}
 
@@ -169,7 +151,6 @@ CNN-Conformer模型来源于卷积模块与Conformer编码器相结合的设计�
 典型Conformer编码块由两个前馈网络模块、多头自注意力模块、卷积模块、残差连接和归一化操作构成\cite{gulati2020conformer}。前馈网络模块负责在每个时间位置内部进行非线性表示变换，相当于对每个标记的通道维度进行重新组织。多头自注意力模块负责建立不同时间位置之间的相关性，使模型能够在同一层内整合较长时间范围内的信息。卷积模块通过局部连接处理相邻标记之间的动态关系，使短时变化、局部平滑性和局部频谱纹理能够以更直接的方式参与编码。残差连接用于保留输入表示并缓解深层堆叠带来的信息衰减，归一化操作用于稳定不同子模块之间的表示尺度。
 
 Conformer编码块采用类似macaron的前馈结构。输入表示先经过一个前馈网络分支，并以半步残差的形式加入原表示。随后表示进入多头自注意力模块，用于吸收较长范围上下文。接着，卷积模块补充局部序列建模。最后，第二个前馈网络分支再次更新每个时间位置的通道表示，并通过归一化得到编码块输出。半步残差的意义在于降低单个前馈分支对表示更新的幅度，使自注意力路径、卷积路径和前馈路径在同一编码块中保持较平衡的贡献。Conformer编码块结构与仅由自注意力和前馈网络组成的Transformer编码器存在差异。
-
 \begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.58\textwidth]{images/chapter4_hand_models/cnn_conformer_block.drawio.pdf}
@@ -195,6 +176,7 @@ y &= \mathrm{LayerNorm}\left(\tilde{x}_3 + \frac{1}{2}\mathrm{FFN}(\tilde{x}_3)\
 
 本文使用CNN-Conformer这一名称描述当前结构家族，但代表配置没有沿用原始自动语音识别场景中常见的两级卷积压缩前端。原始Conformer往往在编码器之前使用卷积下采样，以降低序列长度并扩大局部接收范围\cite{gulati2020conformer}。本文的代表配置面向语音情绪识别任务，对前端组织方式进行了调整。模型前端采用无卷积前端时间分块输入，将对数梅尔频谱沿时间轴划分为覆盖完整梅尔频带的时间片段，再把每个时间片段投影为序列标记。前端设计减少对早期卷积压缩的依赖，把较多频带结构保留到Conformer编码阶段。
 
+从任务设置看，原始Conformer需要把较长语音序列映射为文字序列，模型更关注连续声学单元到文字单元的对齐与识别。本文的CNN-Conformer模型输出8类情绪标签，更关注整段发话中的非文字语义线索是否能够形成稳定类别边界。原始Conformer实验使用自动语音识别常见的词错误率评价，本文使用Accuracy、Macro-F1和UAR评价分类结果，并按照用户划分验证集以观察未见用户条件下的判别能力。原始Conformer的前端压缩有助于降低自动语音识别中的长序列计算负担，本文的无卷积前端时间分块输入则更强调在进入编码器之前保留完整频带结构。上述差别决定了本文不能简单复现原始自动语音识别结构，而需要在Conformer编码思想基础上进行面向语音情绪识别任务的输入组织调整。
 \begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.72\textwidth]{images/chapter4_hand_models/cnn_conformer_nostem.drawio.pdf}
@@ -202,7 +184,7 @@ y &= \mathrm{LayerNorm}\left(\tilde{x}_3 + \frac{1}{2}\mathrm{FFN}(\tilde{x}_3)\
     \label{fig:chapter4_nostem_patch_tokenization}
 \end{figure}
 
-从任务设置看，原始Conformer需要把较长语音序列映射为文字序列，模型更关注连续声学单元到文字单元的对齐与识别。本文的CNN-Conformer模型输出8类情绪标签，模型更关注整段发话中的非文字语义线索是否能够形成稳定的类别边界。原始Conformer实验使用自动语音识别常见的词错误率评价，本文使用Accuracy、Macro-F1和UAR评价分类结果，并按照用户划分验证集以观察未见用户条件下的判别能力。原始Conformer的前端压缩有助于降低自动语音识别中的长序列计算负担，本文的无卷积前端时间分块输入则更强调在进入编码器之前保留完整频带结构。上述差别决定了本文不能简单复现原始自动语音识别结构，而需要在Conformer编码思想基础上进行面向语音情绪识别任务的输入组织调整。
+代表配置的前端采用无卷积前端时间分块输入：将对数梅尔频谱沿时间轴划分为覆盖完整梅尔频带的时间片段并投影为序列标记，每个标记保留同一时间片段内的整体频带结构。与纯Transformer模型的二维补丁展平相比，时间分块标记更接近短时声学片段，有助于保留音色、频带能量分布和短时动态之间的共同关系。进入Conformer编码阶段后，相对位置自注意力处理跨片段上下文，卷积模块处理相邻片段局部动态，使发话中分布于不同时间位置的情绪线索在同一序列表示中共同更新。
 
 无卷积前端时间分块输入与纯Transformer模型的二维分块方式存在直接差别。纯Transformer模型把谱图切分为二维补丁，再将二维补丁展平为一维序列。本文CNN-Conformer代表配置中的时间分块输入覆盖完整频带，每个标记保留同一时间片段内的整体频带结构。时间分块处理方式使单个标记更接近一个短时间声学片段，而不是局部时频小块。对于语音情绪识别任务，时间分块标记组织方式有助于保留音色、频带能量分布和短时动态之间的共同关系，也减少早期二维补丁切分对频带结构的割裂。
 
@@ -214,25 +196,14 @@ Conformer编码阶段在时间分块输入组织方式上进一步发挥作用�
 
 注意力池化是本文CNN-Conformer代表配置的另一项关键设计。纯Transformer代表配置使用均值池化，各时间标记在句级表示中具有相同权重。CNN-Conformer代表配置使用注意力池化，在时间维度上学习每个标记对发话级情绪判别的贡献。对于情绪线索分布不均匀的发话，注意力池化可以让情绪相关片段在句级表示中获得更高权重。池化设计与语音情绪识别中关注局部高信息片段的研究思路具有对应关系\cite{mirsamadi2017automatic,peng2021efficient}。
 
-训练阶段的混合增强用于缓解中小规模数据条件下的过拟合风险。CNN-Conformer代表配置具有较强表示能力，训练过程中容易出现训练集指标持续提高而验证集指标提前停滞的现象。混合增强通过在样本和标签层面构造较平滑的过渡样本，使模型在训练阶段接触到更连续的判别边界。混合增强不改变Conformer编码块的结构，但会影响模型对少量训练样本的依赖程度。相关自注意力语音情绪识别研究为在语音情绪识别任务中使用混合增强提供了依据\cite{kang2023labelmixup}。
+训练阶段引入混合增强，通过在样本和标签层面构造较平滑的过渡样本来缓解中小规模数据条件下的过拟合风险，相关研究为在语音情绪识别任务中使用该策略提供了依据\cite{kang2023labelmixup}。
+
 
 将上述结构放回本章模型演进脉络，可以看到CNN-Conformer代表配置不是单纯扩大模型规模的结果。纯Transformer模型的参数量高于CNN-Conformer代表配置，但验证指标低于后者。CNN-Conformer代表配置的改进来自多个环节的组合，包括完整频带时间分块输入、Conformer编码块中的相对位置自注意力和卷积模块、注意力池化以及训练阶段的混合增强。结构组合从输入组织、序列编码和句级聚合三个层面回应了纯Transformer模型在局部细节、时间片段权重和中小规模训练稳定性方面暴露出的不足。
 
 本文重点分析CNN-Conformer模型，主要有两个原因。第一，CNN-Conformer结构在理论上同时利用局部建模和上下文建模，与本文围绕声学情绪线索组织方式展开的比较主线具有较强关联。第二，已有实验记录表明，CNN-Conformer模型在部分设置下能够达到较高验证指标，也持续暴露出训练后期过拟合倾向。围绕CNN-Conformer模型开展较细致的结构调整与训练策略分析，可以从结构组合角度回应卷积结构与Transformer结构如何协同的问题。
 
-需要说明的是，本文综合实验所采用的代表配置已不再保留原始自动语音识别场景中常见的两级卷积压缩前端。模型前端改为面向语音情绪识别场景的无卷积前端时间分块输入组织方式。无卷积前端时间分块输入与原始Conformer前端设计存在明确差异\cite{gulati2020conformer,zou2022speech,peng2021efficient}。
-
-在本文采用的代表实现中，CNN-Conformer模型的前端不承担强压缩作用，先利用无卷积前端时间分块方式直接构造序列标记。中间部分由若干Conformer编码块构成，每个编码块内部包含前馈网络、相对位置多头自注意力模块、卷积模块以及残差连接。末端部分通过注意力池化形成句级表示，并交由分类头输出情绪类别。当前实现将建模重点放在时间分块标记构造、Conformer序列编码和句级聚合三个部分，减少传统自动语音识别式卷积下采样前端造成的早期压缩。
-
-当前章节在综合实验中采用的CNN-Conformer代表配置，采用后续实验中取得较高指标的无卷积前端时间分块输入变体。代表配置中，时间块长度为4，归一化方式为LayerNorm，嵌入维度为192，编码层数为4，注意力头数为8，前馈维度为768，卷积模块卷积核大小为31，层间融合方式为末层输出，池化方式为注意力池化。训练阶段同时结合频谱级混合增强，$\alpha=0.4$。在代码实现上，Conformer块内部的执行顺序为前馈网络$\rightarrow$相对位置多头自注意力$\rightarrow$卷积模块$\rightarrow$前馈网络$\rightarrow$LayerNorm，并在两个前馈分支处使用0.5倍率的半步残差连接。
-
-分类器设计方面，CNN-Conformer模型首先通过注意力池化获得句级嵌入，再经过丢弃层与线性层完成8类情绪分类。对于本章所采用的代表配置而言，分类器之前的句级表示维度为192，分类头结构相对简洁，目的是将指标差异主要保留在前端标记构造方式与Conformer编码路径本身，减少额外复杂后端分类器带来的影响。
-
-无卷积前端时间分块输入是一种面向情绪细粒度时间线索保留而设计的输入组织方式。无卷积前端时间分块输入不使用标准两级卷积前端先压缩时频图，直接使用覆盖完整频率维度、宽度等于固定时间帧数的卷积核，将整幅谱图沿时间轴切分为若干连续时间块。每个时间块在进入序列编码之前已经包含完整频带信息，再经过层归一化和线性投影得到统一维度的序列标记。图\ref{fig:chapter4_nostem_patch_tokenization}给出了无卷积前端时间分块输入的形成过程。无卷积前端时间分块输入与多层声学信息融合和多尺度声学建模研究所关注的局部声学线索与上下文信息并用思路具有一定关联，可用于检验Conformer在较弱前端压缩条件下的实际收益\cite{zou2022speech,peng2021efficient}。
-
-CNN-Conformer模型中的层间特征融合、注意力池化和混合增强分别承担不同作用。层间特征融合用于比较末层上下文表示与多层表示组合之间的差异，相关研究曾从多层声学信息角度讨论语音情绪识别中的层级特征利用\cite{zou2022speech}。注意力池化用于在时间维度上为不同序列位置分配不同权重，语音情绪识别中的局部注意力和多尺度注意力研究均说明了聚合方式的任务相关性\cite{mirsamadi2017automatic,peng2021efficient}。混合增强用于在训练阶段构造较平滑的样本间过渡，以降低模型对少量训练样本的过度拟合风险。自注意力语音情绪识别中已有按照标签信息调整mixup训练过程的研究，该研究为本文采用混合增强提供了相关依据\cite{kang2023labelmixup}。
-
-图\ref{fig:chapter4_cnn_conformer_arch}、图\ref{fig:chapter4_conformer_block}与图\ref{fig:chapter4_nostem_patch_tokenization}分别对应CNN-Conformer模型的整体实现路径、单个Conformer编码块的内部结构以及无卷积前端时间分块输入的形成方式。本文采用的代表配置没有照搬原始Conformer在自动语音识别任务中的前端设计，模型在保留Conformer编码块主干顺序的基础上调整输入组织方式。编码阶段仍采用前馈网络、相对位置多头自注意力、卷积模块、前馈网络与LayerNorm构成的结构顺序，后端使用注意力池化、丢弃层与线性分类器完成8类情绪判别。代表配置安排使结构差异集中在前端标记构造与序列编码部分，与Conformer和语音情绪识别多层声学信息建模研究具有对应关系\cite{gulati2020conformer,zou2022speech,peng2021efficient}。
+代表配置的具体超参数见表\ref{tab:chapter4_conformer_final}。Conformer块内部执行顺序为前馈网络$\rightarrow$相对位置多头自注意力$\rightarrow$卷积模块$\rightarrow$前馈网络$\rightarrow$LayerNorm，两个前馈分支均采用0.5倍率半步残差连接，分类器通过注意力池化后经丢弃层与线性层完成8类情绪分类\cite{gulati2020conformer,zou2022speech,peng2021efficient}。
 
 经过模型结构设计，三类模型分别对应三种建模侧重：卷积神经网络基线模型强调局部时频纹理提取，纯Transformer模型强调基于自注意力的全局关系建模，CNN-Conformer模型则尝试在局部卷积建模与上下文建模之间建立衔接。表\ref{tab:chapter4_model_compare}对三类结构的前端处理方式、注意力使用情况与结构特点进行并列整理。
 
@@ -362,7 +333,7 @@ CNN-Conformer模型中的层间特征融合、注意力池化和混合增强分�
     \end{tabularx}
 \end{table}
 
-从表\ref{tab:chapter4_overall_results}可以看到，卷积神经网络基线模型达到Accuracy 0.61667、Macro-F1 0.62196和UAR 0.61563，说明局部时频模式仍具有较强参照意义。纯Transformer模型的三项指标分别为0.52000、0.51163和0.51250，未显示出稳定优于卷积基线的优势。CNN-Conformer模型达到Accuracy 0.70000、Macro-F1 0.70563和UAR 0.70938，说明局部建模与上下文建模结合后更适合当前实验条件。
+表\ref{tab:chapter4_overall_results}列出了三类模型的主要结果。卷积神经网络基线模型提供了稳定的局部特征对照；纯Transformer模型未在当前设置下取得明显优势；CNN-Conformer模型在局部与上下文建模结合下取得了较高验证指标。
 
 \subsection{CNN-Conformer模型的结构优化路径}
 
@@ -445,7 +416,7 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
 
 \subsection{噪声条件设计}
 
-噪声类型设置为white、pink、babble和synthetic-mixed四类，分别对应宽带随机干扰、低频偏置干扰、语音样背景干扰和混合瞬态干扰。此处采用合成噪声，主要用于形成可重复的受控评价条件，因此本文不对真实环境噪声建模作展开讨论。四类噪声与SNR等级构成双轴设计，便于观察不同频谱形态和不同强度下的退化差异\cite{leem2024selective,thanh2024robust,tzeng2025noiserobust}。
+噪声类型设置为white、pink、babble和synthetic-mixed四类，分别对应宽带随机干扰、低频偏置干扰、语音样背景干扰和混合瞬态干扰。此处采用合成噪声，主要用于形成可重复的受控评价条件，本文不对真实环境噪声建模作展开讨论。四类噪声与SNR等级构成双轴设计，便于观察不同频谱形态和不同强度下的退化差异\cite{leem2024selective,thanh2024robust,tzeng2025noiserobust}。
 
 \begin{table}[!t]
     \centering
@@ -469,7 +440,27 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
 
 表\ref{tab:chapter4_noise_setting}给出了统一设置。四类噪声作用于同一份评价样本，样本顺序、分块位置、聚合方式和评价指标保持一致，使不同条件之间的主要差异集中在输入波形受扰方式和受扰强度上。
 
-\begin{table}[!tbp]
+\subsection{结果与现象分析}
+
+\begin{figure}[!t]
+    \centering
+    \begin{minipage}{0.46\textwidth}
+        \centering
+        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_snr_accuracy_curve.png}
+        \par\footnotesize (a) 不同噪声强度下的Accuracy变化
+    \end{minipage}\hfill
+    \begin{minipage}{0.46\textwidth}
+        \centering
+        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_pink_m5_confusion_matrix.png}
+        \par\footnotesize (b) pink噪声-5dB条件下的混淆矩阵
+    \end{minipage}
+    \caption{噪声条件下CNN-Conformer模型的结果可视化}
+    \label{fig:chapter4_noise_result_artifacts}
+\end{figure}
+
+图\ref{fig:chapter4_noise_result_artifacts}（a）显示，进入20dB后四类噪声均造成指标回落；随着SNR继续下降，不同噪声类型之间的差异扩大。pink噪声在10dB以下退化较快，babble噪声和synthetic-mixed噪声在低SNR区间相对缓和。图\ref{fig:chapter4_noise_result_artifacts}（b）的混淆矩阵显示，强pink噪声条件下错误分布更加分散，类别边界明显变得模糊。各噪声条件的完整数值见表\ref{tab:chapter4_noise_results}。
+
+\begin{table}[!htbp]
     \centering
     \caption{不同噪声条件下CNN-Conformer模型的实验结果}
     \label{tab:chapter4_noise_results}
@@ -505,29 +496,7 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
     \end{tabular}
 \end{table}
 
-\subsection{结果与现象分析}
-
-\begin{figure}[!t]
-    \centering
-    \begin{minipage}{0.46\textwidth}
-        \centering
-        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_snr_accuracy_curve.png}
-        \par\footnotesize (a) 不同噪声强度下的Accuracy变化
-    \end{minipage}\hfill
-    \begin{minipage}{0.46\textwidth}
-        \centering
-        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_pink_m5_confusion_matrix.png}
-        \par\footnotesize (b) pink噪声-5dB条件下的混淆矩阵
-    \end{minipage}
-    \caption{噪声条件下CNN-Conformer模型的结果可视化}
-    \label{fig:chapter4_noise_result_artifacts}
-\end{figure}
-
-表\ref{tab:chapter4_noise_results}和图\ref{fig:chapter4_noise_result_artifacts}显示，clean条件下代表模型的Accuracy为0.70333，Macro-F1为0.70042，UAR为0.70000。进入20dB后，四类噪声均造成指标回落；随着SNR继续下降，不同噪声类型之间的差异扩大。pink噪声在10dB以下退化较快，-5dB条件下Accuracy降至0.15000，Macro-F1降至0.06243。babble噪声和synthetic-mixed噪声在低SNR区间下降相对缓和，但仍低于clean条件。
-
-从指标对应关系看，Accuracy、Macro-F1和UAR在多数噪声条件下同步下降，说明受扰输入同时影响整体正确率、类别均衡性和召回率稳定性。结合CNN-Conformer的时间分块与序列编码方式看，持续低频覆盖会压缩能量轮廓和局部时频纹理，使后续注意力池化获得的情绪相关线索减少。图\ref{fig:chapter4_noise_result_artifacts}右图中的混淆矩阵也显示，强pink噪声条件下错误分布更加分散，类别边界明显变得模糊。
-
-本节实验定位为代表模型在受扰输入下的补充观察。结果说明，clean条件下取得较高指标并不意味着模型在受扰输入下具有同等稳定性；噪声频谱形态和强度等级都会改变情绪线索的可见程度。当前论文不展开噪声建模改进，只把上述结果作为代表结构边界条件的记录。
+结合CNN-Conformer的时间分块与序列编码方式看，持续低频覆盖会压缩能量轮廓和局部时频纹理，使注意力池化获得的情绪相关线索减少；Accuracy、Macro-F1和UAR在多数条件下同步下降，说明受扰输入同时影响整体正确率与类别均衡性。本节结果说明，clean条件下的较高指标不能等同于受扰输入下的稳定性，当前论文不展开噪声建模改进，只把上述结果作为代表结构边界条件的记录。
 
 
 \section{跨语料库实验}
@@ -563,7 +532,7 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
     \end{tabularx}
 \end{table}
 
-上述协议固定两项约束：目标语料不参与模型选择，目标语料评价沿用主实验中的对数梅尔频谱提取、batch推理和统一指标统计口径。这样可以把数值差异主要解释为语料分布变化带来的影响。
+上述协议中目标语料不参与模型选择，评价沿用主实验统一口径，使数值差异主要反映语料分布变化的影响。
 
 \subsection{实验结果与现象分析}
 
@@ -602,11 +571,9 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
     \label{fig:chapter4_cross_corpus_artifacts}
 \end{figure}
 
-表\ref{tab:chapter4_cross_corpus_result}和图\ref{fig:chapter4_cross_corpus_artifacts}显示，当前模型在源语料内部能够形成一定程度的六类情绪边界，但该边界没有稳定迁移到目标语料。源验证集Macro-F1为0.56897，目标语料Macro-F1降至0.09243，说明同语料指标与跨语料库指标不能等同。结合训练现象看，源语料训练F1后期继续上升，而源验证集Macro-F1进入平台区，模型可能保留了较明显的源域偏向\cite{zhang2020transfer,lu2022domain,gao2024adversarial}。
+表\ref{tab:chapter4_cross_corpus_result}和图\ref{fig:chapter4_cross_corpus_artifacts}显示，当前模型在源语料内部能够形成一定程度的六类情绪边界，但该边界没有稳定迁移到目标语料。源验证集Macro-F1为0.56897，目标语料Macro-F1降至0.09243，目标语料ECE升至0.56109，说明同语料指标与跨语料库指标不能等同，模型可能保留了较明显的源域偏向\cite{zhang2020transfer,lu2022domain,gao2024adversarial}。图\ref{fig:chapter4_cross_corpus_artifacts}右图进一步显示，目标语料上多类样本的判别边界出现收缩，表明模型输出置信度与目标分布之间存在明显失配。
 
-图\ref{fig:chapter4_cross_corpus_artifacts}右图进一步显示，目标语料上多类样本的判别边界出现收缩，不同类别之间发生更广泛的相互偏移。该现象与目标语料ECE升高相互对应，表明问题不仅是个别类别召回率下降，也包括模型输出置信度与目标分布之间的失配。
-
-本节结果应解释为跨语料库基线观察。当前记录仅运行1个fold，且没有引入域不变约束、跨语料库特征标准化或目标域适配策略。相关研究表明，跨语料库语音情绪识别通常需要迁移子空间学习、域不变特征学习、对抗式域泛化或多任务建模来减弱语料间偏移，单纯依赖源语料监督往往难以获得稳定结果\cite{zhang2020transfer,luo2020nonnegative,lu2022domain,su2023unsupervised,ahn2025multitask,gao2024adversarial}。因此，本节主要用于量化source-only条件下的指标落差，并与噪声实验共同说明代表模型在输入受扰和语料迁移条件下的边界。
+本节结果作为跨语料库基线观察。相关研究表明，跨语料库语音情绪识别通常需要引入域不变特征学习、对抗式域泛化或多任务建模来减弱语料间偏移\cite{zhang2020transfer,luo2020nonnegative,lu2022domain,su2023unsupervised,ahn2025multitask,gao2024adversarial}。本节主要量化source-only条件下的指标落差，与噪声实验共同说明代表模型的边界条件。
 
 \section{本章小结}
 

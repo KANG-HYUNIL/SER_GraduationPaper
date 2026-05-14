@@ -61,53 +61,19 @@
 
 \textbf{(1) 输入格式统一：重采样与通道统一}
 
-不同语音数据集或录音设备采集的音频文件可能具有不同的采样频率和通道配置。 部分文件以8 kHz、16 kHz、22.05 kHz、44.1 kHz或48 kHz等不同采样频率存储，且单声道与立体声格式也可能混用。 这些差异会影响可分析的频率范围、时间分辨率以及后续特征的统计分布。为稳定应用相同的特征提取流程，特征提取前通常需要完成重采样与通道统一。
-
-重采样（resampling）是将原始采样频率下的离散信号重新表达为目标采样频率的过程。在概念上可理解为先从原离散信号恢复连续时间信号，再按目标采样频率重新采样，理想化情况下可表示为：
-
-\begin{equation}
-x_r[m] = x_c\left(\frac{m}{F_s'}\right)
-\end{equation}
-其中 $x_r[m]$ 为重采样后的离散信号，$x_c(t)$ 为恢复的连续时间信号，$F_s'$ 为目标采样频率，$m$ 为新采样索引。
-
-实际实现中并不直接计算连续时间信号，而是通过插值与抗混叠滤波相结合的数字化处理完成。尤其在下采样时，超出奈奎斯特频率的成分可能引发混叠，通常需通过低通滤波器抑制高频成分后再进行重采样。对于立体声或多声道输入信号，为保持特征提取的一致性，常将其转换为单声道。一种常见的方法是取左右声道平均值，可表示为：
-
+不同语音数据集的音频文件可能具有不同的采样频率（如16 kHz、44.1 kHz等）和通道配置（单声道/立体声），这些差异会影响可分析的频率范围与后续特征分布。重采样（resampling）将信号从原始采样频率转换至目标采样频率，下采样时需先通过低通滤波器抑制高频成分以避免混叠。对于立体声输入，通常取左右声道平均值转换为单声道：
 \begin{equation}
 x_{\text{mono}}[n] = \frac{x_L[n] + x_R[n]}{2}
 \end{equation}
-其中 $x_L[n]$ 和 $x_R[n]$ 分别为左右声道信号，$x_{\text{mono}}[n]$ 为转换后的单声道信号。该方法实现简单，较为适用于多数语音情绪识别实验，当某些声学信息仅集中于特定声道时，可能因平均化导致信息损失\cite{leem2024selective,lin2023chunk}。
-
-重采样与通道统一虽不直接产生情绪线索，但对于保证后续特征提取输入条件的一致性较为重要。若采样频率与通道格式未统一，即便采用相同的短时傅里叶变换（Short-Time Fourier Transform, STFT）或梅尔滤波器组（Mel filterbank）参数，也可能得到分布不同的特征，从而增加模型误将设备差异或存储格式差异作为情绪信息学习的风险。统一输入格式有助于保障后续处理可重复性与实验可比性的基础环节。
+其中 $x_L[n]$ 和 $x_R[n]$ 分别为左右声道信号。统一采样频率与通道格式有助于保证后续特征提取输入条件的一致性，避免模型将设备差异作为情绪信息学习\cite{leem2024selective,lin2023chunk}。
 
 \textbf{(2) 振幅归一化}
 
-不同语音文件在用户的发声音量、麦克风灵敏度、录音距离、设备增益、存储格式等方面可能存在一定差异。 这种差异可能源于情绪表达本身的差别，也可能反映录音条件的不同。若保留这种振幅差异直接提取特征，模型可能过度学习与情绪无关的振幅变化，从而影响识别性能\cite{fan2022isnet,lin2023chunk}。振幅归一化（amplitude normalization）用于统一输入信号的振幅范围。
-
-峰值归一化（peak normalization）是一种简单且常用的方法之一。 该方法以整个信号中绝对值最大的样本为基准进行缩放，可表示为：
-
+不同语音文件因用户发声音量、麦克风灵敏度、设备增益等差异，振幅范围可能不一致。振幅归一化（amplitude normalization）用于统一输入信号的振幅范围，减少录音条件差异对特征分布的影响\cite{fan2022isnet,lin2023chunk}。常用方法包括峰值归一化与均方根归一化（RMS normalization）。峰值归一化以信号最大绝对值为基准缩放，计算简单但对瞬时峰值敏感；RMS 归一化以信号平均强度为基准：
 \begin{equation}
-x_{\text{peak}}[n] = \frac{x[n]}{\max_{0 \le n < N} |x[n]| + \varepsilon}
+x_{\text{rms}}[n] = \frac{x[n]}{\sqrt{\frac{1}{N}\sum_{n=0}^{N-1} x[n]^2} + \varepsilon}
 \end{equation}
-其中 $x[n]$ 为原始信号，$x_{\text{peak}}[n]$ 为峰值归一化后的信号，$N$ 为总样本数，$\varepsilon$ 为防止分母为零的极小常数。经此归一化的信号，其最大绝对振幅通常较为接近1。峰值归一化的优点在于计算简单、直观，可较为快速地将信号动态范围调整到统一水平。峰值归一化的缺点在于，若信号中存在较大的瞬时峰值，其余部分的相对强度可能被过度压缩\cite{lin2023chunk}。
-
-均方根归一化（RMS normalization）也是一种常用的方法之一。均方根（RMS）反映信号的平均强度水平，定义为：
-
-\begin{equation}
-\mathrm{RMS}(x) = \sqrt{\frac{1}{N}\sum_{n=0}^{N-1} x[n]^2}
-\end{equation}
-据此，RMS 归一化可表示为：
-\begin{equation}
-x_{\text{rms}}[n] = \frac{x[n]}{\mathrm{RMS}(x) + \varepsilon}
-\end{equation}
-其中 $\mathrm{RMS}(x)$ 为原始信号的均方根值，$x_{\text{rms}}[n]$ 为归一化后的信号。若需要指定目标 RMS 值 $r_t$，可表示为：
-\begin{equation}
-x_{\text{target-rms}}[n] = \frac{r_t}{\mathrm{RMS}(x) + \varepsilon} x[n]
-\end{equation}
-其中$r_t$为目标 RMS 值。RMS 归一化以信号的均方根值为基准，相较于峰值归一化，通常可提供较为稳定的幅度调节效果\cite{zhang2020transfer,leem2024selective,lin2023chunk}。
-
-在语音情绪识别中，振幅归一化有助于减少因录音条件差异带来的无关振幅变化。情绪表达本身也包含发声强度、响度等重要线索，过度归一化可能削弱这些与情绪相关的强度信息。例如，愤怒、喜悦常伴随较高发声强度，而悲伤、疲惫则可能呈现较低且平缓的强度分布。应用振幅归一化时，需要在减少录音条件差异与保留情绪相关强度信息之间取得平衡\cite{fan2022isnet,zhang2020transfer,lin2023chunk}。
-
-此外，振幅归一化并非适用于所有情况。将整个信号缩放至统一振幅范围时，噪声环境也会被同步放大或缩小。振幅归一化可视为信号振幅统一的基础步骤，噪声消除与鲁棒性增强应该结合后续的数据增强或鲁棒性策略共同实现。
+其中 $\varepsilon$ 为防止分母为零的极小常数，通常可提供较为稳定的幅度调节效果\cite{zhang2020transfer,leem2024selective,lin2023chunk}。需要注意的是，情绪表达本身包含发声强度线索（如愤怒伴随较高强度、悲伤呈现较低强度），应用归一化时需在减少录音条件差异与保留情绪相关强度信息之间取得平衡\cite{fan2022isnet,zhang2020transfer}。
 
 
 
@@ -174,7 +140,7 @@ f_k = \frac{k F_s}{N}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.80\textwidth]{images/feedback_diagrams/chapter2/fourier/ft_time_to_frequency.drawio.pdf}
+    \includegraphics[width=0.75\textwidth]{images/feedback_diagrams/chapter2/fourier/ft_time_to_frequency.drawio.pdf}
     \caption{傅里叶变换将时域波形转换为频域幅度谱的直观过程}
     \label{fig:ft_time_to_frequency}
 \end{figure}
@@ -220,11 +186,7 @@ X(m,k) = \sum_{n=-\infty}^{\infty} x[n] \cdot w[n-mH] \cdot e^{-j 2\pi kn/N}
 \end{equation}
 其中 $x[n]$ 为原始离散信号，$w[n-mH]$ 为移动至第 $m$ 个时间位置的窗函数，$H$ 为帧移，$N$ 为快速傅里叶变换长度，$m$ 为时间帧索引，$k$ 为频率 bin 索引。
 
-结合前述分帧处理，短时傅里叶变换也可按帧表示为：
-\begin{equation}
-X(m,k) = \sum_{n=0}^{L-1} x_m[n] \cdot w[n] \cdot e^{-j 2\pi kn/N}
-\end{equation}
-其中 $x_m[n]$ 为第 $m$ 帧信号，$L$ 为帧长，$w[n]$ 为窗函数，$N$ 为快速傅里叶变换长度。该表达式说明，短时傅里叶变换可视为“分帧—加窗—逐帧快速傅里叶变换”的连续过程。
+结合前述分帧处理，短时傅里叶变换可视为”分帧—加窗—逐帧快速傅里叶变换”的连续过程。
 
 短时傅里叶变换能够同时提供时间与频率信息，但该变换的时间分辨率与频率分辨率之间往往存在权衡。采用较短的窗函数可获得较好的时间分辨率，但频率分辨率可能相应降低；采用较长的窗函数则可获得更精细的频率结构，但对时间变化的响应能力相对较弱。上述时间分辨率与频率分辨率之间的权衡关系与帧移、快速傅里叶变换长度及采样频率等因素密切相关。
 
@@ -232,7 +194,7 @@ X(m,k) = \sum_{n=0}^{L-1} x_m[n] \cdot w[n] \cdot e^{-j 2\pi kn/N}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.80\textwidth]{images/feedback_diagrams/chapter2/stft/ft_vs_stft.drawio.pdf}
+    \includegraphics[width=0.75\textwidth]{images/feedback_diagrams/chapter2/stft/ft_vs_stft.drawio.pdf}
     \caption{傅里叶变换与短时傅里叶变换在时间信息保留方式上的差异}
     \label{fig:ft_vs_stft}
 \end{figure}
@@ -254,19 +216,11 @@ S_{\mathrm{pow}}(m,k) = |X(m,k)|^2
 \end{equation}
 功率谱图与信号的能量分布较为密切地相关，在许多声学特征提取中作为基础输入使用。在语音处理中，功率形式往往比幅度形式较为常见，后续的梅尔滤波器组（Mel filterbank）运算也通常基于功率谱图进行。
 
-对数谱图（log spectrogram）通过对功率谱图取对数，压缩动态范围，使其更接近人耳听觉感知特性。最简单的对数表达形式为：
+对数谱图（log spectrogram）通过对功率谱图取对数，压缩动态范围，使其更接近人耳听觉感知特性：
 \begin{equation}
 S_{\log}(m,k) = \log\left(S_{\mathrm{pow}}(m,k)+\varepsilon\right)
 \end{equation}
-其中 $\varepsilon$ 为极小常数，用于避免对零取对数引起的数值不稳定。实际实现中有时采用 dB 刻度，即：
-\begin{equation}
-S_{\mathrm{dB}}(m,k) = 10 \log_{10}\left(S_{\mathrm{pow}}(m,k)+\varepsilon\right)
-\end{equation}
-或以幅度谱图为基础的 dB 表示为：
-\begin{equation}
-S_{\mathrm{dB-mag}}(m,k) = 20 \log_{10}\left(S_{\mathrm{mag}}(m,k)+\varepsilon\right)
-\end{equation}
-对数刻度能够压缩大动态范围，使得微弱频率成分相对更易被观测。
+其中 $\varepsilon$ 为极小常数，用于避免数值不稳定。实际实现中也常采用 dB 刻度 $10\log_{10}(\cdot)$，对数刻度能够压缩大动态范围，使微弱频率成分相对更易被观测。
 
 谱图是语音情绪识别中较为常用的输入表示之一\cite{peng2021efficient,mirsamadi2017automatic,chen2023dwformer}。不同情绪状态下，特定频带的能量分布、谱包络、共振结构及发声强度的时变模式可能有所不同，谱图能够较为清晰地呈现这些差异。在卷积神经网络类模型中，常将谱图视作二维图像，自动学习具有情绪判别性的时频模式\cite{zhang2023cnn,wang2024swin}。此外，对数谱图是后续梅尔滤波器组、对数梅尔谱及梅尔频率倒谱系数等特征构建的基础。
 
@@ -274,7 +228,7 @@ S_{\mathrm{dB-mag}}(m,k) = 20 \log_{10}\left(S_{\mathrm{mag}}(m,k)+\varepsilon\r
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.80\textwidth]{images/feedback_diagrams/chapter2/spectrogram_forms/spectrogram_forms.drawio.pdf}
+    \includegraphics[width=0.75\textwidth]{images/feedback_diagrams/chapter2/spectrogram_forms/spectrogram_forms.drawio.pdf}
     \caption{幅度谱图、功率谱图与对数谱图在同一时频结构上的显示差异}
     \label{fig:spectrogram_forms}
 \end{figure}
@@ -306,20 +260,11 @@ E_p(m) = \sum_{k=0}^{N-1} |X(m,k)|^2 H_p[k]
 
 对梅尔滤波器组输出的各帧频带能量取对数，即得到对数梅尔谱图。可理解为将基于短时傅里叶变换的功率谱映射至梅尔刻度后，再通过对数运算压缩动态范围。对数梅尔谱图既模拟了人耳的非线性听觉特性，又通过对数变换使能量分布更为平稳。
 
-设梅尔滤波器组输出能量为 $E_p(m)$，其定义如下：
-\begin{equation}
-E_p(m) = \sum_{k=0}^{N-1} |X(m,k)|^2 H_p[k]
-\end{equation}
-对该能量取对数，得到第 $m$ 帧第 $p$ 个梅尔频带的对数能量：
+以前述梅尔滤波器组输出能量 $E_p(m)$ 为基础，对其取对数得到第 $m$ 帧第 $p$ 个梅尔频带的对数能量：
 \begin{equation}
 M_p(m) = \log\left(E_p(m)+\varepsilon\right)
 \end{equation}
-其中 $M_p(m)$ 为对数梅尔谱值，$\varepsilon$ 为极小常数，用于避免对零取对数。
-
-实际应用中，也可采用 dB 刻度，即：
-\begin{equation}
-M_p^{(\mathrm{dB})}(m) = 10 \log_{10}\left(E_p(m)+\varepsilon\right)
-\end{equation}
+其中 $M_p(m)$ 为对数梅尔谱值，$\varepsilon$ 为极小常数。实际应用中也可采用 dB 刻度 $10\log_{10}(\cdot)$。
 
 语音信号的能量动态范围较广。原始功率谱或梅尔滤波器组输出中，某些频带能量可能远大于其他频带，若未经处理直接使用，模型可能过度关注大值区域。对数变换可压缩动态范围，使小能量差异也能被有效保留，同时与人耳的对数响度感知特性有一定关联。对数梅尔谱是数值处理结果，也是连接物理信号与听觉感知的常用表示之一\cite{he2023multiple,peng2021efficient,wang2024swin}。
 
@@ -327,14 +272,14 @@ M_p^{(\mathrm{dB})}(m) = 10 \log_{10}\left(E_p(m)+\varepsilon\right)
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.80\textwidth]{images/feedback_diagrams/chapter2/logmel/mel_vs_logmel.drawio.pdf}
+    \includegraphics[width=0.75\textwidth]{images/feedback_diagrams/chapter2/logmel/mel_vs_logmel.drawio.pdf}
     \caption{梅尔谱图与对数梅尔谱图的生成关系及动态范围差异}
     \label{fig:mel_vs_logmel}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.78\textwidth]{images/chapter2/chapter2_logmel_time_frequency.drawio.pdf}
+    \includegraphics[width=0.75\textwidth]{images/chapter2/chapter2_logmel_time_frequency.drawio.pdf}
     \caption{对数梅尔频谱的时间-频带结构与情绪线索表达}
     \label{fig:chapter2_logmel_time_frequency}
 \end{figure}
@@ -413,7 +358,7 @@ z = \frac{x-\mu}{\sigma + \varepsilon}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.80\textwidth]{images/chapter2/chapter2_length_handling.drawio.pdf}
+    \includegraphics[width=0.75\textwidth]{images/chapter2/chapter2_length_handling.drawio.pdf}
     \caption{变长语音特征的长度处理与输入组织方式}
     \label{fig:chapter2_length_handling}
 \end{figure}
@@ -465,11 +410,11 @@ z = \frac{x-\mu}{\sigma + \varepsilon}
 
 语音情绪识别领域的信号处理技术，可根据输入语音转换为何种特征表示，划分为若干改进方向\cite{ma2023review,lin2023chunk,peng2021efficient}。第一种改进方向采用人工设计的固定变换特征。该类方法从语音信号中提取梅尔频率倒谱系数、对数梅尔谱、谱图、基频、能量、共振峰等特征。第二种改进方向利用大规模无标注语音数据中学习的特征表示。该类方法使用 Wav2Vec2、HuBERT、WavLM 等自监督学习模型，从原始语音中提取高维特征向量\cite{thanh2024robust,sampath2025efficient}。第三种改进方向聚焦于信号的鲁棒性。该类方法采用噪声添加、多输入添加、数据增强、去噪处理、特征增强等技术\cite{leem2024selective}。
 
-第一种改进方向采用人工设计的固定变换特征。该类方法从语音信号中提取多种声学特征，主要可分为时频域特征、韵律特征和发声质量特征三类\cite{ma2023review,lin2023chunk,peng2021efficient}。时频域特征包括通过短时傅里叶变换获得的谱图、对数梅尔谱图、梅尔频率倒谱系数等。韵律特征包括基频、能量、语速、过零率等。发声质量特征包括共振峰、微扰、shimmer、谐波比等。上述人工设计的声学特征，其优势在于能够将语音的时间、频率及发声属性整理为相对可解释的形式\cite{pappagari2023music}。例如，基频与能量可反映语调与发话强度的变化，梅尔频率倒谱系数及频谱类特征则可较好地概括音色与频谱包络的变化。这些声学特征可与支持向量机、隐马尔可夫模型、高斯混合模型等分类器结合使用。其中，基于OpenSMILE提取的eGeMAPS、ComParE、IS09等特征集，在情绪识别研究中作为代表性基准特征集使用。该类固定变换特征方法在特征设计上对研究者们的先验判断存在一定依赖，不同特征之间可能存在一定重叠，且难以通过单一固定特征集完整捕捉情绪的复杂表达。该方法通常作为基础技术路线之一，在需要更高表达能力的场景下常与其他类型方法结合使用。
+第一种改进方向采用人工设计的固定变换特征，主要包括谱图、对数梅尔谱图、梅尔频率倒谱系数等时频域特征，以及基频、能量、共振峰等韵律与发声质量特征\cite{ma2023review,peng2021efficient}。代表性特征集包括基于OpenSMILE提取的eGeMAPS、ComParE等，常用于基准对比。该类特征可解释性较强，但依赖先验设计，难以通过单一固定特征集完整捕捉情绪的复杂表达\cite{pappagari2023music}。
 
-第二种改进方向利用大规模无标注语音数据中学习的特征表示。该类方法使用 Wav2Vec2、HuBERT、WavLM 等自监督学习模型，从原始语音中提取高维特征向量\cite{baevski2020wav2vec2,hsu2021hubert,chen2022wavlm}。这些自监督学习模型在大规模无标注语音数据（数千小时以上）上进行预训练，学习涵盖语音信号多个层次（音素、韵律、发声特性等）的通用特征表示\cite{yang2021superb}。例如，在 LibriSpeech 数据集（960小时）上预训练的 Wav2Vec2 和 HuBERT 模型，可从原始语音中提取 768 维以上的特征向量。在 Libri-Light 数据集（6万小时）上训练的大规模模型则具有更为丰富的表示能力。这种特征表示与传统人工设计特征（MFCC、log-Mel 等）不同，其特点在于通过可学习的变换自动捕捉语音信号的复杂结构。围绕语音情绪识别的下游研究已表明，自监督学习特征在冻结特征、全量微调和说话人归一化等设定下都具有较强潜力，并在噪声环境下能够提供相对稳定的表示\cite{pepino2021wav2vec,morais2022sslfeatures,gat2022speakernorm,fang2023downstreamssl,thanh2024robust}。该类方法也存在一定局限。首先，预训练的语音表示未必针对情绪信息进行优化，情绪识别所需的线索与预训练目标之间可能存在差异\cite{sampath2025efficient}。其次，模型规模较大，计算资源与内存消耗较高\cite{feng2023peftser,lashkarashvili2024peftdomain}。此外，预训练数据与目标情绪数据之间的领域差异（语言、录音环境、用户特性等）可能影响特征表示的有效性\cite{park2023speakerspecificemotion}。该类方法作为信号处理技术之一，需根据数据规模与计算条件加以选择。
+第二种改进方向利用大规模无标注语音数据训练的自监督学习模型提取高维特征表示，代表性模型包括Wav2Vec2、HuBERT和WavLM等\cite{baevski2020wav2vec2,hsu2021hubert,chen2022wavlm}。自监督学习特征在语音情绪识别的下游研究中表现出较强潜力\cite{pepino2021wav2vec,fang2023downstreamssl,thanh2024robust}，但模型规模较大、计算资源消耗较高，预训练目标与情绪识别需求之间可能存在差异\cite{sampath2025efficient,feng2023peftser}。
 
-第三种改进方向关注信号的鲁棒性。在实际应用环境中，噪声环境、室内多输入、麦克风质量差异、录音距离变化等多种失真因素可能影响特征提取的稳定性\cite{ma2023review,leem2024selective,zhou2020using,lin2023chunk}。在信号处理阶段，可采用以下技术。第一，在训练阶段应用噪声添加、多输入添加、速度扰动、基频扰动等数据增强技术，以提高模型在不同环境条件下的适应性\cite{thanh2024robust}。第二，在前处理阶段应用去噪算法，改善输入信号的质量\cite{tzeng2025noiserobust}。第三，在特征提取阶段应用选择性特征增强或鲁棒特征提取技术，获得对失真相对不敏感的特征表示。这些信号处理技术与特征表示本身的设计不同，其作用在于辅助现有特征提取方式在实际环境中更稳定地运行。
+第三种改进方向关注信号的鲁棒性，采用噪声添加、速度扰动等数据增强技术、前处理阶段的去噪算法或特征提取阶段的鲁棒特征设计，以提高模型在噪声环境和多输入等实际条件下的稳定性\cite{leem2024selective,thanh2024robust,tzeng2025noiserobust}。
 
 
 \section{本文采用的信号处理流程}
@@ -478,7 +423,7 @@ z = \frac{x-\mu}{\sigma + \varepsilon}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{images/chapter2/chapter2_signal_processing_pipeline.drawio.pdf}
+    \includegraphics[width=0.78\textwidth]{images/chapter2/chapter2_signal_processing_pipeline.drawio.pdf}
     \caption{本文采用的信号处理流程}
     \label{fig:chapter2_signal_processing_pipeline}
 \end{figure}
@@ -489,7 +434,7 @@ z = \frac{x-\mu}{\sigma + \varepsilon}
 
 \textbf{(2) 对数梅尔频谱提取。}
 
-完成基础预处理后，本文采用短时傅里叶变换和梅尔滤波器组提取对数梅尔频谱。主实验中采用80维梅尔频带，快速傅里叶变换长度设为1024，帧移设为160，在16kHz采样率下约对应10ms的时间步长。频率范围主要覆盖0Hz至6000Hz区间。对数梅尔频谱既保留语音在时间轴上的局部变化，又将频率轴整理为接近听觉感知的频带表示，适合作为卷积神经网络、Transformer和CNN-Conformer模型的共同输入基础\cite{ma2023review,peng2021efficient}。
+完成基础预处理后，本文采用短时傅里叶变换和梅尔滤波器组提取对数梅尔频谱。实验流程保留固定的快速傅里叶变换长度、帧移与频率范围设置，使不同样本在后续模型比较中具有一致的时频分析口径。对数梅尔频谱既保留语音在时间轴上的局部变化，又将频率轴整理为接近听觉感知的频带表示，适合作为卷积神经网络、Transformer和CNN-Conformer模型的共同输入基础\cite{ma2023review,peng2021efficient}。
 
 \textbf{(3) 特征标准化与输入长度组织。}
 
