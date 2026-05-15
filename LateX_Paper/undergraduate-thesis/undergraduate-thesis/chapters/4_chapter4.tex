@@ -301,6 +301,8 @@ Conformer编码阶段在时间分块输入组织方式上进一步发挥作用�
     \end{tabular}
 \end{table}
 
+\FloatBarrier
+
 \section{综合实验}
 
 \subsection{各比较模型的综合实验结果}
@@ -326,6 +328,7 @@ Conformer编码阶段在时间分块输入组织方式上进一步发挥作用�
         \bottomrule
     \end{tabularx}
 \end{table}
+
 
 \begin{table}[!htbp]
     \centering
@@ -385,6 +388,8 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
     \end{tabularx}
 \end{table}
 
+表\ref{tab:chapter4_conformer_final}用于固定后续讨论中的代表配置。该配置汇总输入组织、编码器结构、池化方式和训练设置，表\ref{tab:chapter4_conformer_stage_results}则从实验推进角度回顾不同调整阶段对应的指标变化。
+
 \begin{table}[!htbp]
     \centering
     \caption{CNN-Conformer模型阶段性结果汇总}
@@ -430,7 +435,25 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
 
 噪声类型设置为white、pink、babble和synthetic-mixed四类，分别对应宽带随机干扰、低频偏置干扰、语音样背景干扰和混合瞬态干扰。此处采用合成噪声，主要用于形成可重复的受控评价条件，本文不对真实环境噪声建模作展开讨论。四类噪声与SNR等级构成双轴设计，便于观察不同频谱形态和不同强度下的退化差异\cite{leem2024selective,thanh2024robust,tzeng2025noiserobust}。
 
-\begin{table}[!t]
+\begin{figure}[!t]
+    \centering
+    \begin{minipage}{0.46\textwidth}
+        \centering
+        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_snr_accuracy_curve.png}
+        \par\footnotesize (a) 不同噪声强度下的Accuracy变化
+    \end{minipage}\hfill
+    \begin{minipage}{0.46\textwidth}
+        \centering
+        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_pink_m5_confusion_matrix.png}
+        \par\footnotesize (b) pink噪声-5dB条件下的混淆矩阵
+    \end{minipage}
+    \caption{噪声条件下CNN-Conformer模型的结果可视化}
+    \label{fig:chapter4_noise_result_artifacts}
+\end{figure}
+
+图\ref{fig:chapter4_noise_result_artifacts}先给出噪声强度曲线和代表混淆矩阵，用于展示受扰输入下的总体退化趋势与类别混淆形态。表\ref{tab:chapter4_noise_setting}随后列出评价协议，使图中现象与具体噪声设置保持对应。
+
+\begin{table}[!htbp]
     \centering
     \caption{噪声条件实验设置}
     \label{tab:chapter4_noise_setting}
@@ -454,25 +477,15 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
 
 \subsection{结果与现象分析}
 
-\begin{figure}[!t]
-    \centering
-    \begin{minipage}{0.46\textwidth}
-        \centering
-        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_snr_accuracy_curve.png}
-        \par\footnotesize (a) 不同噪声强度下的Accuracy变化
-    \end{minipage}\hfill
-    \begin{minipage}{0.46\textwidth}
-        \centering
-        \includegraphics[width=0.88\linewidth]{images/chapter4_experiment_artifacts/noise_pink_m5_confusion_matrix.png}
-        \par\footnotesize (b) pink噪声-5dB条件下的混淆矩阵
-    \end{minipage}
-    \caption{噪声条件下CNN-Conformer模型的结果可视化}
-    \label{fig:chapter4_noise_result_artifacts}
-\end{figure}
 
-图\ref{fig:chapter4_noise_result_artifacts}（a）显示，进入20dB后四类噪声均造成指标回落；随着SNR继续下降，不同噪声类型之间的差异扩大。pink噪声在10dB以下退化较快，babble噪声和synthetic-mixed噪声在低SNR区间相对缓和。图\ref{fig:chapter4_noise_result_artifacts}（b）的混淆矩阵显示，强pink噪声条件下错误分布更加分散，类别边界明显变得模糊。各噪声条件的完整数值见表\ref{tab:chapter4_noise_results}。
 
-\begin{table}[!htbp]
+图\ref{fig:chapter4_noise_result_artifacts}（a）显示，进入20dB后四类噪声均造成指标回落，随着SNR继续下降，不同噪声类型之间的差异扩大。pink噪声在10dB以下退化较快，babble噪声和synthetic-mixed噪声在低SNR区间相对缓和。图\ref{fig:chapter4_noise_result_artifacts}（b）的混淆矩阵显示，强pink噪声条件下错误分布更加分散，类别边界明显变得模糊。该现象说明，受扰输入削弱的不只是整体判别置信度，也会改变相近情绪类别之间的混淆形态。
+
+从表\ref{tab:chapter4_noise_results}的逐项数值看，white噪声从20dB到-5dB形成连续退化，Accuracy由0.61000降至0.29333。pink噪声在低SNR区间下降更明显，-5dB时Accuracy仅为0.15000，说明持续低频偏置会更强地干扰当前输入表示。babble噪声在各SNR区间的退化相对缓和，synthetic-mixed噪声在20dB到5dB之间保持较高指标，但在0dB以下同样出现明显下降。
+
+结合CNN-Conformer的时间分块与序列编码方式看，持续低频覆盖会压缩能量轮廓和局部时频纹理，使注意力池化获得的情绪相关线索减少。Accuracy、Macro-F1和UAR在多数条件下同步下降，说明受扰输入同时影响整体正确率与类别均衡性。本节结果说明，clean条件下的较高指标不能等同于受扰输入下的稳定性，当前论文不展开噪声建模改进，只把上述结果作为代表结构边界条件的记录。
+
+\begin{table}[!t]
     \centering
     \caption{不同噪声条件下CNN-Conformer模型的实验结果}
     \label{tab:chapter4_noise_results}
@@ -507,8 +520,6 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
         \bottomrule
     \end{tabular}
 \end{table}
-
-结合CNN-Conformer的时间分块与序列编码方式看，持续低频覆盖会压缩能量轮廓和局部时频纹理，使注意力池化获得的情绪相关线索减少；Accuracy、Macro-F1和UAR在多数条件下同步下降，说明受扰输入同时影响整体正确率与类别均衡性。本节结果说明，clean条件下的较高指标不能等同于受扰输入下的稳定性，当前论文不展开噪声建模改进，只把上述结果作为代表结构边界条件的记录。
 
 
 \section{跨语料库实验}
@@ -567,6 +578,8 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
     \end{tabular}
 \end{table}
 
+表\ref{tab:chapter4_cross_corpus_result}和图\ref{fig:chapter4_cross_corpus_artifacts}显示，当前模型在源语料内部能够形成一定程度的六类情绪边界，但该边界没有稳定迁移到目标语料。源验证集Macro-F1为0.56897，目标语料Macro-F1降至0.09243，目标语料ECE升至0.56109，说明同语料指标与跨语料库指标不能等同，模型可能保留了较明显的源域偏向\cite{zhang2020transfer,lu2022domain,gao2024adversarial}。图\ref{fig:chapter4_cross_corpus_artifacts}右图进一步显示，目标语料上多类样本的判别边界出现收缩，表明模型输出置信度与目标分布之间存在明显失配。
+
 \begin{figure}[!htbp]
     \centering
     \begin{minipage}{0.46\textwidth}
@@ -583,8 +596,7 @@ CNN-Conformer模型同时包含输入组织、序列编码与分类模块，指�
     \label{fig:chapter4_cross_corpus_artifacts}
 \end{figure}
 
-表\ref{tab:chapter4_cross_corpus_result}和图\ref{fig:chapter4_cross_corpus_artifacts}显示，当前模型在源语料内部能够形成一定程度的六类情绪边界，但该边界没有稳定迁移到目标语料。源验证集Macro-F1为0.56897，目标语料Macro-F1降至0.09243，目标语料ECE升至0.56109，说明同语料指标与跨语料库指标不能等同，模型可能保留了较明显的源域偏向\cite{zhang2020transfer,lu2022domain,gao2024adversarial}。图\ref{fig:chapter4_cross_corpus_artifacts}右图进一步显示，目标语料上多类样本的判别边界出现收缩，表明模型输出置信度与目标分布之间存在明显失配。
-
+ 
 本节结果作为跨语料库基线观察。相关研究表明，跨语料库语音情绪识别通常需要引入域不变特征学习、对抗式域泛化或多任务建模来减弱语料间偏移\cite{zhang2020transfer,luo2020nonnegative,lu2022domain,su2023unsupervised,ahn2025multitask,gao2024adversarial}。本节主要量化source-only条件下的指标落差，与噪声实验共同说明代表模型的边界条件。
 
 \section{本章小结}
