@@ -74,7 +74,7 @@
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.68\textwidth]{images/chapter4_hand_models/cnn_baseline.drawio.pdf}
+    \includegraphics[width=\textwidth]{images/chapter4_hand_models/cnn_baseline.drawio.pdf}
     \caption{卷积神经网络基线模型结构}
     \label{fig:chapter4_cnn_baseline_arch}
 \end{figure}
@@ -113,7 +113,7 @@
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.70\textwidth]{images/chapter4_ex/pure_transformer_learning_curve.png}
+    \includegraphics[width=\textwidth]{images/chapter4_ex/pure_transformer_learning_curve.png}
     \caption{纯Transformer模型的训练曲线}
     \label{fig:chapter4_pure_transformer_learning_curve}
 \end{figure}
@@ -145,7 +145,7 @@ CNN-Conformer模型来源于卷积模块与Conformer编码器相结合的设计�
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.72\textwidth]{images/chapter4_hand_models/cnn_conformer_overall.drawio.pdf}
+    \includegraphics[width=\textwidth]{images/chapter4_hand_models/cnn_conformer_overall.drawio.pdf}
     \caption{CNN-Conformer模型结构}
     \label{fig:chapter4_cnn_conformer_arch}
 \end{figure}
@@ -187,7 +187,7 @@ y &= \mathrm{LayerNorm}\left(\tilde{x}_3 + \frac{1}{2}\mathrm{FFN}(\tilde{x}_3)\
 从任务设置看，原始Conformer需要把较长语音序列映射为文字序列，模型更关注连续声学单元到文字单元的对齐与识别。本文的CNN-Conformer模型输出8类情绪标签，更关注整段发话中的非文字语义线索是否能够形成稳定类别边界。原始Conformer实验使用自动语音识别常见的词错误率评价，本文使用Accuracy、Macro-F1和UAR评价分类结果，并按照用户划分验证集以观察未见用户条件下的判别能力。原始Conformer的前端压缩有助于降低自动语音识别中的长序列计算负担，本文的无卷积前端时间分块输入则更强调在进入编码器之前保留完整频带结构。上述差别决定了本文不能简单复现原始自动语音识别结构，而需要在Conformer编码思想基础上进行面向语音情绪识别任务的输入组织调整。
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.72\textwidth]{images/chapter4_hand_models/cnn_conformer_nostem.drawio.pdf}
+    \includegraphics[width=\textwidth]{images/chapter4_hand_models/cnn_conformer_nostem.drawio.pdf}
     \caption{无卷积前端时间分块输入的形成过程}
     \label{fig:chapter4_nostem_patch_tokenization}
 \end{figure}
