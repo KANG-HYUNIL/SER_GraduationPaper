@@ -1,0 +1,53 @@
+data:
+  dataset_path: C:\Users\hik88\Desktop\BIT_Uni\GraduationPaper\Project\SER_GraduationPaper\src\$RVNS6MQ
+  sample_rate: 16000
+  duration: 3.0
+  n_mels: 128
+  n_fft: 1024
+  hop_length: 160
+  f_min: 20.0
+  f_max: 6000.0
+  normalize: true
+  resize_enabled: true
+  resize_height: 96
+  resize_width: 512
+  cache_features: true
+  chunking:
+    enabled: false
+    chunk_frames: 64
+    hop_frames: 32
+    eval_hop_frames: 16
+    aggregation_mode: mean_logit
+    topk_ratio: 0.5
+model:
+  name: cnn_baseline
+  hidden_dims:
+  - 32
+  - 32
+  - 96
+  - 512
+  dropout: 0.3704027749807811
+train:
+  seed: 42
+  batch_size: 16
+  epochs: 30
+  learning_rate: 0.00015931138368626644
+  weight_decay: 3.6488410367671756e-05
+  k_folds: 5
+  folds_to_run: 1
+  early_stopping: 10
+  device: auto
+  num_workers: 0
+  objective_metric: f1_macro
+  loss:
+    name: cross_entropy
+    label_smoothing: 0.0
+    class_weight_mode: none
+    focal_gamma: 2.0
+  mixup:
+    enabled: false
+    alpha: 0.2
+    level: spectrogram
+  sampler:
+    name: random
+    class_weight_mode: none

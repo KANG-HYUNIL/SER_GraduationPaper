@@ -1,0 +1,20 @@
+{
+  "experiment_id": "cnn_baseline_retained_checkpoint_fold1_reproduction",
+  "source_note": "Loads the retained CNN baseline fold-1 checkpoint. The checkpoint tensor shapes match trial_0075, while the documented trial_0023 checkpoint is not retained as a separate file.",
+  "purpose": "presentation reproduction: load saved checkpoint and run inference/evaluation again",
+  "checkpoint": {
+    "path": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-04-14\\04-49-31_cnn_optuna_stage1_baselineTest\\weights\\best_model_fold1.pt",
+    "size_bytes": 2200437,
+    "mtime_iso": "2026-04-14T11:48:41",
+    "sha256": "135b557edc77343eb8b68f3680b83d2934ca6ddc6ed06b37c95b2f13fe780e32"
+  },
+  "dataset_note": "RAVDESS GroupKFold fold 1 validation/test split",
+  "original_result_reference": {
+    "matching_trial_summary": "outputs/2026-04-14/04-49-31_cnn_optuna_stage1_baselineTest/optuna_trials/trial_0075/trial_summary.json",
+    "documented_winner_summary": "outputs/2026-04-14/04-49-31_cnn_optuna_stage1_baselineTest/optuna_trials/trial_0023/trial_summary.json",
+    "document": "docs/KR_MODELS_CNN_BASELINE.md"
+  },
+  "model_name": "cnn_baseline",
+  "num_classes": 8,
+  "output_dir": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-07-57_presentation_cnn_baseline_retained_checkpoint"
+}

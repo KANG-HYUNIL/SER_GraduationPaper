@@ -1,0 +1,8 @@
+{
+  "confusion_matrix_csv": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-13-46_presentation_cnn_conformer_retained_checkpoint\\artifacts\\fold_1_confusion_matrix.csv",
+  "confusion_matrix_html": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-13-46_presentation_cnn_conformer_retained_checkpoint\\artifacts\\fold_1_confusion_matrix.html",
+  "calibration_bins_csv": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-13-46_presentation_cnn_conformer_retained_checkpoint\\artifacts\\fold_1_calibration_bins.csv",
+  "calibration_bins_html": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-13-46_presentation_cnn_conformer_retained_checkpoint\\artifacts\\fold_1_calibration_bins.html",
+  "class_curve_summary_csv": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-13-46_presentation_cnn_conformer_retained_checkpoint\\artifacts\\fold_1_class_curve_summary.csv",
+  "class_curve_summary_html": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-13-46_presentation_cnn_conformer_retained_checkpoint\\artifacts\\fold_1_class_curve_summary.html"
+}

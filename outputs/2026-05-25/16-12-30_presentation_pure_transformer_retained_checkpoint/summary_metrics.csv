@@ -1,0 +1,10 @@
+scope,metric,value
+ravdess_fold1,accuracy,0.16333333333333333
+ravdess_fold1,f1_macro,0.06460549645390071
+ravdess_fold1,f1_weighted,0.06891252955082743
+ravdess_fold1,uar,0.153125
+ravdess_fold1,war,0.16333333333333333
+ravdess_fold1,mcc,0.04546090565385554
+ravdess_fold1,kappa,0.0346153846153846
+ravdess_fold1,ece,0.6054556745290756
+ravdess_fold1,loss,6.144453860918681

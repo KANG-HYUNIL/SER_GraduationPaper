@@ -1,0 +1,20 @@
+{
+  "experiment_id": "pure_transformer_retained_checkpoint_fold1_reproduction",
+  "source_note": "Loads the retained pure_transformer fold-1 checkpoint. The checkpoint tensor shapes match trial_0153, while the documented trial_0016 checkpoint is not retained as a separate file.",
+  "purpose": "presentation reproduction: load saved checkpoint and run inference/evaluation again",
+  "checkpoint": {
+    "path": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-04-15\\13-44-11_thesis_transformer_stage2_pure_transformer\\weights\\best_model_fold1.pt",
+    "size_bytes": 11626917,
+    "mtime_iso": "2026-04-24T02:28:51",
+    "sha256": "6832cfa9b1ef30c3fbf31895adf70accd62f5fd05f05058a8ff6d053cd6fb398"
+  },
+  "dataset_note": "RAVDESS GroupKFold fold 1 validation/test split",
+  "original_result_reference": {
+    "matching_trial_summary": "outputs/2026-04-15/13-44-11_thesis_transformer_stage2_pure_transformer/optuna_trials/trial_0153/trial_summary.json",
+    "documented_winner_summary": "outputs/2026-04-15/13-44-11_thesis_transformer_stage2_pure_transformer/optuna_trials/trial_0016/trial_summary.json",
+    "document": "docs/KR_MODEL_PURE_TRANSFORMER.md"
+  },
+  "model_name": "pure_transformer",
+  "num_classes": 8,
+  "output_dir": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-12-30_presentation_pure_transformer_retained_checkpoint"
+}

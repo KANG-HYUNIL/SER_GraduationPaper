@@ -1,0 +1,20 @@
+{
+  "experiment_id": "cnn_conformer_retained_checkpoint_fold1_reproduction",
+  "source_note": "Loads the retained CNN-Conformer fold-1 checkpoint. The checkpoint tensor shapes match trial_0041, while the documented trial_0003 checkpoint is not retained as a separate file.",
+  "purpose": "presentation reproduction: load saved checkpoint and run inference/evaluation again",
+  "checkpoint": {
+    "path": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-04-21\\18-47-36_cnn_conformer\\weights\\best_model_fold1.pt",
+    "size_bytes": 12351062,
+    "mtime_iso": "2026-04-24T02:29:06",
+    "sha256": "fb0415a2056b19c0f81ce16f09d4a7bd222bf888837af912a110532cfdf45ad0"
+  },
+  "dataset_note": "RAVDESS GroupKFold fold 1 validation/test split",
+  "original_result_reference": {
+    "matching_trial_summary": "outputs/2026-04-21/18-47-36_cnn_conformer/optuna_trials/trial_0041/trial_summary.json",
+    "documented_winner_summary": "outputs/2026-04-21/18-47-36_cnn_conformer/optuna_trials/trial_0003/trial_summary.json",
+    "document": "docs/cnn_conformer/2026-04-22_overfitting_followup.md"
+  },
+  "model_name": "cnn_conformer",
+  "num_classes": 8,
+  "output_dir": "C:\\Users\\hik88\\Desktop\\BIT_Uni\\GraduationPaper\\Project\\SER_GraduationPaper\\outputs\\2026-05-25\\16-13-46_presentation_cnn_conformer_retained_checkpoint"
+}
